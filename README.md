@@ -19,12 +19,30 @@ Google does not publish hard token ceiling numbers for developer quotas. This en
 - **Empirical Capacity Discovery:** Correlates real disk token consumption against server percentage snapshots ($W_{\text{slot}} / \text{Fraction Used}$) to calculate your empirical pool size.
 - **Persistent Self-Calibration:** Saves calibration data points to `quota_history.json` and uses running median regression to continuously refine accuracy.
 
-### 2. 4-Tier Financial Valuations (Gemini 3.7 Flash Pricing)
-Translates abstract percentage limits and token pools into concrete pay-as-you-go API dollar values:
-- **1. Weighted ($2.25/M):** Blended representative consumption rate.
-- **2. Input Only ($0.75/M):** Full quota value if consumed strictly as fresh prompt tokens.
-- **3. Output Only ($3.75/M):** Full quota value if consumed strictly as generation and thinking tokens.
-- **4. Cache Only ($0.075/M):** Full quota value if consumed strictly as cached context reads (90% cache discount).
+## Pricing & Valuation Matrix
+
+Antigravity Live Monitor runs real-time valuation across both model pools:
+
+### Primary Gemini Models (Gemini 3.7 Flash API Rates)
+- **Input:** `$0.75` / 1M tokens ($0.00075 / 1k)
+- **Prompt Cache Read:** `$0.075` / 1M tokens ($0.000075 / 1k — 90% cache discount)
+- **Output:** `$3.75` / 1M tokens ($0.00375 / 1k)
+- **Weighted Valuation:** `$2.25` / 1M tokens
+
+### Third-Party Models (Claude 3.7 / 3.5 Sonnet & GPT-4o API Rates)
+- **Input:** `$3.00` / 1M tokens ($0.003 / 1k)
+- **Prompt Cache Read:** `$0.30` / 1M tokens ($0.0003 / 1k — 90% cache discount)
+- **Output:** `$15.00` / 1M tokens ($0.015 / 1k)
+- **Weighted Valuation:** `$6.00` / 1M tokens
+
+---
+
+## 4-Way Valuation Methodology
+For both model tiers, the monitor calculates quota dollar values using four distinct lenses:
+1. **Weighted Blended:** Realistic composite session valuation.
+2. **Input Only:** Quota value if consumed purely as fresh input tokens.
+3. **Output Only:** Maximum ceiling value if consumed exclusively as generated output/thinking.
+4. **Cache Only:** Full quota value if consumed strictly as cached context reads.
 
 ### 3. Cross-Project Slot Tracking
 ### 4. Modern Frameless Desktop HUD & Autostart

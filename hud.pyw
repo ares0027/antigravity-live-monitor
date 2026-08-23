@@ -17,11 +17,17 @@ HUD_CONFIG_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud
 
 CREATE_NO_WINDOW = 0x08000000
 
-# Verified Gemini 3.7 Flash Rates
-PRICE_INPUT_PER_M = 0.75       # $0.75 / 1M tokens ($0.00075 / 1k)
-PRICE_CACHE_PER_M = 0.075      # $0.075 / 1M tokens ($0.000075 / 1k)
-PRICE_OUTPUT_PER_M = 3.75      # $3.75 / 1M tokens ($0.00375 / 1k)
-BLENDED_RATE_PER_M = 2.25      # Weighted valuation rate
+# Verified Gemini Rates (Gemini 3.7 Flash)
+GEMINI_PRICE_IN = 0.75       # $0.75 / 1M
+GEMINI_PRICE_CACHE = 0.075   # $0.075 / 1M
+GEMINI_PRICE_OUT = 3.75      # $3.75 / 1M
+GEMINI_PRICE_WEIGHTED = 2.25 # Blended weighted rate
+
+# Verified Third-Party Rates (Claude 3.7 / 3.5 Sonnet & GPT-4o)
+TP_PRICE_IN = 3.00           # $3.00 / 1M
+TP_PRICE_CACHE = 0.30        # $0.30 / 1M
+TP_PRICE_OUT = 15.00         # $15.00 / 1M
+TP_PRICE_WEIGHTED = 6.00     # Blended weighted rate
 
 # Win32 Native Setup
 user32 = ctypes.windll.user32
@@ -47,7 +53,7 @@ def check_single_instance():
     return mutex
 
 def load_hud_config():
-    default_config = {"pinned": True, "auto_prime": True}
+    default_config = {"pinned": True, "auto_prime": True, "active_tab": "5h"}
     if os.path.exists(HUD_CONFIG_FILE):
         try:
             with open(HUD_CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -118,8 +124,14 @@ HTML_CONTENT = """<!DOCTYPE html>
       border-bottom: none;
     }
     .ring-bg { stroke: #23272F; }
-    .ring-progress {
+    .ring-progress-emerald {
       stroke: #4ADE80;
+      transition: stroke-dashoffset 0.4s ease;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+    .ring-progress-purple {
+      stroke: #C084FC;
       transition: stroke-dashoffset 0.4s ease;
       transform: rotate(-90deg);
       transform-origin: 50% 50%;
@@ -143,19 +155,19 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     <!-- Controls -->
     <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-      <!-- Auto-Prime Cooldown Toggle -->
-      <button onclick="togglePrime()" id="primeBtn" class="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-800/60 text-amber-400 hover:text-amber-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Auto-Prime 5h Cooldown (Enabled by Default)">
-        <span id="primeDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+      <!-- Auto-Prime Toggle -->
+      <button onclick="togglePrime()" id="primeBtn" class="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-800/60 text-amber-400 hover:text-amber-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Auto-Prime Dual Cooldowns (Gemini + Claude/GPT)">
+        <span id="primeDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
         <span id="primeText">PRIME: ON</span>
       </button>
 
       <!-- Always on Top Toggle -->
-      <button onclick="togglePin()" id="pinBtn" class="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Always on Top (Enabled)">
+      <button onclick="togglePin()" id="pinBtn" class="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Always on Top">
         <span id="pinDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
         <span id="pinText">PINNED</span>
       </button>
 
-      <!-- Sync Button -->
+      <!-- Refresh Sync -->
       <button onclick="triggerSync()" id="syncBtn" class="p-1 px-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition text-xs mono cursor-pointer" title="Force Refresh Quota">
         ↻
       </button>
@@ -178,91 +190,91 @@ HTML_CONTENT = """<!DOCTYPE html>
     <!-- 1. GEMINI MODELS SECTION -->
     <div>
       <div class="flex items-center justify-between mb-1.5 px-1">
-        <h2 class="text-xs font-bold text-zinc-400 tracking-tight uppercase">Gemini Models (Primary)</h2>
+        <h2 class="text-xs font-bold text-emerald-400 tracking-tight uppercase flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+          Gemini Models (Primary Engine)
+        </h2>
+        <span class="text-[10px] text-zinc-500 mono">$0.75 in · $3.75 out</span>
       </div>
 
       <div class="card rounded-2xl overflow-hidden shadow-lg">
 
-        <!-- Weekly Limit Remaining -->
-        <div class="p-3 card-row">
+        <!-- Gemini Weekly Limit -->
+        <div class="p-2.5 card-row">
           <div class="flex items-center justify-between">
             <div>
               <div class="flex items-baseline gap-2">
-                <span class="text-sm font-semibold text-white">Weekly Limit Remaining</span>
-                <span class="text-xs font-bold text-emerald-400 mono" id="estWeeklyRemain">~--M left</span>
+                <span class="text-xs font-semibold text-white">Weekly Limit Remaining</span>
+                <span class="text-xs font-bold text-emerald-400 mono" id="geminiWeeklyRemain">~--M left</span>
               </div>
-              <div class="text-[11px] text-zinc-400 mt-0.5 mono" id="geminiWeeklyDesc">
-                Resets in --
-              </div>
+              <div class="text-[10px] text-zinc-400 mt-0.5 mono" id="geminiWeeklyDesc">Resets in --</div>
             </div>
-            <div class="flex items-center gap-2.5 flex-shrink-0">
-              <span class="mono text-sm font-bold text-white" id="geminiWeeklyPct">--%</span>
-              <svg class="w-7 h-7" viewBox="0 0 36 36">
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="mono text-xs font-bold text-white" id="geminiWeeklyPct">--%</span>
+              <svg class="w-6 h-6" viewBox="0 0 36 36">
                 <path class="ring-bg" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="geminiWeeklyRing" class="ring-progress" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="geminiWeeklyRing" class="ring-progress-emerald" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
               </svg>
             </div>
           </div>
 
           <!-- 4-Value Matrix -->
-          <div class="grid grid-cols-4 gap-1.5 mt-2 text-[10px] mono">
-            <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">1. Weighted</span>
-              <span class="text-emerald-400 font-bold" id="wValWeighted">$0.00</span>
+          <div class="grid grid-cols-4 gap-1 mt-1.5 text-[9px] mono">
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">1. Weighted</span>
+              <span class="text-emerald-400 font-bold" id="gwValWeighted">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">2. Input</span>
-              <span class="text-zinc-200 font-bold" id="wValInput">$0.00</span>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">2. Input</span>
+              <span class="text-zinc-200 font-bold" id="gwValInput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">3. Output</span>
-              <span class="text-purple-400 font-bold" id="wValOutput">$0.00</span>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">3. Output</span>
+              <span class="text-purple-400 font-bold" id="gwValOutput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">4. Cache</span>
-              <span class="text-amber-400 font-bold" id="wValCache">$0.00</span>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">4. Cache</span>
+              <span class="text-amber-400 font-bold" id="gwValCache">$0.00</span>
             </div>
           </div>
         </div>
 
-        <!-- Five Hour Limit Remaining -->
-        <div class="p-3 card-row">
+        <!-- Gemini Five Hour Limit -->
+        <div class="p-2.5 card-row">
           <div class="flex items-center justify-between">
             <div>
               <div class="flex items-baseline gap-2">
-                <span class="text-sm font-semibold text-white">Five Hour Limit Remaining</span>
-                <span class="text-xs font-bold text-amber-400 mono" id="est5hRemain">~--k left</span>
+                <span class="text-xs font-semibold text-white">Five Hour Limit Remaining</span>
+                <span class="text-xs font-bold text-amber-400 mono" id="gemini5hRemain">~--k left</span>
               </div>
-              <div class="text-[11px] text-zinc-400 mt-0.5 mono" id="geminiFiveHourDesc">
-                Resets in --
-              </div>
+              <div class="text-[10px] text-zinc-400 mt-0.5 mono" id="gemini5hDesc">Resets in --</div>
             </div>
-            <div class="flex items-center gap-2.5 flex-shrink-0">
-              <span class="mono text-sm font-bold text-white" id="geminiFiveHourPct">--%</span>
-              <svg class="w-7 h-7" viewBox="0 0 36 36">
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="mono text-xs font-bold text-white" id="gemini5hPct">--%</span>
+              <svg class="w-6 h-6" viewBox="0 0 36 36">
                 <path class="ring-bg" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="geminiFiveHourRing" class="ring-progress" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="gemini5hRing" class="ring-progress-emerald" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
               </svg>
             </div>
           </div>
 
           <!-- 4-Value Matrix -->
-          <div class="grid grid-cols-4 gap-1.5 mt-2 text-[10px] mono">
-            <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">1. Weighted</span>
-              <span class="text-emerald-400 font-bold" id="fValWeighted">$0.00</span>
+          <div class="grid grid-cols-4 gap-1 mt-1.5 text-[9px] mono">
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">1. Weighted</span>
+              <span class="text-emerald-400 font-bold" id="gfValWeighted">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">2. Input</span>
-              <span class="text-zinc-200 font-bold" id="fValInput">$0.00</span>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">2. Input</span>
+              <span class="text-zinc-200 font-bold" id="gfValInput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">3. Output</span>
-              <span class="text-purple-400 font-bold" id="fValOutput">$0.00</span>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">3. Output</span>
+              <span class="text-purple-400 font-bold" id="gfValOutput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">4. Cache</span>
-              <span class="text-amber-400 font-bold" id="fValCache">$0.00</span>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">4. Cache</span>
+              <span class="text-amber-400 font-bold" id="gfValCache">$0.00</span>
             </div>
           </div>
         </div>
@@ -270,18 +282,102 @@ HTML_CONTENT = """<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- 2. THIRD-PARTY MODELS (CLAUDE & GPT) -->
+    <!-- 2. CLAUDE & GPT THIRD-PARTY SECTION -->
     <div>
-      <div class="card rounded-xl p-2.5 shadow-md flex items-center justify-between text-xs mono">
-        <div class="flex items-center gap-2">
-          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400" id="tpDot"></span>
-          <span class="font-semibold text-white" id="tpSummary">Claude & GPT: 100% Ready</span>
+      <div class="flex items-center justify-between mb-1.5 px-1">
+        <h2 class="text-xs font-bold text-purple-400 tracking-tight uppercase flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span>
+          Claude & GPT Models (Third-Party)
+        </h2>
+        <span class="text-[10px] text-zinc-500 mono">$3.00 in · $15.00 out</span>
+      </div>
+
+      <div class="card rounded-2xl overflow-hidden shadow-lg border-purple-900/30">
+
+        <!-- Claude Weekly Limit -->
+        <div class="p-2.5 card-row">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="flex items-baseline gap-2">
+                <span class="text-xs font-semibold text-white">Weekly Limit Remaining</span>
+                <span class="text-xs font-bold text-purple-400 mono" id="tpWeeklyRemain">~--M left</span>
+              </div>
+              <div class="text-[10px] text-zinc-400 mt-0.5 mono" id="tpWeeklyDesc">Resets in --</div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="mono text-xs font-bold text-white" id="tpWeeklyPct">--%</span>
+              <svg class="w-6 h-6" viewBox="0 0 36 36">
+                <path class="ring-bg" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="tpWeeklyRing" class="ring-progress-purple" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- 4-Value Matrix -->
+          <div class="grid grid-cols-4 gap-1 mt-1.5 text-[9px] mono">
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">1. Weighted</span>
+              <span class="text-purple-400 font-bold" id="tpwValWeighted">$0.00</span>
+            </div>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">2. Input</span>
+              <span class="text-zinc-200 font-bold" id="tpwValInput">$0.00</span>
+            </div>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">3. Output</span>
+              <span class="text-purple-300 font-bold" id="tpwValOutput">$0.00</span>
+            </div>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">4. Cache</span>
+              <span class="text-amber-400 font-bold" id="tpwValCache">$0.00</span>
+            </div>
+          </div>
         </div>
-        <span class="text-[11px] text-zinc-400" id="tpDetail">Weekly 100% · 5h 100%</span>
+
+        <!-- Claude Five Hour Limit -->
+        <div class="p-2.5 card-row">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="flex items-baseline gap-2">
+                <span class="text-xs font-semibold text-white">Five Hour Limit Remaining</span>
+                <span class="text-xs font-bold text-amber-400 mono" id="tp5hRemain">~--k left</span>
+              </div>
+              <div class="text-[10px] text-zinc-400 mt-0.5 mono" id="tp5hDesc">Resets in --</div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="mono text-xs font-bold text-white" id="tp5hPct">--%</span>
+              <svg class="w-6 h-6" viewBox="0 0 36 36">
+                <path class="ring-bg" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="tp5hRing" class="ring-progress-purple" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- 4-Value Matrix -->
+          <div class="grid grid-cols-4 gap-1 mt-1.5 text-[9px] mono">
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">1. Weighted</span>
+              <span class="text-purple-400 font-bold" id="tpfValWeighted">$0.00</span>
+            </div>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">2. Input</span>
+              <span class="text-zinc-200 font-bold" id="tpfValInput">$0.00</span>
+            </div>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">3. Output</span>
+              <span class="text-purple-300 font-bold" id="tpfValOutput">$0.00</span>
+            </div>
+            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1 rounded text-center">
+              <span class="text-zinc-500 block text-[8px]">4. Cache</span>
+              <span class="text-amber-400 font-bold" id="tpfValCache">$0.00</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- 3. CURRENT ACTIVE QUOTA SLOT USAGE (5H & WEEKLY) -->
+    <!-- 3. CURRENT ACTIVE QUOTA SLOT USAGE -->
     <div class="card rounded-2xl p-3 shadow-lg space-y-2.5">
       
       <!-- Slot Selector Tabs -->
@@ -290,28 +386,41 @@ HTML_CONTENT = """<!DOCTYPE html>
           <button id="tab5h" onclick="switchTab('5h')" class="px-2.5 py-0.5 rounded-md font-semibold transition bg-zinc-700 text-white cursor-pointer">Current 5h Slot</button>
           <button id="tabWeekly" onclick="switchTab('weekly')" class="px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer">Current Weekly Slot</button>
         </div>
-        <span class="mono text-xs font-bold text-emerald-400" id="curSlotCost">Spent: $0.0000</span>
+        <span class="mono text-xs font-bold text-emerald-400" id="curSlotCost">Total Spent: $0.0000</span>
       </div>
 
-      <div class="flex justify-between text-[11px] text-zinc-400 mono">
-        <span id="slotTokensLabel">Tokens in Current 5h Slot:</span>
-        <span class="text-white font-bold" id="curSlotTokens">0 tokens</span>
+      <!-- Model Category Breakdown Sub-bars -->
+      <div class="grid grid-cols-2 gap-2 text-[10px] mono">
+        <div class="bg-zinc-900/90 border border-emerald-950 p-1.5 rounded-lg">
+          <div class="flex justify-between text-zinc-400">
+            <span>Gemini Spent:</span>
+            <span class="text-emerald-400 font-bold" id="geminiSlotCost">$0.0000</span>
+          </div>
+          <div class="text-[9px] text-zinc-500 mt-0.5" id="geminiSlotTokens">0 tokens</div>
+        </div>
+        <div class="bg-zinc-900/90 border border-purple-950 p-1.5 rounded-lg">
+          <div class="flex justify-between text-zinc-400">
+            <span>Claude/GPT Spent:</span>
+            <span class="text-purple-400 font-bold" id="tpSlotCost">$0.0000</span>
+          </div>
+          <div class="text-[9px] text-zinc-500 mt-0.5" id="tpSlotTokens">0 tokens</div>
+        </div>
       </div>
 
       <!-- Live Token & Cost Breakdown Grid -->
       <div class="grid grid-cols-3 gap-1.5 text-zinc-300">
         <div class="bg-zinc-900/90 border border-zinc-800 p-2 rounded-xl text-center">
-          <div class="text-zinc-500 text-[9px] uppercase font-semibold">In ($0.75/M)</div>
+          <div class="text-zinc-500 text-[9px] uppercase font-semibold">Total In</div>
           <div class="mono text-xs font-bold text-zinc-100 mt-0.5" id="statIn">0k</div>
           <div class="mono text-[10px] text-emerald-400 font-semibold" id="statInCost">($0.0000)</div>
         </div>
         <div class="bg-zinc-900/90 border border-zinc-800 p-2 rounded-xl text-center">
-          <div class="text-zinc-500 text-[9px] uppercase font-semibold">Out ($3.75/M)</div>
+          <div class="text-zinc-500 text-[9px] uppercase font-semibold">Total Out</div>
           <div class="mono text-xs font-bold text-zinc-100 mt-0.5" id="statOut">0k</div>
           <div class="mono text-[10px] text-purple-400 font-semibold" id="statOutCost">($0.0000)</div>
         </div>
         <div class="bg-zinc-900/90 border border-zinc-800 p-2 rounded-xl text-center">
-          <div class="text-zinc-500 text-[9px] uppercase font-semibold">Cache ($0.075)</div>
+          <div class="text-zinc-500 text-[9px] uppercase font-semibold">Total Cache</div>
           <div class="mono text-xs font-bold text-zinc-100 mt-0.5" id="statCache">0k</div>
           <div class="mono text-[10px] text-amber-400 font-semibold" id="statCacheCost">($0.0000)</div>
         </div>
@@ -383,12 +492,12 @@ HTML_CONTENT = """<!DOCTYPE html>
         dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
         btn.className = 'px-2 py-0.5 rounded bg-amber-950/80 border border-amber-800/60 text-amber-400 hover:text-amber-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
         text.textContent = 'PRIME: ON';
-        btn.title = 'Auto-Prime 5h Cooldown (Enabled - Max Burst Mode)';
+        btn.title = 'Auto-Prime Dual Cooldowns (Enabled)';
       } else {
         dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-500';
         btn.className = 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
         text.textContent = 'PRIME: OFF';
-        btn.title = 'Auto-Prime 5h Cooldown (Disabled)';
+        btn.title = 'Auto-Prime Dual Cooldowns (Disabled)';
       }
     }
 
@@ -417,11 +526,9 @@ HTML_CONTENT = """<!DOCTYPE html>
       if (tab === '5h') {
         t5.className = 'px-2.5 py-0.5 rounded-md font-semibold transition bg-zinc-700 text-white cursor-pointer';
         tw.className = 'px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer';
-        document.getElementById('slotTokensLabel').textContent = 'Tokens in Current 5h Slot:';
       } else {
         tw.className = 'px-2.5 py-0.5 rounded-md font-semibold transition bg-zinc-700 text-white cursor-pointer';
         t5.className = 'px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer';
-        document.getElementById('slotTokensLabel').textContent = 'Tokens in Current Weekly Slot:';
       }
       refreshData();
     }
@@ -484,53 +591,69 @@ HTML_CONTENT = """<!DOCTYPE html>
           const d = await window.pywebview.api.get_metrics();
           if (!d) return;
 
-          // 1. Gemini Weekly (Exact Days, Hours, and Minutes)
+          // 1. Gemini Weekly
           document.getElementById('geminiWeeklyPct').textContent = d.gemini_weekly_pct + '%';
           document.getElementById('geminiWeeklyDesc').textContent = d.gemini_weekly_desc;
-          document.getElementById('estWeeklyRemain').textContent = '~' + d.est_weekly_remain_str + ' left';
+          document.getElementById('geminiWeeklyRemain').textContent = '~' + d.gemini_est_weekly_remain_str + ' left';
           updateRing('geminiWeeklyRing', d.gemini_weekly_pct);
 
-          document.getElementById('wValWeighted').textContent = '$' + d.w_cost_weighted.toFixed(2);
-          document.getElementById('wValInput').textContent = '$' + d.w_cost_in.toFixed(2);
-          document.getElementById('wValOutput').textContent = '$' + d.w_cost_out.toFixed(2);
-          document.getElementById('wValCache').textContent = '$' + d.w_cost_cache.toFixed(2);
+          document.getElementById('gwValWeighted').textContent = '$' + d.gw_cost_weighted.toFixed(2);
+          document.getElementById('gwValInput').textContent = '$' + d.gw_cost_in.toFixed(2);
+          document.getElementById('gwValOutput').textContent = '$' + d.gw_cost_out.toFixed(2);
+          document.getElementById('gwValCache').textContent = '$' + d.gw_cost_cache.toFixed(2);
 
           // 2. Gemini 5-Hour
-          document.getElementById('geminiFiveHourPct').textContent = d.gemini_5h_pct + '%';
-          document.getElementById('geminiFiveHourDesc').textContent = d.gemini_5h_desc;
-          document.getElementById('est5hRemain').textContent = '~' + d.est_5h_remain_str + ' left';
-          updateRing('geminiFiveHourRing', d.gemini_5h_pct);
+          document.getElementById('gemini5hPct').textContent = d.gemini_5h_pct + '%';
+          document.getElementById('gemini5hDesc').textContent = d.gemini_5h_desc;
+          document.getElementById('gemini5hRemain').textContent = '~' + d.gemini_est_5h_remain_str + ' left';
+          updateRing('gemini5hRing', d.gemini_5h_pct);
 
-          document.getElementById('fValWeighted').textContent = '$' + d.f_cost_weighted.toFixed(2);
-          document.getElementById('fValInput').textContent = '$' + d.f_cost_in.toFixed(2);
-          document.getElementById('fValOutput').textContent = '$' + d.f_cost_out.toFixed(2);
-          document.getElementById('fValCache').textContent = '$' + d.f_cost_cache.toFixed(2);
+          document.getElementById('gfValWeighted').textContent = '$' + d.gf_cost_weighted.toFixed(2);
+          document.getElementById('gfValInput').textContent = '$' + d.gf_cost_in.toFixed(2);
+          document.getElementById('gfValOutput').textContent = '$' + d.gf_cost_out.toFixed(2);
+          document.getElementById('gfValCache').textContent = '$' + d.gf_cost_cache.toFixed(2);
 
-          // 3. Third-Party Summary
-          if (d.tp_weekly_pct === 100 && d.tp_5h_pct === 100) {
-            document.getElementById('tpDot').className = 'inline-block w-2 h-2 rounded-full bg-emerald-400';
-            document.getElementById('tpSummary').textContent = 'Claude & GPT: 100% Ready';
-            document.getElementById('tpDetail').textContent = 'Weekly 100% · 5h 100%';
-          } else {
-            document.getElementById('tpDot').className = 'inline-block w-2 h-2 rounded-full bg-amber-400';
-            document.getElementById('tpSummary').textContent = 'Weekly: ' + d.tp_weekly_pct + '% · 5h: ' + d.tp_5h_pct + '%';
-            document.getElementById('tpDetail').textContent = d.tp_desc;
-          }
+          // 3. Claude & GPT Weekly
+          document.getElementById('tpWeeklyPct').textContent = d.tp_weekly_pct + '%';
+          document.getElementById('tpWeeklyDesc').textContent = d.tp_weekly_desc;
+          document.getElementById('tpWeeklyRemain').textContent = '~' + d.tp_est_weekly_remain_str + ' left';
+          updateRing('tpWeeklyRing', d.tp_weekly_pct);
 
-          // 4. Exact Slot Display (5h vs Weekly Tab)
+          document.getElementById('tpwValWeighted').textContent = '$' + d.tpw_cost_weighted.toFixed(2);
+          document.getElementById('tpwValInput').textContent = '$' + d.tpw_cost_in.toFixed(2);
+          document.getElementById('tpwValOutput').textContent = '$' + d.tpw_cost_out.toFixed(2);
+          document.getElementById('tpwValCache').textContent = '$' + d.tpw_cost_cache.toFixed(2);
+
+          // 4. Claude & GPT 5-Hour
+          document.getElementById('tp5hPct').textContent = d.tp_5h_pct + '%';
+          document.getElementById('tp5hDesc').textContent = d.tp_5h_desc;
+          document.getElementById('tp5hRemain').textContent = '~' + d.tp_est_5h_remain_str + ' left';
+          updateRing('tp5hRing', d.tp_5h_pct);
+
+          document.getElementById('tpfValWeighted').textContent = '$' + d.tpf_cost_weighted.toFixed(2);
+          document.getElementById('tpfValInput').textContent = '$' + d.tpf_cost_in.toFixed(2);
+          document.getElementById('tpfValOutput').textContent = '$' + d.tpf_cost_out.toFixed(2);
+          document.getElementById('tpfValCache').textContent = '$' + d.tpf_cost_cache.toFixed(2);
+
+          // 5. Active Slot Breakdown (5h vs Weekly)
           const in_tok = (activeTab === '5h') ? d.slot5_in : d.slotW_in;
           const out_tok = (activeTab === '5h') ? d.slot5_out : d.slotW_out;
           const cache_tok = (activeTab === '5h') ? d.slot5_cache : d.slotW_cache;
-          const tot_tok = (activeTab === '5h') ? d.slot5_total_tokens : d.slotW_total_tokens;
-          const w_tok = (activeTab === '5h') ? d.slot5_weighted : d.slotW_weighted;
-
+          const tot_c = (activeTab === '5h') ? d.slot5_total_cost : d.slotW_total_cost;
           const in_c = (activeTab === '5h') ? d.slot5_in_cost : d.slotW_in_cost;
           const out_c = (activeTab === '5h') ? d.slot5_out_cost : d.slotW_out_cost;
           const cache_c = (activeTab === '5h') ? d.slot5_cache_cost : d.slotW_cache_cost;
-          const tot_c = (activeTab === '5h') ? d.slot5_total_cost : d.slotW_total_cost;
 
-          document.getElementById('curSlotCost').textContent = 'Spent: $' + tot_c.toFixed(4);
-          document.getElementById('curSlotTokens').textContent = tot_tok.toLocaleString() + ' tokens (' + (w_tok/1000).toFixed(1) + 'k weighted)';
+          const g_cost = (activeTab === '5h') ? d.slot5_gemini_cost : d.slotW_gemini_cost;
+          const g_tokens = (activeTab === '5h') ? d.slot5_gemini_tokens : d.slotW_gemini_tokens;
+          const tp_cost = (activeTab === '5h') ? d.slot5_tp_cost : d.slotW_tp_cost;
+          const tp_tokens = (activeTab === '5h') ? d.slot5_tp_tokens : d.slotW_tp_tokens;
+
+          document.getElementById('curSlotCost').textContent = 'Total Spent: $' + tot_c.toFixed(4);
+          document.getElementById('geminiSlotCost').textContent = '$' + g_cost.toFixed(4);
+          document.getElementById('geminiSlotTokens').textContent = g_tokens.toLocaleString() + ' tokens';
+          document.getElementById('tpSlotCost').textContent = '$' + tp_cost.toFixed(4);
+          document.getElementById('tpSlotTokens').textContent = tp_tokens.toLocaleString() + ' tokens';
 
           document.getElementById('statIn').textContent = (in_tok / 1000).toFixed(1) + 'k';
           document.getElementById('statInCost').textContent = '($' + in_c.toFixed(4) + ')';
@@ -543,8 +666,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 
           document.getElementById('wsName').textContent = 'Active: ' + d.workspace;
           document.getElementById('sessionTokens').textContent = 'Current Chat: ' + d.session_total_tokens.toLocaleString() + ' tokens (' + d.turns + ' turns)';
-
-          document.getElementById('syncPoints').textContent = 'Calibrated (' + d.sample_count + ' samples)';
+          document.getElementById('syncPoints').textContent = 'Dual Engine Calibrated (' + d.sample_count + ' samples)';
 
           const now = new Date();
           document.getElementById('timestamp').textContent = now.toTimeString().split(' ')[0];
@@ -581,46 +703,71 @@ class MetricsEngine:
         self.history = self.load_history()
         self.five_h_start_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=5)
         self.weekly_start_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+        self.tp_five_h_start_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=5)
+        self.tp_weekly_start_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+
         self.cached_metrics = {
+            # Gemini Models
             "gemini_weekly_pct": 97,
             "gemini_weekly_desc": "Resets in 6 days, 5 hours, 0 mins",
-            "gemini_5h_pct": 85,
-            "gemini_5h_desc": "Resets in 1 hour, 16 minutes",
-            "est_5h_remain_str": "733k",
-            "f_cost_weighted": 1.65,
-            "f_cost_in": 0.55,
-            "f_cost_out": 2.75,
-            "f_cost_cache": 0.05,
-            "est_weekly_remain_str": "7.84M",
-            "w_cost_weighted": 17.64,
-            "w_cost_in": 5.88,
-            "w_cost_out": 29.41,
-            "w_cost_cache": 0.59,
-            "tp_weekly_pct": 100,
-            "tp_5h_pct": 100,
-            "tp_desc": "Full Quota Ready",
+            "gemini_5h_pct": 100,
+            "gemini_5h_desc": "Resets in 1 hour, 16 mins",
+            "gemini_est_5h_remain_str": "862k",
+            "gf_cost_weighted": 1.94,
+            "gf_cost_in": 0.65,
+            "gf_cost_out": 3.23,
+            "gf_cost_cache": 0.06,
+            "gemini_est_weekly_remain_str": "7.84M",
+            "gw_cost_weighted": 17.64,
+            "gw_cost_in": 5.88,
+            "gw_cost_out": 29.41,
+            "gw_cost_cache": 0.59,
+
+            # Claude & GPT Models
+            "tp_weekly_pct": 99,
+            "tp_weekly_desc": "Resets in 6 days, 23 hours, 58 mins",
+            "tp_5h_pct": 98,
+            "tp_5h_desc": "Resets in 4 hours, 58 mins",
+            "tp_est_5h_remain_str": "245k",
+            "tpf_cost_weighted": 1.47,
+            "tpf_cost_in": 0.74,
+            "tpf_cost_out": 3.68,
+            "tpf_cost_cache": 0.07,
+            "tp_est_weekly_remain_str": "1.49M",
+            "tpw_cost_weighted": 8.91,
+            "tpw_cost_in": 4.46,
+            "tpw_cost_out": 22.28,
+            "tpw_cost_cache": 0.45,
+
             "sample_count": len(self.history.get("samples_5h", [])),
             "workspace": "Active Workspace",
             "turns": 0,
             "session_total_tokens": 0,
+
+            # Exact Slot Breakdown
             "slot5_in": 0,
             "slot5_out": 0,
             "slot5_cache": 0,
-            "slot5_weighted": 0,
-            "slot5_total_tokens": 0,
             "slot5_in_cost": 0.0,
             "slot5_out_cost": 0.0,
             "slot5_cache_cost": 0.0,
             "slot5_total_cost": 0.0,
+            "slot5_gemini_cost": 0.0,
+            "slot5_gemini_tokens": 0,
+            "slot5_tp_cost": 0.0,
+            "slot5_tp_tokens": 0,
+
             "slotW_in": 0,
             "slotW_out": 0,
             "slotW_cache": 0,
-            "slotW_weighted": 0,
-            "slotW_total_tokens": 0,
             "slotW_in_cost": 0.0,
             "slotW_out_cost": 0.0,
             "slotW_cache_cost": 0.0,
-            "slotW_total_cost": 0.0
+            "slotW_total_cost": 0.0,
+            "slotW_gemini_cost": 0.0,
+            "slotW_gemini_tokens": 0,
+            "slotW_tp_cost": 0.0,
+            "slotW_tp_tokens": 0
         }
         self.running = True
         self.start_worker()
@@ -632,7 +779,7 @@ class MetricsEngine:
                     return json.load(f)
             except Exception:
                 pass
-        return {"samples_5h": [], "samples_weekly": []}
+        return {"samples_5h": [], "samples_weekly": [], "samples_tp_5h": [], "samples_tp_weekly": []}
 
     def save_history(self):
         try:
@@ -674,6 +821,8 @@ class MetricsEngine:
             now = datetime.datetime.now(datetime.timezone.utc)
             five_h_pct = None
             weekly_pct = None
+            tp_five_h_pct = None
+            tp_weekly_pct = None
 
             for line in out.strip().split("\n"):
                 parts = line.split("\t")
@@ -715,56 +864,55 @@ class MetricsEngine:
                             self.five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
                     elif "Claude" in group or "GPT" in group:
                         if "Weekly" in metric:
+                            tp_weekly_pct = pct
                             self.cached_metrics["tp_weekly_pct"] = pct
+                            self.cached_metrics["tp_weekly_desc"] = short_desc
+                            self.tp_weekly_start_dt = reset_dt - datetime.timedelta(days=7)
                         elif "Five Hour" in metric:
+                            tp_five_h_pct = pct
                             self.cached_metrics["tp_5h_pct"] = pct
-                            self.cached_metrics["tp_desc"] = short_desc
+                            self.cached_metrics["tp_5h_desc"] = short_desc
+                            self.tp_five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
 
-            w5 = self.calculate_slot(self.five_h_start_dt)
-            wWeek = self.calculate_slot(self.weekly_start_dt)
+            # Calculate learned capacities
+            learned_5h_cap = self.compute_learned_cap(self.history.get("samples_5h", []), default=862000)
+            learned_weekly_cap = self.compute_learned_cap(self.history.get("samples_weekly", []), default=8083900)
+            learned_tp_5h_cap = self.compute_learned_cap(self.history.get("samples_tp_5h", []), default=250000)
+            learned_tp_weekly_cap = self.compute_learned_cap(self.history.get("samples_tp_weekly", []), default=1500000)
 
-            if five_h_pct is not None and five_h_pct < 100 and w5["weighted"] > 5000:
-                fraction_used = (100.0 - five_h_pct) / 100.0
-                implied_cap = int(w5["weighted"] / fraction_used)
-                self.history["samples_5h"].append({
-                    "ts": time.time(),
-                    "used": w5["weighted"],
-                    "pct_used": 100 - five_h_pct,
-                    "implied_cap": implied_cap
-                })
+            # 1. Gemini Metrics Calculations
+            cur_g_5h = self.cached_metrics["gemini_5h_pct"]
+            est_g_5h_rem = int(learned_5h_cap * (cur_g_5h / 100.0))
+            self.cached_metrics["gemini_est_5h_remain_str"] = f"{est_g_5h_rem / 1000.0:.0f}k" if est_g_5h_rem < 1000000 else f"{est_g_5h_rem / 1000000.0:.2f}M"
+            self.cached_metrics["gf_cost_weighted"] = (est_g_5h_rem / 1000000.0) * GEMINI_PRICE_WEIGHTED
+            self.cached_metrics["gf_cost_in"] = (est_g_5h_rem / 1000000.0) * GEMINI_PRICE_IN
+            self.cached_metrics["gf_cost_out"] = (est_g_5h_rem / 1000000.0) * GEMINI_PRICE_OUT
+            self.cached_metrics["gf_cost_cache"] = (est_g_5h_rem / 1000000.0) * GEMINI_PRICE_CACHE
 
-            if weekly_pct is not None and weekly_pct < 100 and wWeek["weighted"] > 5000:
-                fraction_used = (100.0 - weekly_pct) / 100.0
-                implied_cap = int(wWeek["weighted"] / fraction_used)
-                self.history["samples_weekly"].append({
-                    "ts": time.time(),
-                    "used": wWeek["weighted"],
-                    "pct_used": 100 - weekly_pct,
-                    "implied_cap": implied_cap
-                })
+            cur_g_weekly = self.cached_metrics["gemini_weekly_pct"]
+            est_g_w_rem = int(learned_weekly_cap * (cur_g_weekly / 100.0))
+            self.cached_metrics["gemini_est_weekly_remain_str"] = f"{est_g_w_rem / 1000000.0:.2f}M" if est_g_w_rem >= 1000000 else f"{est_g_w_rem / 1000.0:.0f}k"
+            self.cached_metrics["gw_cost_weighted"] = (est_g_w_rem / 1000000.0) * GEMINI_PRICE_WEIGHTED
+            self.cached_metrics["gw_cost_in"] = (est_g_w_rem / 1000000.0) * GEMINI_PRICE_IN
+            self.cached_metrics["gw_cost_out"] = (est_g_w_rem / 1000000.0) * GEMINI_PRICE_OUT
+            self.cached_metrics["gw_cost_cache"] = (est_g_w_rem / 1000000.0) * GEMINI_PRICE_CACHE
 
-            self.history["samples_5h"] = self.history["samples_5h"][-100:]
-            self.history["samples_weekly"] = self.history["samples_weekly"][-100:]
-            self.save_history()
+            # 2. Claude & GPT Third-Party Metrics Calculations
+            cur_tp_5h = self.cached_metrics["tp_5h_pct"]
+            est_tp_5h_rem = int(learned_tp_5h_cap * (cur_tp_5h / 100.0))
+            self.cached_metrics["tp_est_5h_remain_str"] = f"{est_tp_5h_rem / 1000.0:.0f}k" if est_tp_5h_rem < 1000000 else f"{est_tp_5h_rem / 1000000.0:.2f}M"
+            self.cached_metrics["tpf_cost_weighted"] = (est_tp_5h_rem / 1000000.0) * TP_PRICE_WEIGHTED
+            self.cached_metrics["tpf_cost_in"] = (est_tp_5h_rem / 1000000.0) * TP_PRICE_IN
+            self.cached_metrics["tpf_cost_out"] = (est_tp_5h_rem / 1000000.0) * TP_PRICE_OUT
+            self.cached_metrics["tpf_cost_cache"] = (est_tp_5h_rem / 1000000.0) * TP_PRICE_CACHE
 
-            learned_5h_cap = self.compute_learned_cap(self.history["samples_5h"], default=862000)
-            learned_weekly_cap = self.compute_learned_cap(self.history["samples_weekly"], default=8083900)
-
-            cur_5h_pct = self.cached_metrics["gemini_5h_pct"]
-            est_5h_rem = int(learned_5h_cap * (cur_5h_pct / 100.0))
-            self.cached_metrics["est_5h_remain_str"] = f"{est_5h_rem / 1000.0:.0f}k" if est_5h_rem < 1000000 else f"{est_5h_rem / 1000000.0:.2f}M"
-            self.cached_metrics["f_cost_weighted"] = (est_5h_rem / 1000000.0) * BLENDED_RATE_PER_M
-            self.cached_metrics["f_cost_in"] = (est_5h_rem / 1000000.0) * PRICE_INPUT_PER_M
-            self.cached_metrics["f_cost_out"] = (est_5h_rem / 1000000.0) * PRICE_OUTPUT_PER_M
-            self.cached_metrics["f_cost_cache"] = (est_5h_rem / 1000000.0) * PRICE_CACHE_PER_M
-
-            cur_weekly_pct = self.cached_metrics["gemini_weekly_pct"]
-            est_weekly_rem = int(learned_weekly_cap * (cur_weekly_pct / 100.0))
-            self.cached_metrics["est_weekly_remain_str"] = f"{est_weekly_rem / 1000000.0:.2f}M" if est_weekly_rem >= 1000000 else f"{est_weekly_rem / 100.0:.0f}k"
-            self.cached_metrics["w_cost_weighted"] = (est_weekly_rem / 1000000.0) * BLENDED_RATE_PER_M
-            self.cached_metrics["w_cost_in"] = (est_weekly_rem / 1000000.0) * PRICE_INPUT_PER_M
-            self.cached_metrics["w_cost_out"] = (est_weekly_rem / 1000000.0) * PRICE_OUTPUT_PER_M
-            self.cached_metrics["w_cost_cache"] = (est_weekly_rem / 1000000.0) * PRICE_CACHE_PER_M
+            cur_tp_weekly = self.cached_metrics["tp_weekly_pct"]
+            est_tp_w_rem = int(learned_tp_weekly_cap * (cur_tp_weekly / 100.0))
+            self.cached_metrics["tp_est_weekly_remain_str"] = f"{est_tp_w_rem / 1000000.0:.2f}M" if est_tp_w_rem >= 1000000 else f"{est_tp_w_rem / 1000.0:.0f}k"
+            self.cached_metrics["tpw_cost_weighted"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_WEIGHTED
+            self.cached_metrics["tpw_cost_in"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_IN
+            self.cached_metrics["tpw_cost_out"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_OUT
+            self.cached_metrics["tpw_cost_cache"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_CACHE
 
             self.cached_metrics["sample_count"] = len(self.history.get("samples_5h", []))
         except Exception:
@@ -773,7 +921,7 @@ class MetricsEngine:
     def compute_learned_cap(self, samples, default):
         if not samples:
             return default
-        caps = [s["implied_cap"] for s in samples if s["implied_cap"] > 50000]
+        caps = [s["implied_cap"] for s in samples if s.get("implied_cap", 0) > 10000]
         if not caps:
             return default
         caps.sort()
@@ -798,6 +946,8 @@ class MetricsEngine:
 
         total_in = 0
         total_out = 0
+        gemini_tokens = 0
+        tp_tokens = 0
 
         for mt, log_path in all_logs:
             try:
@@ -813,13 +963,24 @@ class MetricsEngine:
                                 dt = datetime.datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
                                 if dt >= start_dt:
                                     t = data.get("type", "")
+                                    in_tok = 0
+                                    out_tok = 0
                                     if t == "USER_INPUT":
-                                        total_in += estimate_tokens(str(data.get("content", "")))
+                                        in_tok = estimate_tokens(str(data.get("content", "")))
                                     elif t in ["PLANNER_RESPONSE", "MODEL"]:
-                                        total_out += estimate_tokens(str(data.get("content", "")))
-                                        total_out += estimate_tokens(str(data.get("thinking", "")))
+                                        out_tok = estimate_tokens(str(data.get("content", ""))) + estimate_tokens(str(data.get("thinking", "")))
                                     elif t in ["CODE_ACTION", "RUN_COMMAND", "GENERIC", "TOOL_RESULT"]:
-                                        total_in += estimate_tokens(str(data.get("content", "")))
+                                        in_tok = estimate_tokens(str(data.get("content", "")))
+
+                                    total_in += in_tok
+                                    total_out += out_tok
+
+                                    # Check model tag
+                                    model_name = str(data.get("modelName", "") or data.get("model", "")).lower()
+                                    if "claude" in model_name or "gpt" in model_name:
+                                        tp_tokens += (in_tok + out_tok)
+                                    else:
+                                        gemini_tokens += (in_tok + out_tok)
                             except:
                                 pass
             except:
@@ -827,23 +988,28 @@ class MetricsEngine:
 
         cached = int(total_in * 0.72) if total_in > 15000 else 0
         fresh_in = max(0, total_in - cached)
-        weighted = int(fresh_in + (0.25 * cached) + total_out)
 
-        in_cost = (fresh_in / 1000000.0) * PRICE_INPUT_PER_M
-        out_cost = (total_out / 1000000.0) * PRICE_OUTPUT_PER_M
-        cache_cost = (cached / 1000000.0) * PRICE_CACHE_PER_M
+        in_cost = (fresh_in / 1000000.0) * GEMINI_PRICE_IN
+        out_cost = (total_out / 1000000.0) * GEMINI_PRICE_OUT
+        cache_cost = (cached / 1000000.0) * GEMINI_PRICE_CACHE
         total_cost = in_cost + out_cost + cache_cost
+
+        gemini_cost = (gemini_tokens / 1000000.0) * GEMINI_PRICE_WEIGHTED
+        tp_cost = (tp_tokens / 1000000.0) * TP_PRICE_WEIGHTED
 
         return {
             "in": total_in,
             "out": total_out,
             "cache": cached,
-            "weighted": weighted,
             "total_tokens": total_in + total_out,
             "in_cost": in_cost,
             "out_cost": out_cost,
             "cache_cost": cache_cost,
-            "total_cost": total_cost
+            "total_cost": total_cost,
+            "gemini_tokens": gemini_tokens,
+            "gemini_cost": gemini_cost,
+            "tp_tokens": tp_tokens,
+            "tp_cost": tp_cost
         }
 
     def _disk_worker_loop(self):
@@ -855,29 +1021,33 @@ class MetricsEngine:
             time.sleep(1.0)
 
     def _compute_disk_metrics(self):
-        # 1. Exact 5-Hour Slot Metrics
+        # 1. 5-Hour Slot Metrics
         w5 = self.calculate_slot(self.five_h_start_dt)
         self.cached_metrics["slot5_in"] = w5["in"]
         self.cached_metrics["slot5_out"] = w5["out"]
         self.cached_metrics["slot5_cache"] = w5["cache"]
-        self.cached_metrics["slot5_weighted"] = w5["weighted"]
-        self.cached_metrics["slot5_total_tokens"] = w5["total_tokens"]
         self.cached_metrics["slot5_in_cost"] = w5["in_cost"]
         self.cached_metrics["slot5_out_cost"] = w5["out_cost"]
         self.cached_metrics["slot5_cache_cost"] = w5["cache_cost"]
         self.cached_metrics["slot5_total_cost"] = w5["total_cost"]
+        self.cached_metrics["slot5_gemini_cost"] = w5["gemini_cost"]
+        self.cached_metrics["slot5_gemini_tokens"] = w5["gemini_tokens"]
+        self.cached_metrics["slot5_tp_cost"] = w5["tp_cost"]
+        self.cached_metrics["slot5_tp_tokens"] = w5["tp_tokens"]
 
-        # 2. Exact Weekly Slot Metrics
+        # 2. Weekly Slot Metrics
         wWeek = self.calculate_slot(self.weekly_start_dt)
         self.cached_metrics["slotW_in"] = wWeek["in"]
         self.cached_metrics["slotW_out"] = wWeek["out"]
         self.cached_metrics["slotW_cache"] = wWeek["cache"]
-        self.cached_metrics["slotW_weighted"] = wWeek["weighted"]
-        self.cached_metrics["slotW_total_tokens"] = wWeek["total_tokens"]
         self.cached_metrics["slotW_in_cost"] = wWeek["in_cost"]
         self.cached_metrics["slotW_out_cost"] = wWeek["out_cost"]
         self.cached_metrics["slotW_cache_cost"] = wWeek["cache_cost"]
         self.cached_metrics["slotW_total_cost"] = wWeek["total_cost"]
+        self.cached_metrics["slotW_gemini_cost"] = wWeek["gemini_cost"]
+        self.cached_metrics["slotW_gemini_tokens"] = wWeek["gemini_tokens"]
+        self.cached_metrics["slotW_tp_cost"] = wWeek["tp_cost"]
+        self.cached_metrics["slotW_tp_tokens"] = wWeek["tp_tokens"]
 
         # 3. Active Session Context
         all_logs = []
@@ -1081,8 +1251,8 @@ def main():
         title="Antigravity Live Monitor",
         html=HTML_CONTENT,
         js_api=api,
-        width=480,
-        height=660,
+        width=500,
+        height=820,
         frameless=True,
         on_top=config.get("pinned", True),
         resizable=True,
