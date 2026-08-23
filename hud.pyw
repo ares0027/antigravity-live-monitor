@@ -942,29 +942,54 @@ class AutoPrimerWorker(threading.Thread):
         self.engine = engine
         self.config = config
         self.running = True
-        self.last_prime_attempt = 0
+        self.last_gemini_prime = 0
+        self.last_tp_prime = 0
 
     def run(self):
         while self.running:
             try:
                 if self.config.get("auto_prime", True):
-                    cur_5h = self.engine.cached_metrics.get("gemini_5h_pct", 100)
                     now_ts = time.time()
-                    # If 5-hour quota is 100% (idle, no timer active) and we haven't primed in last 3 mins
-                    if cur_5h >= 100 and (now_ts - self.last_prime_attempt) > 180:
-                        self.last_prime_attempt = now_ts
-                        self.trigger_prime()
+                    # 1. Gemini Models Pool
+                    cur_gemini_5h = self.engine.cached_metrics.get("gemini_5h_pct", 100)
+                    if cur_gemini_5h >= 100 and (now_ts - self.last_gemini_prime) > 180:
+                        self.last_gemini_prime = now_ts
+                        self.trigger_gemini_prime()
+
+                    # 2. Third-Party (Claude & GPT) Pool
+                    cur_tp_5h = self.engine.cached_metrics.get("tp_5h_pct", 100)
+                    if cur_tp_5h >= 100 and (now_ts - self.last_tp_prime) > 180:
+                        self.last_tp_prime = now_ts
+                        self.trigger_tp_prime()
             except Exception:
                 pass
             time.sleep(30.0)
 
-    def trigger_prime(self):
+    def trigger_gemini_prime(self):
         try:
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
             subprocess.Popen(
                 ["agy", "-p", "1"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                startupinfo=si,
+                creationflags=CREATE_NO_WINDOW
+            )
+            time.sleep(6.0)
+            self.engine.query_official_usage()
+        except Exception:
+            pass
+
+    def trigger_tp_prime(self):
+        try:
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = subprocess.SW_HIDE
+            subprocess.Popen(
+                ["agy", "-p", "1", "--model", "Claude Sonnet 4.6 (Thinking)"],
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,

@@ -40,6 +40,24 @@ GRAY = "\033[38;2;100;116;139m"
 def clear_screen():
     print("\033[2J\033[H", end="")
 
+def ensure_hud_running():
+    try:
+        hud_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hud.pyw")
+        if not os.path.exists(hud_script):
+            hud_script = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud.pyw")
+        python_dir = os.path.dirname(sys.executable)
+        pythonw = os.path.join(python_dir, "pythonw.exe")
+        if not os.path.exists(pythonw):
+            pythonw = r"C:\Users\baran\AppData\Local\Programs\Python\Python311\pythonw.exe"
+        if os.path.exists(hud_script) and os.path.exists(pythonw):
+            CREATE_NO_WINDOW = 0x08000000
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = subprocess.SW_HIDE
+            subprocess.Popen([pythonw, hud_script], startupinfo=si, creationflags=CREATE_NO_WINDOW)
+    except Exception:
+        pass
+
 def get_git_info(path):
     if not os.path.exists(os.path.join(path, ".git")):
         return None
@@ -313,6 +331,7 @@ def show_session_browser(project):
             break
 
 def main():
+    ensure_hud_running()
     selected_idx = 0
     projects = load_all_workspaces()
     page_offset = 0
