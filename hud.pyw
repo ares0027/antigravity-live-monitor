@@ -44,13 +44,7 @@ SWP_NOZORDER = 0x0004
 SWP_NOACTIVATE = 0x0010
 SWP_SHOWWINDOW = 0x0040
 
-def check_single_instance():
-    mutex_name = "Local\\AntigravityLiveMonitor_SingleInstance_Mutex"
-    mutex = kernel32.CreateMutexW(None, True, mutex_name)
-    last_error = kernel32.GetLastError()
-    if last_error == 183:  # ERROR_ALREADY_EXISTS
-        sys.exit(0)
-    return mutex
+HUD_LOCK_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud.lock")
 
 def load_hud_config():
     default_config = {"pinned": True, "auto_prime": True, "global_yolo": True, "active_tab": "5h"}
@@ -1284,7 +1278,6 @@ class Api:
             threading.Thread(target=self.window.destroy, daemon=True).start()
 
 def main():
-    _mutex = check_single_instance()
     config = load_hud_config()
 
     engine = MetricsEngine()
