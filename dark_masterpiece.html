@@ -1,454 +1,551 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="h-full select-none">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HOROLOGIX — Astronomical Tourbillon &amp; Mechanical Calibres</title>
+  <title>CYBER-DECK M-808 — Modular Hardware Synthesizer &amp; Step Sequencer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Cabinet+Grotesk:wght@700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
-    .font-cabinet { font-family: 'Cabinet Grotesk', sans-serif; }
-    .font-serif-fraunces { font-family: 'Fraunces', Georgia, serif; }
-    .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
     .font-mono-jb { font-family: 'JetBrains Mono', monospace; }
+    .font-cabinet { font-family: 'Cabinet Grotesk', sans-serif; }
+    .font-space { font-family: 'Space Grotesk', sans-serif; }
 
-    /* Custom 3D Card Hover Physics */
-    .card-luxury {
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Hardware Chassis Textures */
+    .rack-chassis {
+      background: radial-gradient(circle at 50% 0%, #1e222b 0%, #0d0f14 100%);
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.08), 0 25px 50px -12px rgba(0,0,0,0.9);
     }
-    .card-luxury:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.1);
-      border-color: rgba(212, 175, 55, 0.35);
+    .module-card {
+      background: linear-gradient(180deg, #181b22 0%, #12141a 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 20px rgba(0,0,0,0.5);
+    }
+    .crt-screen {
+      background: #020b06;
+      box-shadow: inset 0 0 20px rgba(16,185,129,0.25), inset 0 0 5px rgba(16,185,129,0.5);
     }
 
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #07080b; }
-    ::-webkit-scrollbar-thumb { background: #1c1f2b; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #2f3447; }
+    /* Key Animation */
+    .seq-step.active-step {
+      border-color: #10b981;
+      background: #10b981;
+      box-shadow: 0 0 15px #10b981;
+    }
+    .seq-step.triggered {
+      transform: scale(1.1);
+      box-shadow: 0 0 25px #34d399;
+    }
+
+    /* Rotary Knob Dial */
+    .knob-control {
+      touch-action: none;
+      cursor: ns-resize;
+    }
   </style>
 </head>
-<body class="bg-[#07080b] text-[#edeef2] font-jakarta antialiased selection:bg-[#d4af37] selection:text-black min-h-screen flex flex-col overflow-x-hidden">
+<body class="bg-[#060709] text-[#e0e4ed] font-mono-jb min-h-screen flex flex-col p-4 sm:p-8 antialiased">
 
-  <!-- ================= MASTER HEADER ================= -->
-  <header class="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.07] bg-[#07080b]/85 backdrop-blur-2xl">
-    <div class="max-w-7xl mx-auto px-6 sm:px-10 h-20 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-3 group">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#161822] to-[#252a3a] border border-white/10 flex items-center justify-center text-[#d4af37] group-hover:border-[#d4af37]/50 transition-all duration-300 shadow-xl">
-          <i data-lucide="watch" class="w-5 h-5 group-hover:rotate-45 transition-transform duration-500"></i>
-        </div>
-        <div class="flex flex-col">
-          <span class="font-cabinet text-lg font-black tracking-widest text-white">HOROLOGIX</span>
-          <span class="text-[9px] font-mono-jb text-[#8e95a5] uppercase tracking-widest -mt-1">Manufacture Genevoise</span>
-        </div>
-      </a>
-
-      <nav class="hidden md:flex items-center gap-8 text-xs font-semibold text-[#8e95a5]">
-        <a href="#calibres" class="hover:text-white transition-colors">Calibres</a>
-        <a href="#configurator" class="hover:text-white transition-colors">Atelier Studio</a>
-        <a href="#tourbillon" class="hover:text-white transition-colors">Escapement Physics</a>
-        <a href="#heritage" class="hover:text-white transition-colors">Heritage</a>
-      </nav>
-
+  <!-- ================= 19-INCH RACK TOP BAR ================= -->
+  <div class="max-w-6xl w-full mx-auto rack-chassis border-2 border-[#2b303d] rounded-3xl p-6 sm:p-8 space-y-6">
+    
+    <!-- Rack Unit Header Plate -->
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-6 border-b border-[#2b303d] text-xs">
       <div class="flex items-center gap-4">
-        <span class="hidden sm:inline-block text-[11px] font-mono-jb text-[#8e95a5] border-r border-white/10 pr-4">
-          GENÈVE • VALLÉE DE JOUX
-        </span>
-        <button class="px-5 py-2.5 rounded-xl bg-[#d4af37] text-[#07080b] text-xs font-bold font-cabinet hover:bg-[#e4c45e] transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#d4af37]/20 flex items-center gap-2">
-          <span>Private Viewing</span>
-          <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+        <!-- Rack Screws -->
+        <div class="w-4 h-4 rounded-full bg-[#1e222d] border border-white/20 flex items-center justify-center shadow-inner">
+          <div class="w-2.5 h-0.5 bg-[#4a5266]"></div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-white font-cabinet font-black text-xl tracking-wider">CYBER-DECK M-808</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">WEBAUDIO ANALOG SYNTH</span>
+          </div>
+          <span class="text-[10px] text-[#6b7280]">19-INCH RACKMOUNT DUAL-OSCILLATOR &amp; 8-STEP DRUM COMPUTER</span>
+        </div>
+      </div>
+
+      <!-- Master Transport Controls -->
+      <div class="flex items-center gap-3">
+        <button id="powerBtn" onclick="togglePower()" class="px-4 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-500/40 text-xs font-bold transition-all flex items-center gap-2 shadow-lg">
+          <i data-lucide="power" class="w-4 h-4 text-rose-400"></i>
+          <span id="powerStatus">POWER ON</span>
+        </button>
+
+        <button id="playBtn" onclick="togglePlay()" class="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-all shadow-lg shadow-emerald-500/25 flex items-center gap-2">
+          <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+          <span id="playLabel">RUN SEQUENCER</span>
         </button>
       </div>
     </div>
-  </header>
 
-  <!-- ================= HERO SECTION WITH 60FPS ESCAPEMENT CANVAS ================= -->
-  <section class="relative min-h-screen pt-28 pb-20 flex flex-col justify-center items-center overflow-hidden">
-    <!-- Interactive Canvas Background -->
-    <canvas id="tourbillonCanvas" class="absolute inset-0 w-full h-full pointer-events-auto opacity-70"></canvas>
-    
-    <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-gradient-to-tr from-[#d4af37]/10 to-[#3b82f6]/10 rounded-full blur-[140px] pointer-events-none"></div>
-
-    <div class="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 pointer-events-none">
+    <!-- ================= MODULE RACK GRID ================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl text-xs font-mono-jb text-[#d4af37] shadow-2xl pointer-events-auto">
-        <i data-lucide="compass" class="w-4 h-4 text-[#d4af37]"></i>
-        <span>TRIPLE-AXIS CELESTIAL TOURBILLON • CALIBRE HX-09</span>
+      <!-- MODULE 1: DUAL OSCILLATOR & FILTER (4 cols) -->
+      <div class="lg:col-span-4 module-card rounded-2xl p-5 space-y-5">
+        <div class="flex justify-between items-center border-b border-white/10 pb-2.5">
+          <span class="text-xs font-bold text-amber-400 tracking-wider">MODULE A // OSCILLATORS</span>
+          <span class="text-[10px] text-[#6b7280]">VCO 1 &amp; 2</span>
+        </div>
+
+        <!-- Waveform Selector -->
+        <div class="space-y-2">
+          <label class="text-[10px] text-[#9ca3af] uppercase font-bold">VCO 1 Waveform</label>
+          <div class="grid grid-cols-4 gap-1.5 text-xs text-center font-bold">
+            <button onclick="setWaveform('sawtooth')" class="wave-btn active p-2 rounded-lg bg-amber-500/20 border border-amber-500 text-amber-300">SAW</button>
+            <button onclick="setWaveform('square')" class="wave-btn p-2 rounded-lg bg-white/5 border border-white/10 text-neutral-400 hover:text-white">SQR</button>
+            <button onclick="setWaveform('sine')" class="wave-btn p-2 rounded-lg bg-white/5 border border-white/10 text-neutral-400 hover:text-white">SIN</button>
+            <button onclick="setWaveform('triangle')" class="wave-btn p-2 rounded-lg bg-white/5 border border-white/10 text-neutral-400 hover:text-white">TRI</button>
+          </div>
+        </div>
+
+        <!-- Cutoff & Resonance Knobs -->
+        <div class="grid grid-cols-2 gap-4 text-center pt-2">
+          <div class="space-y-2">
+            <label class="text-[10px] text-[#9ca3af] uppercase font-bold">VCF Cutoff</label>
+            <input type="range" id="cutoffSlider" min="100" max="6000" value="1800" oninput="updateCutoff(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-amber-400 cursor-pointer">
+            <div id="cutoffReadout" class="text-xs font-bold text-amber-400">1800 Hz</div>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] text-[#9ca3af] uppercase font-bold">Resonance (Q)</label>
+            <input type="range" id="resSlider" min="0" max="20" step="0.5" value="6" oninput="updateResonance(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-amber-400 cursor-pointer">
+            <div id="resReadout" class="text-xs font-bold text-amber-400">6.0 Q</div>
+          </div>
+        </div>
+
+        <!-- Envelope Attack & Decay -->
+        <div class="grid grid-cols-2 gap-4 text-center pt-2 border-t border-white/5">
+          <div class="space-y-2">
+            <label class="text-[10px] text-[#9ca3af] uppercase font-bold">Attack Time</label>
+            <input type="range" id="attackSlider" min="0.01" max="1" step="0.01" value="0.05" oninput="updateAttack(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-emerald-400 cursor-pointer">
+            <div id="attackReadout" class="text-xs font-bold text-emerald-400">0.05s</div>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] text-[#9ca3af] uppercase font-bold">Decay / Release</label>
+            <input type="range" id="decaySlider" min="0.05" max="2" step="0.05" value="0.4" oninput="updateDecay(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-emerald-400 cursor-pointer">
+            <div id="decayReadout" class="text-xs font-bold text-emerald-400">0.40s</div>
+          </div>
+        </div>
       </div>
 
-      <h1 class="text-5xl sm:text-7xl lg:text-8xl font-serif-fraunces italic font-normal tracking-tight text-white leading-[1.05]">
-        Gravity defied through <br>
-        <span class="font-cabinet not-italic font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#f3e7d3] to-[#d4af37]">
-          Pure Mechanics.
-        </span>
-      </h1>
+      <!-- MODULE 2: CRT OSCILLOSCOPE & AUDIO VISUALIZER (5 cols) -->
+      <div class="lg:col-span-5 module-card rounded-2xl p-5 space-y-4">
+        <div class="flex justify-between items-center border-b border-white/10 pb-2.5">
+          <span class="text-xs font-bold text-emerald-400 tracking-wider">MODULE B // CRT OSCILLOSCOPE</span>
+          <span class="text-[10px] text-emerald-500 font-mono-jb animate-pulse">● 60 FPS REALTIME</span>
+        </div>
 
-      <p class="max-w-2xl mx-auto text-base sm:text-lg text-[#9da4b4] leading-relaxed font-normal pointer-events-auto">
-        Hand-assembled in the Vallée de Joux. 486 hand-beveled components operating in 3-dimensional gyroscopic equilibrium.
-      </p>
+        <!-- Phosphor CRT Display -->
+        <div class="crt-screen rounded-xl p-3 border border-emerald-500/40 relative overflow-hidden h-56 flex items-center justify-center">
+          <canvas id="scopeCanvas" class="w-full h-full"></canvas>
+          <div class="absolute top-2 left-3 text-[10px] text-emerald-400 font-mono-jb pointer-events-none">
+            CH-1: AUDIO_SIGNAL • TIME/DIV: 2ms
+          </div>
+        </div>
 
-      <div class="pt-4 flex flex-wrap justify-center items-center gap-4 pointer-events-auto">
-        <a href="#configurator" class="px-8 py-4 rounded-2xl bg-[#d4af37] text-[#07080b] text-sm font-bold font-cabinet hover:bg-[#e4c45e] transition-all transform hover:scale-105 shadow-2xl shadow-[#d4af37]/25 flex items-center gap-3">
-          <i data-lucide="sliders" class="w-4 h-4"></i>
-          <span>Configure Your Timepiece</span>
-        </a>
-        <a href="#tourbillon" class="px-8 py-4 rounded-2xl bg-white/[0.05] border border-white/10 hover:border-white/25 text-white text-sm font-bold transition-all flex items-center gap-2.5 backdrop-blur-xl">
-          <i data-lucide="play" class="w-4 h-4 text-[#d4af37]"></i>
-          <span>Technical Monograph</span>
-        </a>
+        <div class="flex justify-between items-center text-[10px] text-[#6b7280] font-mono-jb pt-1">
+          <span>SAMPLE RATE: 48.0 kHz</span>
+          <span class="text-emerald-400">DSP LATENCY: 1.8ms</span>
+        </div>
       </div>
 
-      <div class="pt-6 text-[11px] font-mono-jb text-[#616877] flex justify-center items-center gap-2 pointer-events-none">
-        <i data-lucide="mouse-pointer" class="w-3.5 h-3.5 text-[#d4af37] animate-bounce"></i>
-        <span>Move cursor to adjust mechanical inertia and kinetic gear alignment</span>
+      <!-- MODULE 3: MASTER TEMPO & FX (3 cols) -->
+      <div class="lg:col-span-3 module-card rounded-2xl p-5 space-y-5">
+        <div class="flex justify-between items-center border-b border-white/10 pb-2.5">
+          <span class="text-xs font-bold text-cyan-400 tracking-wider">MODULE C // MASTER</span>
+          <span class="text-[10px] text-[#6b7280]">CLOCK</span>
+        </div>
+
+        <!-- BPM Slider -->
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs">
+            <span class="text-[#9ca3af]">BPM TEMPO</span>
+            <span id="bpmReadout" class="text-cyan-400 font-bold font-cabinet text-base">124 BPM</span>
+          </div>
+          <input type="range" id="bpmSlider" min="70" max="175" value="124" oninput="updateBPM(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-cyan-400 cursor-pointer">
+        </div>
+
+        <!-- Distortion / Drive -->
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs">
+            <span class="text-[#9ca3af]">TUBE DRIVE FX</span>
+            <span id="driveReadout" class="text-cyan-400 font-bold">15%</span>
+          </div>
+          <input type="range" id="driveSlider" min="0" max="100" value="15" oninput="updateDrive(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-cyan-400 cursor-pointer">
+        </div>
+
+        <!-- Master Volume -->
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs">
+            <span class="text-[#9ca3af]">MASTER GAIN</span>
+            <span id="volReadout" class="text-white font-bold">75%</span>
+          </div>
+          <input type="range" id="volSlider" min="0" max="100" value="75" oninput="updateVolume(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-white cursor-pointer">
+        </div>
       </div>
+
     </div>
 
-    <!-- Technical Metrics Strip -->
-    <div class="relative z-10 mt-16 max-w-5xl w-full mx-auto px-6">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-3xl bg-[#0e1017]/90 border border-white/[0.08] backdrop-blur-2xl shadow-2xl text-left">
-        <div class="space-y-1">
-          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Oscillation Frequency</div>
-          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">36,000 <span class="text-xs font-mono-jb text-[#d4af37]">VPH</span></div>
-          <div class="text-[11px] text-[#10b981] flex items-center gap-1 font-semibold font-mono-jb">
-            <i data-lucide="check" class="w-3 h-3"></i> 5 Hz Hi-Beat Accuracy
-          </div>
+    <!-- ================= 8-STEP PATTERN SEQUENCER GRID ================= -->
+    <div class="module-card rounded-2xl p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="grid" class="w-4 h-4 text-emerald-400"></i>
+          <span class="text-xs font-bold text-white tracking-wider">8-STEP HARDWARE PATTERN MATRIX</span>
         </div>
-
-        <div class="space-y-1 border-l border-white/[0.06] pl-4">
-          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Power Reserve</div>
-          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">120 <span class="text-xs font-mono-jb text-[#d4af37]">HRS</span></div>
-          <div class="text-[11px] text-[#8e95a5]">Twin coaxial barrels</div>
-        </div>
-
-        <div class="space-y-1 border-l border-white/[0.06] pl-4">
-          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Cage Weight</div>
-          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">0.24 <span class="text-xs font-mono-jb text-[#d4af37]">GRAMS</span></div>
-          <div class="text-[11px] text-[#10b981] flex items-center gap-1 font-semibold font-mono-jb">
-            <i data-lucide="shield" class="w-3 h-3"></i> Grade-5 Titanium
-          </div>
-        </div>
-
-        <div class="space-y-1 border-l border-white/[0.06] pl-4">
-          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Chronometric Tolerance</div>
-          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">-1 / +1 <span class="text-xs font-mono-jb text-[#d4af37]">SEC/DAY</span></div>
-          <div class="text-[11px] text-[#8e95a5]">Poinçon de Genève</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= ATELIER CONFIGURATOR ================= -->
-  <section id="configurator" class="py-24 border-t border-white/[0.07] bg-[#0a0c12] relative">
-    <div class="max-w-7xl mx-auto px-6 sm:px-10 space-y-16">
-      
-      <div class="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-white/[0.08] pb-8">
-        <div class="space-y-3 max-w-xl">
-          <span class="text-xs font-mono-jb text-[#d4af37] uppercase tracking-widest font-bold">BESPOKE HOROLOGY ATELIER</span>
-          <h2 class="text-4xl sm:text-5xl font-cabinet font-black text-white tracking-tight">
-            Commission Your Calibre.
-          </h2>
-          <p class="text-sm text-[#8e95a5] leading-relaxed">
-            Select metallurgical case alloys, dial skeletonization depths, and balance wheel inertia.
-          </p>
-        </div>
-        <div class="text-xs font-mono-jb text-[#8e95a5] bg-white/[0.02] border border-white/10 px-4 py-2 rounded-2xl">
-          SERIALIZED PIECE UNIQUE PRODUCTION
-        </div>
+        <span class="text-[10px] text-[#6b7280]">Click steps to toggle active beats</span>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-        <!-- Showcase Card -->
-        <div class="lg:col-span-7 relative group">
-          <div class="relative bg-gradient-to-b from-[#131620] to-[#0d0f15] border border-white/10 rounded-[36px] p-8 sm:p-12 overflow-hidden shadow-2xl">
-            <div id="ambientAura" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#d4af37]/20 blur-3xl rounded-full transition-all duration-700 pointer-events-none"></div>
-
-            <div class="relative z-10 flex justify-center items-center py-6">
-              <img id="timepieceImage" src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80" alt="Horologix Timepiece" class="w-full max-w-md h-80 object-cover rounded-3xl shadow-2xl border border-white/10 transform group-hover:scale-105 transition-transform duration-700">
-            </div>
-
-            <div class="relative z-10 mt-6 flex justify-between items-center bg-[#07080b]/90 backdrop-blur-xl border border-white/10 p-4 rounded-2xl">
-              <div>
-                <div id="caseTitle" class="text-sm font-bold text-white font-cabinet">GRADE-5 TITANIUM SKELETON</div>
-                <div id="caseSubtitle" class="text-[11px] font-mono-jb text-[#8e95a5]">Hand-Anglage Bridges • Sapphire Dial</div>
-              </div>
-              <div id="priceIndicator" class="text-xl font-bold font-mono-jb text-[#d4af37]">38,500 CHF</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Controls -->
-        <div class="lg:col-span-5 space-y-8 bg-[#0e1118] border border-white/[0.08] p-8 rounded-[36px] shadow-2xl">
-          
-          <div class="space-y-4">
-            <label class="text-xs font-mono-jb text-[#8e95a5] uppercase font-bold flex justify-between">
-              <span>1. Case Metallurgy</span>
-              <span id="alloyBadge" class="text-[#d4af37]">TITANIUM</span>
-            </label>
-            <div class="grid grid-cols-2 gap-3">
-              <button onclick="setCase('titanium')" class="case-btn active p-4 rounded-2xl border border-[#d4af37] bg-[#d4af37]/10 text-left transition-all">
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full bg-[#a1a1aa]"></span>
-                  <span class="text-xs font-bold text-white font-cabinet">Grade-5 Titanium</span>
-                </div>
-                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+0 CHF</div>
-              </button>
-
-              <button onclick="setCase('rose_gold')" class="case-btn p-4 rounded-2xl border border-white/10 bg-white/[0.02] text-left hover:border-white/20 transition-all">
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full bg-[#e0a899]"></span>
-                  <span class="text-xs font-bold text-white font-cabinet">18K 5N Rose Gold</span>
-                </div>
-                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+8,200 CHF</div>
-              </button>
-
-              <button onclick="setCase('platinum')" class="case-btn p-4 rounded-2xl border border-white/10 bg-white/[0.02] text-left hover:border-white/20 transition-all">
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full bg-[#e2e8f0]"></span>
-                  <span class="text-xs font-bold text-white font-cabinet">950 Platinum</span>
-                </div>
-                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+14,500 CHF</div>
-              </button>
-
-              <button onclick="setCase('carbon')" class="case-btn p-4 rounded-2xl border border-white/10 bg-white/[0.02] text-left hover:border-white/20 transition-all">
-                <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 rounded-full bg-[#18181b]"></span>
-                  <span class="text-xs font-bold text-white font-cabinet">Forged Carbon</span>
-                </div>
-                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+4,100 CHF</div>
-              </button>
-            </div>
-          </div>
-
-          <!-- Escapement Speed Slider -->
-          <div class="space-y-3">
-            <div class="flex justify-between text-xs font-mono-jb">
-              <span class="text-[#8e95a5] font-bold">2. Escapement Frequency</span>
-              <span id="freqValue" class="text-[#d4af37] font-bold">36,000 vph (5 Hz)</span>
-            </div>
-            <input type="range" id="freqSlider" min="18000" max="36000" step="3600" value="36000" oninput="updateFrequency(this.value)" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#d4af37]">
-            <div class="flex justify-between text-[10px] text-[#616877] font-mono-jb">
-              <span>18,000 (Vintage)</span>
-              <span>28,800 (Standard)</span>
-              <span>36,000 (Hi-Beat)</span>
-            </div>
-          </div>
-
-          <button class="w-full py-4 rounded-2xl bg-[#d4af37] hover:bg-[#e4c45e] text-[#07080b] font-black font-cabinet text-sm transition-all transform hover:-translate-y-0.5 shadow-xl shadow-[#d4af37]/25 flex items-center justify-center gap-2">
-            <i data-lucide="file-badge" class="w-4 h-4"></i>
-            <span>Generate Horological Certificate &amp; Reserve</span>
-          </button>
-
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= ASYMMETRIC BENTO SUITE ================= -->
-  <section id="calibres" class="py-24 bg-[#07080b] relative">
-    <div class="max-w-7xl mx-auto px-6 sm:px-10 space-y-16">
-      
-      <div class="text-center max-w-2xl mx-auto space-y-4">
-        <span class="text-xs font-mono-jb text-[#d4af37] uppercase tracking-widest font-bold">CHRONOMETRIC EXCELLENCE</span>
-        <h2 class="text-4xl sm:text-6xl font-serif-fraunces italic font-normal text-white">
-          Crafted to outlast centuries.
-        </h2>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <!-- Sequencer Tracks -->
+      <div class="space-y-3 pt-2">
         
-        <!-- Bento 1: Escapement Geometry (8 cols) -->
-        <div class="md:col-span-8 card-luxury bg-[#0d0f17] border border-white/[0.08] rounded-[36px] p-8 sm:p-12 flex flex-col justify-between space-y-8 relative overflow-hidden group">
-          <div class="space-y-4 max-w-md relative z-10">
-            <div class="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#d4af37]">
-              <i data-lucide="layers" class="w-6 h-6"></i>
-            </div>
-            <h3 class="text-3xl font-cabinet font-black text-white">Silicon Hairspring with Breguet Overcoil.</h3>
-            <p class="text-sm text-[#8e95a5] leading-relaxed">
-              Completely immune to magnetic fields up to 15,000 Gauss. Thermo-compensated geometry ensures identical oscillation across arctic cold and tropical heat.
-            </p>
-          </div>
-
-          <div class="relative z-10 overflow-hidden rounded-2xl border border-white/10">
-            <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80" alt="Watchmaker macro" class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-700">
+        <!-- Track 1: Kick -->
+        <div class="flex items-center gap-3">
+          <span class="w-16 text-[11px] font-bold text-rose-400">BD KICK</span>
+          <div class="grid grid-cols-8 gap-2 flex-1" id="track-kick">
+            <!-- 8 Step Buttons -->
+            <button onclick="toggleStep(0, 0)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">1</button>
+            <button onclick="toggleStep(0, 1)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">2</button>
+            <button onclick="toggleStep(0, 2)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">3</button>
+            <button onclick="toggleStep(0, 3)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">4</button>
+            <button onclick="toggleStep(0, 4)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">5</button>
+            <button onclick="toggleStep(0, 5)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">6</button>
+            <button onclick="toggleStep(0, 6)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">7</button>
+            <button onclick="toggleStep(0, 7)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">8</button>
           </div>
         </div>
 
-        <!-- Bento 2: Hand Anglage (4 cols) -->
-        <div class="md:col-span-4 card-luxury bg-[#0d0f17] border border-white/[0.08] rounded-[36px] p-8 flex flex-col justify-between space-y-6">
-          <div class="space-y-3">
-            <div class="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#d4af37]">
-              <i data-lucide="sparkles" class="w-6 h-6"></i>
-            </div>
-            <h3 class="text-2xl font-cabinet font-bold text-white">Mirror Black Polish Finishing.</h3>
-            <p class="text-xs text-[#8e95a5] leading-relaxed">
-              Every interior bridge angle is hand-chamfered using gentian wood pegs and diamond paste for 40 hours per movement.
-            </p>
+        <!-- Track 2: Snare -->
+        <div class="flex items-center gap-3">
+          <span class="w-16 text-[11px] font-bold text-amber-400">SD SNARE</span>
+          <div class="grid grid-cols-8 gap-2 flex-1" id="track-snare">
+            <button onclick="toggleStep(1, 0)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">1</button>
+            <button onclick="toggleStep(1, 1)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">2</button>
+            <button onclick="toggleStep(1, 2)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">3</button>
+            <button onclick="toggleStep(1, 3)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">4</button>
+            <button onclick="toggleStep(1, 4)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">5</button>
+            <button onclick="toggleStep(1, 5)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">6</button>
+            <button onclick="toggleStep(1, 6)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">7</button>
+            <button onclick="toggleStep(1, 7)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">8</button>
           </div>
-          
-          <div class="p-4 bg-[#07080b] rounded-2xl border border-white/[0.06] space-y-2 text-xs font-mono-jb">
-            <div class="flex justify-between text-neutral-400">
-              <span>FINISH STANDARD</span>
-              <span class="text-[#d4af37]">Poinçon de Genève</span>
-            </div>
-            <div class="flex justify-between text-neutral-400">
-              <span>INTERNAL ANGLES</span>
-              <span class="text-white">34 Sharp Inward Angles</span>
-            </div>
+        </div>
+
+        <!-- Track 3: Synth Lead -->
+        <div class="flex items-center gap-3">
+          <span class="w-16 text-[11px] font-bold text-cyan-400">SYN LEAD</span>
+          <div class="grid grid-cols-8 gap-2 flex-1" id="track-synth">
+            <button onclick="toggleStep(2, 0)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">C3</button>
+            <button onclick="toggleStep(2, 1)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">D3</button>
+            <button onclick="toggleStep(2, 2)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">Eb3</button>
+            <button onclick="toggleStep(2, 3)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">F3</button>
+            <button onclick="toggleStep(2, 4)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">G3</button>
+            <button onclick="toggleStep(2, 5)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">Bb3</button>
+            <button onclick="toggleStep(2, 6)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">C4</button>
+            <button onclick="toggleStep(2, 7)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">G3</button>
           </div>
         </div>
 
       </div>
     </div>
-  </section>
 
-  <!-- ================= FOOTER ================= -->
-  <footer class="border-t border-white/[0.07] bg-[#050609] py-12 text-xs text-[#616877]">
-    <div class="max-w-7xl mx-auto px-6 sm:px-10 flex flex-col sm:flex-row justify-between items-center gap-6 font-mono-jb">
-      <div class="flex items-center gap-2 text-white font-bold">
-        <i data-lucide="watch" class="w-4 h-4 text-[#d4af37]"></i>
-        <span>HOROLOGIX MANUFACTURE S.A.</span>
+    <!-- Interactive Musical Keyboard Bar -->
+    <div class="module-card rounded-2xl p-5 space-y-3">
+      <div class="flex justify-between items-center text-xs">
+        <span class="text-[#9ca3af]">MANUAL KEYBOARD TRIGGER</span>
+        <span class="text-amber-400">CLICK OR PRESS KEYS TO TEST SOUND</span>
       </div>
-      <div>© 2026 HOROLOGIX Genève. All rights reserved. Zero AI Slop Standard.</div>
-      <div class="flex gap-6">
-        <a href="#" class="hover:text-white transition-colors">Poinçon Registry</a>
-        <a href="#" class="hover:text-white transition-colors">Atelier Geneve</a>
+      <div class="flex gap-2 justify-center">
+        <button onmousedown="playManualNote(261.63)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">C</button>
+        <button onmousedown="playManualNote(293.66)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">D</button>
+        <button onmousedown="playManualNote(329.63)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">E</button>
+        <button onmousedown="playManualNote(349.23)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">F</button>
+        <button onmousedown="playManualNote(392.00)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">G</button>
+        <button onmousedown="playManualNote(440.00)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">A</button>
+        <button onmousedown="playManualNote(493.88)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">B</button>
+        <button onmousedown="playManualNote(523.25)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">C5</button>
       </div>
     </div>
-  </footer>
 
-  <!-- ================= WORKING JS ENGINE ================= -->
+  </div>
+
+  <!-- ================= WEBAUDIO SYNTHESIZER JAVASCRIPT ================= -->
   <script>
     lucide.createIcons();
 
-    // 1. Interactive 60FPS Escapement Gear Canvas
-    const canvas = document.getElementById('tourbillonCanvas');
-    const ctx = canvas.getContext('2d');
-    let width, height;
-    let angle = 0;
-    let gearSpeed = 0.015;
-    let mouse = { x: null, y: null };
+    // 1. Audio Context & DSP Routing
+    let audioCtx = null;
+    let masterGain = null;
+    let filterNode = null;
+    let analyserNode = null;
 
-    function initCanvas() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', initCanvas);
-    window.addEventListener('mousemove', (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    });
+    let isPowered = true;
+    let isPlaying = false;
+    let bpm = 124;
+    let currentStep = 0;
+    let stepTimer = null;
 
-    function drawGear(cx, cy, radius, teeth, rotation, color) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(rotation);
-      ctx.beginPath();
-      for (let i = 0; i < teeth; i++) {
-        let a = (i / teeth) * Math.PI * 2;
-        let r1 = radius;
-        let r2 = radius + 12;
-        ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
-        ctx.lineTo(Math.cos(a + 0.05) * r2, Math.sin(a + 0.05) * r2);
-        ctx.lineTo(Math.cos(a + 0.1) * r2, Math.sin(a + 0.1) * r2);
-        ctx.lineTo(Math.cos(a + 0.15) * r1, Math.sin(a + 0.15) * r1);
+    let waveform = 'sawtooth';
+    let cutoff = 1800;
+    let resonance = 6.0;
+    let attackTime = 0.05;
+    let decayTime = 0.40;
+
+    // Pattern Matrix [Track][Step]
+    const pattern = [
+      [true, false, false, false, true, false, false, false], // Kick
+      [false, false, true, false, false, false, true, false], // Snare
+      [true, false, true, false, true, false, true, false]    // Synth
+    ];
+    const synthPitches = [261.63, 293.66, 311.13, 349.23, 392.00, 466.16, 523.25, 392.00];
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(0.75, audioCtx.currentTime);
+
+        filterNode = audioCtx.createBiquadFilter();
+        filterNode.type = 'lowpass';
+        filterNode.frequency.setValueAtTime(cutoff, audioCtx.currentTime);
+        filterNode.Q.setValueAtTime(resonance, audioCtx.currentTime);
+
+        analyserNode = audioCtx.createAnalyser();
+        analyserNode.fftSize = 512;
+
+        filterNode.connect(analyserNode);
+        analyserNode.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
       }
-      ctx.closePath();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-      ctx.restore();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
     }
 
-    function animateEscapement() {
-      ctx.clearRect(0, 0, width, height);
-
-      let cx = width / 2;
-      let cy = height / 2;
-
-      if (mouse.x !== null && mouse.y !== null) {
-        cx += (mouse.x - width / 2) * 0.05;
-        cy += (mouse.y - height / 2) * 0.05;
-      }
-
-      angle += gearSpeed;
-
-      // Central balance wheel
-      drawGear(cx, cy, 140, 24, angle, 'rgba(212, 175, 55, 0.35)');
-      // Coaxial planetary gear
-      drawGear(cx - 180, cy - 80, 90, 16, -angle * 1.5, 'rgba(255, 255, 255, 0.15)');
-      drawGear(cx + 180, cy + 80, 110, 20, -angle * 1.2, 'rgba(212, 175, 55, 0.25)');
-
-      requestAnimationFrame(animateEscapement);
+    // Sound Triggers
+    function playKick(time) {
+      ensureAudio();
+      let osc = audioCtx.createOscillator();
+      let g = audioCtx.createGain();
+      osc.frequency.setValueAtTime(140, time);
+      osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.35);
+      g.gain.setValueAtTime(1.0, time);
+      g.gain.exponentialRampToValueAtTime(0.01, time + 0.35);
+      osc.connect(g);
+      g.connect(filterNode);
+      osc.start(time);
+      osc.stop(time + 0.35);
     }
-    initCanvas();
-    animateEscapement();
 
-    // 2. Configurator Logic
-    const caseData = {
-      titanium: {
-        title: "GRADE-5 TITANIUM SKELETON",
-        subtitle: "Hand-Anglage Bridges • Sapphire Dial",
-        badge: "TITANIUM",
-        price: "38,500 CHF",
-        img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80",
-        aura: "rgba(212, 175, 55, 0.2)"
-      },
-      rose_gold: {
-        title: "18K 5N ROSE GOLD MONOGRAPH",
-        subtitle: "Warm Gold Calibre • Guilloché Sub-Dials",
-        badge: "ROSE GOLD",
-        price: "46,700 CHF",
-        img: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80",
-        aura: "rgba(224, 168, 153, 0.3)"
-      },
-      platinum: {
-        title: "950 PLATINUM CELESTIAL",
-        subtitle: "Ice Blue Enamel • Meteorite Dial Inlay",
-        badge: "950 PLATINUM",
-        price: "53,000 CHF",
-        img: "https://images.unsplash.com/photo-1547996160-71dfabbce5fa?auto=format&fit=crop&w=800&q=80",
-        aura: "rgba(226, 232, 240, 0.3)"
-      },
-      carbon: {
-        title: "FORGED NTPT CARBON HYBRID",
-        subtitle: "Ultralight Monocoque • DLC Coated Bridges",
-        badge: "FORGED CARBON",
-        price: "42,600 CHF",
-        img: "https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=800&q=80",
-        aura: "rgba(100, 116, 139, 0.2)"
-      }
-    };
+    function playSnare(time) {
+      ensureAudio();
+      // White noise buffer
+      let bufferSize = audioCtx.sampleRate * 0.15;
+      let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      let data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
 
-    function setCase(key) {
-      const d = caseData[key];
-      if (!d) return;
+      let noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      let g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.8, time);
+      g.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
+      noise.connect(g);
+      g.connect(filterNode);
+      noise.start(time);
+    }
 
-      document.querySelectorAll('.case-btn').forEach(b => {
-        b.classList.remove('active', 'border-[#d4af37]', 'bg-[#d4af37]/10');
-        b.classList.add('border-white/10', 'bg-white/[0.02]');
+    function playSynthNote(pitch, time) {
+      ensureAudio();
+      let osc = audioCtx.createOscillator();
+      let g = audioCtx.createGain();
+      osc.type = waveform;
+      osc.frequency.setValueAtTime(pitch, time);
+
+      g.gain.setValueAtTime(0.001, time);
+      g.gain.linearRampToValueAtTime(0.6, time + attackTime);
+      g.gain.exponentialRampToValueAtTime(0.001, time + attackTime + decayTime);
+
+      osc.connect(g);
+      g.connect(filterNode);
+      osc.start(time);
+      osc.stop(time + attackTime + decayTime + 0.05);
+    }
+
+    function playManualNote(pitch) {
+      ensureAudio();
+      playSynthNote(pitch, audioCtx.currentTime);
+    }
+
+    // Step Sequencer Engine
+    function runClock() {
+      if (!isPlaying) return;
+      ensureAudio();
+
+      let now = audioCtx.currentTime;
+
+      // Trigger Sounds
+      if (pattern[0][currentStep]) playKick(now);
+      if (pattern[1][currentStep]) playSnare(now);
+      if (pattern[2][currentStep]) playSynthNote(synthPitches[currentStep], now);
+
+      // Highlight step UI
+      document.querySelectorAll('.seq-step').forEach(btn => btn.classList.remove('triggered'));
+      [0, 1, 2].forEach(track => {
+        let parent = track === 0 ? 'track-kick' : track === 1 ? 'track-snare' : 'track-synth';
+        let btn = document.getElementById(parent).children[currentStep];
+        if (btn) btn.classList.add('triggered');
       });
-      event.currentTarget.classList.add('active', 'border-[#d4af37]', 'bg-[#d4af37]/10');
-      event.currentTarget.classList.remove('border-white/10', 'bg-white/[0.02]');
 
-      document.getElementById('caseTitle').innerText = d.title;
-      document.getElementById('caseSubtitle').innerText = d.subtitle;
-      document.getElementById('priceIndicator').innerText = d.price;
-      document.getElementById('alloyBadge').innerText = d.badge;
-      document.getElementById('timepieceImage').src = d.img;
-      document.getElementById('ambientAura').style.background = d.aura;
+      currentStep = (currentStep + 1) % 8;
+      let stepIntervalMs = (60 / bpm / 2) * 1000;
+      stepTimer = setTimeout(runClock, stepIntervalMs);
     }
 
-    function updateFrequency(v) {
-      let hz = (v / 7200).toFixed(1);
-      document.getElementById('freqValue').innerText = Number(v).toLocaleString() + " vph (" + hz + " Hz)";
-      gearSpeed = 0.005 + (v / 36000) * 0.02;
+    function togglePlay() {
+      ensureAudio();
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        document.getElementById('playLabel').innerText = 'STOP SEQUENCER';
+        document.getElementById('playBtn').classList.replace('bg-emerald-500', 'bg-amber-500');
+        runClock();
+      } else {
+        document.getElementById('playLabel').innerText = 'RUN SEQUENCER';
+        document.getElementById('playBtn').classList.replace('bg-amber-500', 'bg-emerald-500');
+        clearTimeout(stepTimer);
+        document.querySelectorAll('.seq-step').forEach(btn => btn.classList.remove('triggered'));
+      }
     }
+
+    function toggleStep(track, step) {
+      pattern[track][step] = !pattern[track][step];
+      let parent = track === 0 ? 'track-kick' : track === 1 ? 'track-snare' : 'track-synth';
+      let btn = document.getElementById(parent).children[step];
+      btn.classList.toggle('active-step', pattern[track][step]);
+      if (pattern[track][step]) {
+        btn.classList.replace('text-neutral-500', 'text-black');
+      } else {
+        btn.classList.replace('text-black', 'text-neutral-500');
+      }
+    }
+
+    function togglePower() {
+      isPowered = !isPowered;
+      document.getElementById('powerStatus').innerText = isPowered ? 'POWER ON' : 'OFFLINE';
+      if (!isPowered && isPlaying) togglePlay();
+    }
+
+    // UI Updates
+    function setWaveform(w) {
+      waveform = w;
+      document.querySelectorAll('.wave-btn').forEach(b => {
+        b.classList.remove('active', 'bg-amber-500/20', 'border-amber-500', 'text-amber-300');
+        b.classList.add('bg-white/5', 'border-white/10', 'text-neutral-400');
+      });
+      event.currentTarget.classList.add('active', 'bg-amber-500/20', 'border-amber-500', 'text-amber-300');
+      event.currentTarget.classList.remove('bg-white/5', 'border-white/10', 'text-neutral-400');
+    }
+
+    function updateCutoff(v) {
+      cutoff = Number(v);
+      document.getElementById('cutoffReadout').innerText = v + " Hz";
+      if (filterNode) filterNode.frequency.setValueAtTime(cutoff, audioCtx.currentTime);
+    }
+
+    function updateResonance(v) {
+      resonance = Number(v);
+      document.getElementById('resReadout').innerText = Number(v).toFixed(1) + " Q";
+      if (filterNode) filterNode.Q.setValueAtTime(resonance, audioCtx.currentTime);
+    }
+
+    function updateAttack(v) {
+      attackTime = Number(v);
+      document.getElementById('attackReadout').innerText = Number(v).toFixed(2) + "s";
+    }
+
+    function updateDecay(v) {
+      decayTime = Number(v);
+      document.getElementById('decayReadout').innerText = Number(v).toFixed(2) + "s";
+    }
+
+    function updateBPM(v) {
+      bpm = Number(v);
+      document.getElementById('bpmReadout').innerText = v + " BPM";
+    }
+
+    function updateDrive(v) {
+      document.getElementById('driveReadout').innerText = v + "%";
+    }
+
+    function updateVolume(v) {
+      document.getElementById('volReadout').innerText = v + "%";
+      if (masterGain) masterGain.gain.setValueAtTime(v / 100, audioCtx.currentTime);
+    }
+
+    // 2. 60FPS Phosphor Oscilloscope Canvas
+    const scopeCanvas = document.getElementById('scopeCanvas');
+    const scopeCtx = scopeCanvas.getContext('2d');
+    let scopeWidth, scopeHeight;
+
+    function initScope() {
+      scopeWidth = scopeCanvas.width = scopeCanvas.clientWidth;
+      scopeHeight = scopeCanvas.height = scopeCanvas.clientHeight;
+    }
+    window.addEventListener('resize', initScope);
+
+    function drawScope() {
+      scopeCtx.fillStyle = 'rgba(2, 11, 6, 0.25)';
+      scopeCtx.fillRect(0, 0, scopeWidth, scopeHeight);
+
+      // Grid Lines
+      scopeCtx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
+      scopeCtx.lineWidth = 1;
+      for (let x = 0; x < scopeWidth; x += 30) {
+        scopeCtx.beginPath(); scopeCtx.moveTo(x, 0); scopeCtx.lineTo(x, scopeHeight); scopeCtx.stroke();
+      }
+      for (let y = 0; y < scopeHeight; y += 30) {
+        scopeCtx.beginPath(); scopeCtx.moveTo(0, y); scopeCtx.lineTo(scopeWidth, y); scopeCtx.stroke();
+      }
+
+      if (analyserNode && isPowered) {
+        let bufferLength = analyserNode.frequencyBinCount;
+        let dataArray = new Uint8Array(bufferLength);
+        analyserNode.getByteTimeDomainData(dataArray);
+
+        scopeCtx.lineWidth = 2;
+        scopeCtx.strokeStyle = '#10b981';
+        scopeCtx.shadowBlur = 8;
+        scopeCtx.shadowColor = '#10b981';
+        scopeCtx.beginPath();
+
+        let sliceWidth = scopeWidth * 1.0 / bufferLength;
+        let x = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          let v = dataArray[i] / 128.0;
+          let y = v * scopeHeight / 2;
+          if (i === 0) scopeCtx.moveTo(x, y);
+          else scopeCtx.lineTo(x, y);
+          x += sliceWidth;
+        }
+        scopeCtx.lineTo(scopeWidth, scopeHeight / 2);
+        scopeCtx.stroke();
+        scopeCtx.shadowBlur = 0;
+      } else {
+        // Flatline
+        scopeCtx.lineWidth = 1.5;
+        scopeCtx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+        scopeCtx.beginPath();
+        scopeCtx.moveTo(0, scopeHeight / 2);
+        scopeCtx.lineTo(scopeWidth, scopeHeight / 2);
+        scopeCtx.stroke();
+      }
+
+      requestAnimationFrame(drawScope);
+    }
+    setTimeout(() => { initScope(); drawScope(); }, 100);
   </script>
 </body>
 </html>

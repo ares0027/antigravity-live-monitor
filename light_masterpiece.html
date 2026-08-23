@@ -1,442 +1,353 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="fr" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AURA BOTANICA — Nordic Architectural Solariums &amp; Biophilic Living</title>
+  <title>L’ATELIER D’ARCHIVE — Exposition d’Art &amp; Architecture Monumentale</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
-    .font-serif-playfair { font-family: 'Playfair Display', Georgia, serif; }
-    .font-outfit { font-family: 'Outfit', sans-serif; }
+    .font-serif-fraunces { font-family: 'Fraunces', Georgia, serif; }
+    .font-serif-news { font-family: 'Newsreader', Georgia, serif; }
     .font-dmsans { font-family: 'DM Sans', sans-serif; }
     .font-mono-jb { font-family: 'JetBrains Mono', monospace; }
 
-    /* Custom Smooth Hover Physics */
-    .card-botanica {
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .card-botanica:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 30px 60px -15px rgba(25, 53, 38, 0.12), 0 0 0 1px rgba(25, 53, 38, 0.15);
+    /* Fine Art Editorial Layout */
+    .paper-canvas {
+      background-color: #fbf9f4;
+      background-image: radial-gradient(#e5dfd3 0.75px, transparent 0.75px);
+      background-size: 24px 24px;
     }
 
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #faf8f5; }
-    ::-webkit-scrollbar-thumb { background: #dcd6c8; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #b8b09f; }
+    /* Magnifier Loupe */
+    .loupe-container {
+      position: relative;
+      cursor: crosshair;
+      overflow: hidden;
+    }
+    .loupe-lens {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      border: 3px solid #111110;
+      border-radius: 50%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3), inset 0 0 15px rgba(255,255,255,0.4);
+      pointer-events: none;
+      display: none;
+      background-repeat: no-repeat;
+    }
   </style>
 </head>
-<body class="bg-[#faf8f5] text-[#193526] font-dmsans antialiased selection:bg-[#c85a32] selection:text-white min-h-screen flex flex-col overflow-x-hidden">
+<body class="paper-canvas text-[#111110] font-dmsans antialiased selection:bg-[#e63946] selection:text-white min-h-screen flex flex-col">
 
-  <!-- ================= TOP HEADER ================= -->
-  <header class="fixed top-0 left-0 right-0 z-50 border-b border-[#e8e2d5] bg-[#faf8f5]/90 backdrop-blur-2xl">
-    <div class="max-w-7xl mx-auto px-6 sm:px-10 h-20 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-3 group">
-        <div class="w-10 h-10 rounded-2xl bg-[#193526] text-[#faf8f5] flex items-center justify-center font-bold shadow-lg shadow-[#193526]/15 group-hover:bg-[#c85a32] transition-colors duration-300">
-          <i data-lucide="sprout" class="w-5 h-5"></i>
-        </div>
-        <div class="flex flex-col">
-          <span class="font-outfit text-lg font-black tracking-wider text-[#193526]">AURA BOTANICA</span>
-          <span class="text-[9px] font-mono-jb text-[#6e7d73] uppercase tracking-widest -mt-1">Nordic Glasshouse Atelier</span>
-        </div>
+  <!-- ================= TOP MASTHEAD ================= -->
+  <header class="border-b-2 border-[#111110] bg-[#fbf9f4]/95 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex justify-between items-center">
+      <a href="#" class="flex items-baseline gap-3">
+        <span class="font-serif-fraunces text-2xl sm:text-3xl font-bold tracking-tight text-[#111110]">L’Atelier d’Archive</span>
+        <span class="text-[11px] font-serif-news italic text-[#736e65]">Paris • VIIe Arrondissement</span>
       </a>
 
-      <nav class="hidden md:flex items-center gap-8 text-xs font-bold text-[#5c6e63]">
-        <a href="#conservatories" class="hover:text-[#193526] transition-colors">Structures</a>
-        <a href="#studio" class="hover:text-[#193526] transition-colors">Architecture Studio</a>
-        <a href="#botany" class="hover:text-[#193526] transition-colors">Biophilic Engineering</a>
-        <a href="#sustainability" class="hover:text-[#193526] transition-colors">Passive Energy</a>
+      <nav class="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest font-bold text-[#545048]">
+        <a href="#galerie" class="hover:text-[#111110] transition-colors">La Galerie</a>
+        <a href="#loupe" class="hover:text-[#111110] transition-colors">Examen Microscopique</a>
+        <a href="#audioguide" class="hover:text-[#111110] transition-colors">Guide Sonore</a>
+        <a href="#billets" class="hover:text-[#111110] transition-colors">Réservations</a>
       </nav>
 
       <div class="flex items-center gap-4">
-        <span class="hidden sm:inline-block text-[11px] font-mono-jb text-[#6e7d73] border-r border-[#e8e2d5] pr-4">
-          COPENHAGEN • STOCKHOLM
+        <span class="text-xs font-mono-jb border border-[#111110] px-3 py-1 rounded-full font-bold">
+          EXPO 2026 // N° 419
         </span>
-        <button class="px-5 py-2.5 rounded-xl bg-[#193526] text-[#faf8f5] text-xs font-bold font-outfit hover:bg-[#c85a32] transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#193526]/15 flex items-center gap-2">
-          <span>Book Consultation</span>
-          <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
-        </button>
       </div>
     </div>
   </header>
 
-  <!-- ================= HERO SECTION WITH BIOPHILIC SUNBEAM CANVAS ================= -->
-  <section class="relative min-h-screen pt-28 pb-20 flex flex-col justify-center items-center overflow-hidden">
-    <!-- Interactive Canvas Background -->
-    <canvas id="sunlightCanvas" class="absolute inset-0 w-full h-full pointer-events-auto opacity-60"></canvas>
-    
-    <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-gradient-to-tr from-[#fef3c7]/60 to-[#dcfce7]/60 rounded-full blur-[140px] pointer-events-none"></div>
-
-    <div class="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 pointer-events-none">
+  <!-- ================= EDITORIAL HERO ================= -->
+  <section class="py-20 border-b border-[#111110]/20">
+    <div class="max-w-7xl mx-auto px-6 sm:px-12 space-y-12">
       
-      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/80 border border-[#e8e2d5] backdrop-blur-xl text-xs font-mono-jb text-[#193526] shadow-md pointer-events-auto font-bold">
-        <i data-lucide="sun" class="w-4 h-4 text-[#c85a32]"></i>
-        <span>PASSIVE BIOPHILIC LIVING • FSC-CERTIFIED SCANDINAVIAN OAK</span>
-      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
+        <div class="lg:col-span-8 space-y-6">
+          <div class="inline-block text-xs font-mono-jb uppercase tracking-[0.25em] text-[#e63946] font-bold">
+            EXPOSITION MONUMENTALE • DU 12 MARS AU 28 JUIN 2026
+          </div>
+          <h1 class="text-5xl sm:text-7xl lg:text-8xl font-serif-fraunces font-normal leading-[1.02] text-[#111110]">
+            L’Éloge de la Matière <br>
+            <span class="italic font-serif-news text-[#736e65] font-light">&amp; du Vide Sculpté.</span>
+          </h1>
+          <p class="text-base sm:text-lg text-[#545048] max-w-2xl font-serif-news leading-relaxed">
+            Une rétrospective architecturale explorant cinquante années de sculpture brutaliste, de marbre de Carrare et de structures lumineuses en verre soufflé.
+          </p>
+        </div>
 
-      <h1 class="text-5xl sm:text-7xl lg:text-8xl font-serif-playfair italic font-medium tracking-tight text-[#193526] leading-[1.05]">
-        Architecture alive with <br>
-        <span class="font-outfit not-italic font-black text-[#193526]">
-          Light and Flora.
-        </span>
-      </h1>
-
-      <p class="max-w-2xl mx-auto text-base sm:text-lg text-[#5c6e63] leading-relaxed font-normal pointer-events-auto">
-        We design triple-glazed architectural conservatories, winter gardens, and bespoke residential solariums that harmonize interior life with natural ecosystems.
-      </p>
-
-      <div class="pt-4 flex flex-wrap justify-center items-center gap-4 pointer-events-auto">
-        <a href="#studio" class="px-8 py-4 rounded-2xl bg-[#193526] text-[#faf8f5] text-sm font-bold font-outfit hover:bg-[#c85a32] transition-all transform hover:scale-105 shadow-2xl shadow-[#193526]/20 flex items-center gap-3">
-          <i data-lucide="compass" class="w-4 h-4"></i>
-          <span>Launch Architectural Studio</span>
-        </a>
-        <a href="#conservatories" class="px-8 py-4 rounded-2xl bg-white border border-[#e8e2d5] hover:border-[#193526] text-[#193526] text-sm font-bold transition-all flex items-center gap-2.5 shadow-sm">
-          <i data-lucide="play" class="w-4 h-4 text-[#c85a32]"></i>
-          <span>Explore 2026 Monographs</span>
-        </a>
-      </div>
-
-      <div class="pt-6 text-[11px] font-mono-jb text-[#8c9c93] flex justify-center items-center gap-2 pointer-events-none">
-        <i data-lucide="mouse-pointer" class="w-3.5 h-3.5 text-[#c85a32] animate-bounce"></i>
-        <span>Move cursor to cast sunlight beams and stimulate botanical particle airflow</span>
-      </div>
-    </div>
-
-    <!-- Metrics Bar -->
-    <div class="relative z-10 mt-16 max-w-5xl w-full mx-auto px-6">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-3xl bg-white border border-[#e8e2d5] shadow-xl text-left">
-        <div class="space-y-1">
-          <div class="text-[10px] font-mono-jb uppercase text-[#6e7d73]">Thermal Insulation</div>
-          <div class="text-2xl font-black font-outfit text-[#193526] tracking-tight">0.58 <span class="text-xs font-mono-jb text-[#c85a32]">U-VALUE</span></div>
-          <div class="text-[11px] text-[#193526] flex items-center gap-1 font-bold">
-            <i data-lucide="check" class="w-3 h-3 text-[#10b981]"></i> Passivhaus Certified
+        <div class="lg:col-span-4 space-y-4 border-l-2 border-[#111110] pl-6 text-xs">
+          <div class="font-bold uppercase tracking-wider text-[#111110]">Commissaire d’Exposition</div>
+          <p class="text-[#545048] font-serif-news italic text-sm">Jean-Luc Morel &amp; Hélène de Saint-Germain</p>
+          <div class="pt-2 flex items-center gap-2 text-[#e63946] font-bold font-mono-jb">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+            <span>Ouvert du Mardi au Dimanche • 10h–19h</span>
           </div>
         </div>
-
-        <div class="space-y-1 border-l border-[#e8e2d5] pl-4">
-          <div class="text-[10px] font-mono-jb uppercase text-[#6e7d73]">Light Transmittance</div>
-          <div class="text-2xl font-black font-outfit text-[#193526] tracking-tight">82.4% <span class="text-xs font-mono-jb text-[#c85a32]">VLT</span></div>
-          <div class="text-[11px] text-[#5c6e63]">Low-Iron Extra Clear</div>
-        </div>
-
-        <div class="space-y-1 border-l border-[#e8e2d5] pl-4">
-          <div class="text-[10px] font-mono-jb uppercase text-[#6e7d73]">Structural Timber</div>
-          <div class="text-2xl font-black font-outfit text-[#193526] tracking-tight">100% <span class="text-xs font-mono-jb text-[#c85a32]">FSC</span></div>
-          <div class="text-[11px] text-[#193526] flex items-center gap-1 font-bold">
-            <i data-lucide="shield-check" class="w-3 h-3 text-[#10b981]"></i> Nordic Larch &amp; Oak
-          </div>
-        </div>
-
-        <div class="space-y-1 border-l border-[#e8e2d5] pl-4">
-          <div class="text-[10px] font-mono-jb uppercase text-[#6e7d73]">Acoustic Dampening</div>
-          <div class="text-2xl font-black font-outfit text-[#193526] tracking-tight">46 <span class="text-xs font-mono-jb text-[#c85a32]">dB RW</span></div>
-          <div class="text-[11px] text-[#5c6e63]">Laminated acoustic interlayer</div>
-        </div>
       </div>
+
     </div>
   </section>
 
-  <!-- ================= ARCHITECTURAL STUDIO CONFIGURATOR ================= -->
-  <section id="studio" class="py-24 border-t border-[#e8e2d5] bg-white relative">
-    <div class="max-w-7xl mx-auto px-6 sm:px-10 space-y-16">
+  <!-- ================= INTERACTIVE MAGNIFIER LOUPE SECTION ================= -->
+  <section id="loupe" class="py-20 border-b border-[#111110]/20 bg-white">
+    <div class="max-w-7xl mx-auto px-6 sm:px-12 space-y-10">
       
-      <div class="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-[#e8e2d5] pb-8">
-        <div class="space-y-3 max-w-xl">
-          <span class="text-xs font-mono-jb text-[#c85a32] uppercase tracking-widest font-bold">SOLARIUM WORKBENCH</span>
-          <h2 class="text-4xl sm:text-5xl font-outfit font-black text-[#193526] tracking-tight">
-            Design Your Living Conservatory.
-          </h2>
-          <p class="text-sm text-[#5c6e63] leading-relaxed">
-            Select structural footprint, timber joinery finishes, and plant microclimate ecology.
-          </p>
+      <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-4 border-b border-[#111110]/15 pb-6">
+        <div>
+          <span class="text-xs font-mono-jb uppercase text-[#e63946] font-bold">INSTRUMENT DE RESTAURATION</span>
+          <h2 class="text-3xl sm:text-4xl font-serif-fraunces font-bold text-[#111110]">Examen de Précision à la Loupe</h2>
         </div>
-        <div class="text-xs font-mono-jb text-[#5c6e63] bg-[#faf8f5] border border-[#e8e2d5] px-4 py-2 rounded-2xl">
-          PRE-FABRICATED IN SMÅLAND, SWEDEN
-        </div>
+        <p class="text-xs text-[#736e65] font-mono-jb">Survolez l’œuvre pour révéler les craquelures et détails à 2.5x</p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-        <!-- Visual Presentation -->
-        <div class="lg:col-span-7 relative group">
-          <div class="relative bg-[#faf8f5] border border-[#e8e2d5] rounded-[36px] p-8 sm:p-12 overflow-hidden shadow-xl">
-            <div id="sunGlow" class="absolute top-0 right-0 w-80 h-80 bg-[#fef3c7] blur-3xl rounded-full transition-all duration-700 pointer-events-none"></div>
-
-            <div class="relative z-10 flex justify-center items-center py-4">
-              <img id="conservatoryImg" src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" alt="Conservatory" class="w-full max-w-lg h-80 object-cover rounded-3xl shadow-xl border border-[#e8e2d5] transform group-hover:scale-105 transition-transform duration-700">
-            </div>
-
-            <div class="relative z-10 mt-6 flex justify-between items-center bg-white border border-[#e8e2d5] p-5 rounded-2xl shadow-sm">
-              <div>
-                <div id="conservatoryTitle" class="text-base font-bold text-[#193526] font-outfit">SUNKEN ATRIUM GLASS PAVILION</div>
-                <div id="conservatorySubtitle" class="text-xs font-mono-jb text-[#6e7d73]">Triple-Glazed Low-E • Solid Nordic White Oak</div>
-              </div>
-              <div id="priceEstimate" class="text-xl font-bold font-mono-jb text-[#193526]">€48,200</div>
-            </div>
+        <!-- Loupe Active Frame -->
+        <div class="lg:col-span-8">
+          <div id="loupeBox" class="loupe-container rounded-3xl border-4 border-[#111110] shadow-2xl overflow-hidden relative">
+            <img id="artworkImg" src="https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80" alt="Sculpture Marbre" class="w-full h-96 sm:h-[480px] object-cover">
+            <div id="lens" class="loupe-lens"></div>
           </div>
         </div>
 
-        <!-- Controls -->
-        <div class="lg:col-span-5 space-y-8 bg-[#faf8f5] border border-[#e8e2d5] p-8 rounded-[36px] shadow-lg">
-          
-          <!-- Structure Preset Selector -->
-          <div class="space-y-4">
-            <label class="text-xs font-mono-jb text-[#6e7d73] uppercase font-bold flex justify-between">
-              <span>1. Structural Typology</span>
-              <span id="typeBadge" class="text-[#c85a32]">ATRIUM</span>
-            </label>
-            <div class="grid grid-cols-2 gap-3">
-              <button onclick="setType('atrium')" class="type-btn active p-4 rounded-2xl border-2 border-[#193526] bg-white text-left transition-all shadow-sm">
-                <div class="text-xs font-bold text-[#193526] font-outfit">Sunken Atrium</div>
-                <div class="text-[10px] text-[#6e7d73] font-mono-jb mt-1">32 m² Footprint</div>
-              </button>
-
-              <button onclick="setType('cantilever')" class="type-btn p-4 rounded-2xl border border-[#e8e2d5] bg-white/60 text-left hover:border-[#193526] transition-all">
-                <div class="text-xs font-bold text-[#193526] font-outfit">Alpine Cantilever</div>
-                <div class="text-[10px] text-[#6e7d73] font-mono-jb mt-1">45 m² Footprint</div>
-              </button>
-
-              <button onclick="setType('courtyard')" class="type-btn p-4 rounded-2xl border border-[#e8e2d5] bg-white/60 text-left hover:border-[#193526] transition-all">
-                <div class="text-xs font-bold text-[#193526] font-outfit">Courtyard Orangery</div>
-                <div class="text-[10px] text-[#6e7d73] font-mono-jb mt-1">60 m² Footprint</div>
-              </button>
-
-              <button onclick="setType('rooftop')" class="type-btn p-4 rounded-2xl border border-[#e8e2d5] bg-white/60 text-left hover:border-[#193526] transition-all">
-                <div class="text-xs font-bold text-[#193526] font-outfit">Rooftop Solarium</div>
-                <div class="text-[10px] text-[#6e7d73] font-mono-jb mt-1">28 m² Footprint</div>
-              </button>
-            </div>
+        <!-- Curatorial Metadata Card -->
+        <div class="lg:col-span-4 space-y-6 bg-[#fbf9f4] border-2 border-[#111110] p-8 rounded-3xl shadow-lg">
+          <div class="text-xs font-mono-jb text-[#e63946] uppercase font-bold">PIÈCE N° 084 // SALLE RICHELIEU</div>
+          <h3 class="text-2xl font-serif-fraunces font-bold text-[#111110]">Torse Antique en Marbre Penthélique</h3>
+          <p class="text-xs text-[#545048] font-serif-news italic leading-relaxed">
+            Daté du IIe siècle avant J.-C. Les pigments minéraux résiduels révèlent l’utilisation de lapis-lazuli d’Afghanistan et de vermillon d’Almadén.
+          </p>
+          <div class="pt-4 border-t border-[#111110]/15 space-y-2 text-xs font-mono-jb">
+            <div class="flex justify-between"><span>HAUTEUR:</span> <span class="font-bold">142 cm</span></div>
+            <div class="flex justify-between"><span>PROVENANCE:</span> <span class="font-bold">Collection Borghèse</span></div>
+            <div class="flex justify-between"><span>ÉTAT:</span> <span class="text-emerald-700 font-bold">Restauré en 2025</span></div>
           </div>
-
-          <!-- Area Slider -->
-          <div class="space-y-3">
-            <div class="flex justify-between text-xs font-mono-jb">
-              <span class="text-[#6e7d73] font-bold">2. Enclosed Floor Area</span>
-              <span id="areaValue" class="text-[#193526] font-bold">32 m² (344 sq ft)</span>
-            </div>
-            <input type="range" id="areaSlider" min="20" max="100" value="32" oninput="updateArea(this.value)" class="w-full h-2 bg-[#e8e2d5] rounded-lg appearance-none cursor-pointer accent-[#193526]">
-            <div class="flex justify-between text-[10px] text-[#8c9c93] font-mono-jb">
-              <span>20 m² Intimate</span>
-              <span>50 m² Family</span>
-              <span>100 m² Botanical Estate</span>
-            </div>
-          </div>
-
-          <!-- CTA -->
-          <button class="w-full py-4 rounded-2xl bg-[#193526] hover:bg-[#c85a32] text-white font-bold font-outfit text-sm transition-all transform hover:-translate-y-0.5 shadow-xl shadow-[#193526]/20 flex items-center justify-center gap-2">
-            <i data-lucide="file-text" class="w-4 h-4"></i>
-            <span>Export Architectural Package &amp; CAD</span>
-          </button>
-
         </div>
       </div>
+
     </div>
   </section>
 
-  <!-- ================= ASYMMETRIC BENTO GRID ================= -->
-  <section id="conservatories" class="py-24 bg-[#faf8f5] relative">
-    <div class="max-w-7xl mx-auto px-6 sm:px-10 space-y-16">
+  <!-- ================= INTERACTIVE AUDIOGUIDE PLAYER ================= -->
+  <section id="audioguide" class="py-20 border-b border-[#111110]/20 bg-[#fbf9f4]">
+    <div class="max-w-4xl mx-auto px-6 space-y-8">
       
-      <div class="text-center max-w-2xl mx-auto space-y-4">
-        <span class="text-xs font-mono-jb text-[#c85a32] uppercase tracking-widest font-bold">PASSIVE SOLAR LIVING</span>
-        <h2 class="text-4xl sm:text-6xl font-serif-playfair italic font-medium text-[#193526]">
-          Where the seasons become your ceiling.
-        </h2>
+      <div class="text-center space-y-2">
+        <h2 class="text-3xl font-serif-fraunces font-bold text-[#111110]">Le Guide Sonore de l'Atelier</h2>
+        <p class="text-xs text-[#736e65] font-serif-news italic">Écoutez les commentaires des conservateurs pendant votre visite</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-        
-        <!-- Large Card 1 (8 cols) -->
-        <div class="md:col-span-8 card-botanica bg-white border border-[#e8e2d5] rounded-[36px] p-8 sm:p-12 flex flex-col justify-between space-y-8 relative overflow-hidden group">
-          <div class="space-y-4 max-w-md relative z-10">
-            <div class="w-12 h-12 rounded-2xl bg-[#faf8f5] border border-[#e8e2d5] flex items-center justify-center text-[#193526]">
-              <i data-lucide="wind" class="w-6 h-6"></i>
-            </div>
-            <h3 class="text-3xl font-outfit font-black text-[#193526]">Passive Geothermal Stack Ventilation.</h3>
-            <p class="text-sm text-[#5c6e63] leading-relaxed">
-              Automated motorized ridge louvers release warm buoyancy air while sub-floor earth tubes draw cooled ground air during summer peaks.
-            </p>
+      <!-- Real Audio Player Card -->
+      <div class="bg-white border-2 border-[#111110] rounded-3xl p-8 shadow-xl space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+          <div>
+            <span class="text-[10px] font-mono-jb text-[#e63946] font-bold">PISTE 03 SUR 12</span>
+            <h4 class="text-xl font-serif-fraunces font-bold text-[#111110]">La Lumière Zénithale dans l’Architecture Romane</h4>
           </div>
+          <button id="audioPlayBtn" onclick="toggleAudioGuide()" class="px-6 py-3 bg-[#111110] hover:bg-[#e63946] text-white rounded-2xl text-xs font-bold font-mono-jb transition-colors flex items-center gap-2 shadow-md">
+            <i id="playIcon" data-lucide="play" class="w-4 h-4 fill-current"></i>
+            <span id="audioStatusText">ÉCOUTER L'EXTRAIT (30s)</span>
+          </button>
+        </div>
 
-          <div class="relative z-10 overflow-hidden rounded-2xl border border-[#e8e2d5]">
-            <img src="https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&w=1200&q=80" alt="Botanical Interior" class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-700">
+        <!-- Animated Soundwave Visualizer Bars -->
+        <div class="flex items-center gap-1.5 h-12 justify-center py-2" id="waveBarsContainer">
+          <div class="w-1.5 bg-[#111110] h-3 rounded-full transition-all duration-150"></div>
+          <div class="w-1.5 bg-[#111110] h-6 rounded-full transition-all duration-150"></div>
+          <div class="w-1.5 bg-[#111110] h-10 rounded-full transition-all duration-150"></div>
+          <div class="w-1.5 bg-[#111110] h-4 rounded-full transition-all duration-150"></div>
+          <div class="w-1.5 bg-[#111110] h-8 rounded-full transition-all duration-150"></div>
+          <div class="w-1.5 bg-[#111110] h-12 rounded-full transition-all duration-150"></div>
+          <div class="w-1.5 bg-[#111110] h-5 rounded-full transition-all duration-150"></div>
+          <div class="w-1.5 bg-[#111110] h-9 rounded-full transition-all duration-150"></div>
+          <div class="w-1.5 bg-[#111110] h-4 rounded-full transition-all duration-150"></div>
+          <div class="w-1.5 bg-[#111110] h-7 rounded-full transition-all duration-150"></div>
+        </div>
+
+        <p class="text-xs text-[#545048] font-serif-news italic border-t border-[#111110]/10 pt-4 leading-relaxed">
+          « L'ouverture du narthex ne cherchait pas à éclairer toute la nef, mais à créer un faisceau oblique qui matérialisait la poussière et le silence sacré de l'espace... »
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= INTERACTIVE TICKET & EXHIBITION RESERVATION ================= -->
+  <section id="billets" class="py-20 bg-white">
+    <div class="max-w-4xl mx-auto px-6 space-y-10">
+      
+      <div class="text-center space-y-2">
+        <h2 class="text-3xl font-serif-fraunces font-bold text-[#111110]">Réservation du Billet Collector</h2>
+        <p class="text-xs text-[#736e65]">Choisissez votre créneau horaire et imprimez votre laissez-passer personnalisé</p>
+      </div>
+
+      <div class="border-2 border-[#111110] rounded-3xl p-8 bg-[#fbf9f4] shadow-2xl space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="text-[10px] font-mono-jb uppercase text-[#736e65] font-bold">Nom du Visiteur</label>
+            <input type="text" id="visitorName" value="Baran Arslan" oninput="updateTicket()" class="w-full mt-1 p-3 bg-white border border-[#111110] rounded-xl text-xs font-bold focus:outline-none">
+          </div>
+          <div>
+            <label class="text-[10px] font-mono-jb uppercase text-[#736e65] font-bold">Salle Privilégiée</label>
+            <select id="roomSelect" onchange="updateTicket()" class="w-full mt-1 p-3 bg-white border border-[#111110] rounded-xl text-xs font-bold focus:outline-none">
+              <option value="Aile Richelieu (Sculptures)">Aile Richelieu (Sculptures)</option>
+              <option value="Galerie des Glaces (Lumière)">Galerie des Glaces (Lumière)</option>
+              <option value="Crypte Archéologique">Crypte Archéologique</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] font-mono-jb uppercase text-[#736e65] font-bold">Date &amp; Heure</label>
+            <select id="dateSelect" onchange="updateTicket()" class="w-full mt-1 p-3 bg-white border border-[#111110] rounded-xl text-xs font-bold focus:outline-none">
+              <option value="28 Mars 2026 • 14h30">28 Mars 2026 • 14h30</option>
+              <option value="29 Mars 2026 • 16h00">29 Mars 2026 • 16h00</option>
+            </select>
           </div>
         </div>
 
-        <!-- Detail Card 2 (4 cols) -->
-        <div class="md:col-span-4 card-botanica bg-white border border-[#e8e2d5] rounded-[36px] p-8 flex flex-col justify-between space-y-6">
-          <div class="space-y-3">
-            <div class="w-12 h-12 rounded-2xl bg-[#faf8f5] border border-[#e8e2d5] flex items-center justify-center text-[#193526]">
-              <i data-lucide="droplet" class="w-6 h-6"></i>
-            </div>
-            <h3 class="text-2xl font-outfit font-bold text-[#193526]">Rainwater Micro-Misting.</h3>
-            <p class="text-xs text-[#5c6e63] leading-relaxed">
-              Integrated copper gutters feed subterranean carbon filtration tanks that nourish indoor sub-tropical ferns.
-            </p>
+        <!-- Dynamic Collector Ticket Preview -->
+        <div class="border-2 border-dashed border-[#111110] p-6 rounded-2xl bg-white space-y-3 font-mono-jb text-xs">
+          <div class="flex justify-between items-center border-b border-[#111110]/20 pb-2">
+            <span class="font-bold text-[#e63946]">L'ATELIER D'ARCHIVE // BILLET D'ENTRÉE</span>
+            <span class="text-[10px] bg-[#111110] text-white px-2 py-0.5 rounded">COUPE-FILE</span>
           </div>
-          
-          <div class="p-4 bg-[#faf8f5] rounded-2xl border border-[#e8e2d5] space-y-2 text-xs font-mono-jb">
-            <div class="flex justify-between text-[#6e7d73]">
-              <span>WATER RECYCLING</span>
-              <span class="text-[#193526] font-bold">94% Net Zero</span>
-            </div>
-            <div class="flex justify-between text-[#6e7d73]">
-              <span>HUMIDITY STABILITY</span>
-              <span class="text-[#c85a32] font-bold">55% - 65% RH</span>
-            </div>
+          <div class="flex justify-between">
+            <span class="text-[#736e65]">TITULAIRE:</span>
+            <span id="ticketVisitor" class="font-bold text-[#111110]">Baran Arslan</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[#736e65]">ACCÈS RÉSERVÉ:</span>
+            <span id="ticketRoom" class="font-bold text-[#111110]">Aile Richelieu (Sculptures)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[#736e65]">CRÉNEAU:</span>
+            <span id="ticketDate" class="font-bold text-[#111110]">28 Mars 2026 • 14h30</span>
           </div>
         </div>
 
+        <button onclick="window.print()" class="w-full py-4 bg-[#111110] hover:bg-[#e63946] text-white font-bold font-mono-jb text-xs rounded-2xl transition-colors shadow-lg flex items-center justify-center gap-2">
+          <i data-lucide="printer" class="w-4 h-4"></i>
+          <span>IMPRIMER MON LAISSEZ-PASSER COLLECTOR</span>
+        </button>
       </div>
+
     </div>
   </section>
 
   <!-- ================= FOOTER ================= -->
-  <footer class="border-t border-[#e8e2d5] bg-white py-12 text-xs text-[#6e7d73]">
-    <div class="max-w-7xl mx-auto px-6 sm:px-10 flex flex-col sm:flex-row justify-between items-center gap-6 font-mono-jb">
-      <div class="flex items-center gap-2 text-[#193526] font-bold">
-        <i data-lucide="sprout" class="w-4 h-4 text-[#c85a32]"></i>
-        <span>AURA BOTANICA ARCHITECTURE AB</span>
-      </div>
-      <div>© 2026 Aura Botanica Copenhagen. All rights reserved. Zero AI Slop Standard.</div>
+  <footer class="border-t-2 border-[#111110] py-12 bg-[#fbf9f4] text-xs text-[#736e65] font-mono-jb">
+    <div class="max-w-7xl mx-auto px-6 sm:px-12 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div>© 2026 L’Atelier d’Archive. Fondation Nationale des Arts Graphiques.</div>
       <div class="flex gap-6">
-        <a href="#" class="hover:text-[#193526] transition-colors">FSC Registry</a>
-        <a href="#" class="hover:text-[#193526] transition-colors">Passivhaus Data</a>
+        <a href="#" class="hover:text-[#111110]">Mentions Légales</a>
+        <a href="#" class="hover:text-[#111110]">Catalogue Raisonné</a>
       </div>
     </div>
   </footer>
 
-  <!-- ================= WORKING JS ENGINE ================= -->
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
     lucide.createIcons();
 
-    // 1. Interactive Sunbeam & Botanical Diffusion Canvas
-    const canvas = document.getElementById('sunlightCanvas');
-    const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    let mouse = { x: null, y: null };
+    // 1. High-Resolution Magnifying Loupe Inspector
+    const box = document.getElementById('loupeBox');
+    const lens = document.getElementById('lens');
+    const img = document.getElementById('artworkImg');
+    const zoom = 2.5;
 
-    function initCanvas() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      particles = [];
-      for (let i = 0; i < 40; i++) {
-        particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          radius: Math.random() * 3 + 1,
-          speedY: Math.random() * 0.4 + 0.1,
-          speedX: (Math.random() - 0.5) * 0.3,
-          alpha: Math.random() * 0.4 + 0.1
-        });
-      }
-    }
-    window.addEventListener('resize', initCanvas);
-    window.addEventListener('mousemove', (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    });
+    box.addEventListener('mousemove', moveLoupe);
+    box.addEventListener('mouseenter', () => { lens.style.display = 'block'; });
+    box.addEventListener('mouseleave', () => { lens.style.display = 'none'; });
 
-    function animateSunbeams() {
-      ctx.clearRect(0, 0, width, height);
+    function moveLoupe(e) {
+      const rect = box.getBoundingClientRect();
+      let x = e.clientX - rect.left;
+      let y = e.clientY - rect.top;
 
-      // Draw warm ambient sunlight cones
-      let sourceX = width * 0.8;
-      let sourceY = 0;
-      if (mouse.x !== null) {
-        sourceX = width * 0.6 + (mouse.x / width) * (width * 0.4);
-      }
+      let w = lens.offsetWidth / 2;
+      let h = lens.offsetHeight / 2;
 
-      let gradient = ctx.createRadialGradient(sourceX, sourceY, 50, sourceX, sourceY, height * 1.2);
-      gradient.addColorStop(0, 'rgba(254, 240, 138, 0.25)');
-      gradient.addColorStop(0.5, 'rgba(254, 240, 138, 0.08)');
-      gradient.addColorStop(1, 'transparent');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
+      // Keep within bounds
+      if (x > box.offsetWidth - w) x = box.offsetWidth - w;
+      if (x < w) x = w;
+      if (y > box.offsetHeight - h) y = box.offsetHeight - h;
+      if (y < h) y = h;
 
-      // Floating spores / dust motes in sunlight
-      for (let p of particles) {
-        p.y -= p.speedY;
-        p.x += p.speedX;
-        if (p.y < 0) p.y = height;
-        if (p.x < 0) p.x = width;
-        if (p.x > width) p.x = 0;
+      lens.style.left = (x - w) + "px";
+      lens.style.top = (y - h) + "px";
 
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 90, 50, ${p.alpha})`;
-        ctx.fill();
-      }
-
-      requestAnimationFrame(animateSunbeams);
-    }
-    initCanvas();
-    animateSunbeams();
-
-    // 2. Interactive Studio Logic
-    const typologyData = {
-      atrium: {
-        title: "SUNKEN ATRIUM GLASS PAVILION",
-        subtitle: "Triple-Glazed Low-E • Solid Nordic White Oak",
-        badge: "ATRIUM",
-        basePrice: 48200,
-        img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"
-      },
-      cantilever: {
-        title: "ALPINE CANTILEVER CONSERVATORY",
-        subtitle: "Suspended Steel Frame • Panoramic Ridge Glass",
-        badge: "CANTILEVER",
-        basePrice: 62400,
-        img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"
-      },
-      courtyard: {
-        title: "COURTYARD ORANGERY ESTATE",
-        subtitle: "Classic Timber Joinery • Integrated Citrus Grove",
-        badge: "ORANGERY",
-        basePrice: 78900,
-        img: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80"
-      },
-      rooftop: {
-        title: "ROOFTOP GREENHOUSE RETREAT",
-        subtitle: "Reinforced Wind-Load Glazing • Urban Honeybee Core",
-        badge: "ROOFTOP",
-        basePrice: 42100,
-        img: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800&q=80"
-      }
-    };
-
-    let currentType = 'atrium';
-
-    function setType(k) {
-      currentType = k;
-      const d = typologyData[k];
-      if (!d) return;
-
-      document.querySelectorAll('.type-btn').forEach(b => {
-        b.classList.remove('active', 'border-2', 'border-[#193526]', 'shadow-sm');
-        b.classList.add('border-[#e8e2d5]', 'bg-white/60');
-      });
-      event.currentTarget.classList.add('active', 'border-2', 'border-[#193526]', 'shadow-sm');
-      event.currentTarget.classList.remove('border-[#e8e2d5]', 'bg-white/60');
-
-      document.getElementById('conservatoryTitle').innerText = d.title;
-      document.getElementById('conservatorySubtitle').innerText = d.subtitle;
-      document.getElementById('typeBadge').innerText = d.badge;
-      document.getElementById('conservatoryImg').src = d.img;
-      updateArea(document.getElementById('areaSlider').value);
+      lens.style.backgroundImage = `url('${img.src}')`;
+      lens.style.backgroundSize = `${box.offsetWidth * zoom}px ${box.offsetHeight * zoom}px`;
+      lens.style.backgroundPosition = `-${(x * zoom) - w}px -${(y * zoom) - h}px`;
     }
 
-    function updateArea(sqm) {
-      document.getElementById('areaValue').innerText = sqm + " m² (" + Math.round(sqm * 10.764) + " sq ft)";
-      let base = typologyData[currentType].basePrice;
-      let calculated = Math.round(base * (sqm / 32));
-      document.getElementById('priceEstimate').innerText = "€" + calculated.toLocaleString();
+    // 2. Synthesized Audio Guide Player (WebAudio Bells & Chimes)
+    let guideAudioCtx = null;
+    let isPlayingAudio = false;
+    let audioInterval = null;
+
+    function toggleAudioGuide() {
+      if (!guideAudioCtx) {
+        guideAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (guideAudioCtx.state === 'suspended') guideAudioCtx.resume();
+
+      isPlayingAudio = !isPlayingAudio;
+      const btn = document.getElementById('audioPlayBtn');
+      const txt = document.getElementById('audioStatusText');
+
+      if (isPlayingAudio) {
+        btn.classList.replace('bg-[#111110]', 'bg-[#e63946]');
+        txt.innerText = 'PAUSE DU GUIDE';
+        playChurchBellChime();
+        animateWaveBars(true);
+      } else {
+        btn.classList.replace('bg-[#e63946]', 'bg-[#111110]');
+        txt.innerText = 'ÉCOUTER L\'EXTRAIT (30s)';
+        animateWaveBars(false);
+      }
+    }
+
+    function playChurchBellChime() {
+      if (!guideAudioCtx || !isPlayingAudio) return;
+      let osc = guideAudioCtx.createOscillator();
+      let gain = guideAudioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(528, guideAudioCtx.currentTime); // 528 Hz Healing tone
+      gain.gain.setValueAtTime(0.3, guideAudioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, guideAudioCtx.currentTime + 3.0);
+      osc.connect(gain);
+      gain.connect(guideAudioCtx.destination);
+      osc.start();
+      osc.stop(guideAudioCtx.currentTime + 3.0);
+    }
+
+    function animateWaveBars(run) {
+      const bars = document.getElementById('waveBarsContainer').children;
+      if (run) {
+        audioInterval = setInterval(() => {
+          for (let b of bars) {
+            b.style.height = (Math.random() * 36 + 6) + "px";
+          }
+        }, 120);
+      } else {
+        clearInterval(audioInterval);
+        for (let b of bars) b.style.height = "12px";
+      }
+    }
+
+    // 3. Ticket Collector Updates
+    function updateTicket() {
+      document.getElementById('ticketVisitor').innerText = document.getElementById('visitorName').value || 'Visiteur Anonyme';
+      document.getElementById('ticketRoom').innerText = document.getElementById('roomSelect').value;
+      document.getElementById('ticketDate').innerText = document.getElementById('dateSelect').value;
     }
   </script>
 </body>
