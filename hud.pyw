@@ -30,12 +30,20 @@ kernel32 = ctypes.windll.kernel32
 user32.SetWindowPos.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_uint]
 user32.SetWindowPos.restype = ctypes.c_bool
 
+user32.ReleaseCapture.argtypes = []
+user32.ReleaseCapture.restype = ctypes.c_bool
+
+user32.SendMessageW.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.c_void_p, ctypes.c_void_p]
+user32.SendMessageW.restype = ctypes.c_void_p
+
 HWND_TOPMOST = -1
 HWND_NOTOPMOST = -2
 SWP_NOSIZE = 0x0001
 SWP_NOMOVE = 0x0002
 SWP_NOACTIVATE = 0x0010
 SWP_SHOWWINDOW = 0x0040
+WM_NCLBUTTONDOWN = 0x00A1
+HTCAPTION = 2
 
 def check_single_instance():
     mutex_name = "Global\\AntigravityLiveMonitor_SingleInstance_Mutex"
@@ -123,25 +131,25 @@ HTML_CONTENT = """<!DOCTYPE html>
       transform: rotate(-90deg);
       transform-origin: 50% 50%;
     }
-    .pywebview-drag-region {
-      -webkit-app-region: drag;
+    .drag-bar {
+      cursor: grab;
     }
-    .no-drag {
-      -webkit-app-region: no-drag;
+    .drag-bar:active {
+      cursor: grabbing;
     }
   </style>
 </head>
 <body class="flex flex-col h-screen box-border antialiased rounded-2xl border border-zinc-800/90 shadow-2xl overflow-hidden bg-[#0D0E12]">
 
-  <!-- 0. SLEEK CUSTOM TITLEBAR -->
-  <div class="pywebview-drag-region flex items-center justify-between px-3 py-2 bg-[#12141A] border-b border-[#23262F] select-none flex-shrink-0 cursor-move">
-    <div class="flex items-center gap-2">
+  <!-- 0. SLEEK CUSTOM TITLEBAR (DRAGGABLE) -->
+  <div id="titlebar" class="drag-bar flex items-center justify-between px-3 py-2 bg-[#12141A] border-b border-[#23262F] select-none flex-shrink-0">
+    <div class="flex items-center gap-2 pointer-events-none">
       <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
       <span class="text-xs font-bold text-zinc-200 tracking-wide mono">Antigravity Live Monitor</span>
     </div>
 
     <!-- Controls -->
-    <div class="flex items-center gap-1.5 no-drag">
+    <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
       <!-- Always on Top Toggle -->
       <button onclick="togglePin()" id="pinBtn" class="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Always on Top (Enabled)">
         <span id="pinDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -332,6 +340,19 @@ HTML_CONTENT = """<!DOCTYPE html>
     let activeTab = '5h';
     let isPinned = true;
 
+    // Attach native Win32 window drag handler
+    function setupDrag() {
+      const tb = document.getElementById('titlebar');
+      if (tb) {
+        tb.addEventListener('mousedown', (e) => {
+          if (e.target.closest('button') || e.target.closest('input')) return;
+          if (e.button === 0 && window.pywebview && window.pywebview.api) {
+            window.pywebview.api.drag_window();
+          }
+        });
+      }
+    }
+
     function applyPinVisual(pinned) {
       isPinned = pinned;
       const dot = document.getElementById('pinDot');
@@ -484,6 +505,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     async function init() {
+      setupDrag();
       if (window.pywebview && window.pywebview.api) {
         try {
           const cfg = await window.pywebview.api.get_config();
@@ -685,7 +707,7 @@ class MetricsEngine:
 
             cur_weekly_pct = self.cached_metrics["gemini_weekly_pct"]
             est_weekly_rem = int(learned_weekly_cap * (cur_weekly_pct / 100.0))
-            self.cached_metrics["est_weekly_remain_str"] = f"{est_weekly_rem / 1000000.0:.2f}M" if est_weekly_rem >= 1000000 else f"{est_weekly_rem / 1000.0:.0f}k"
+            self.cached_metrics["est_weekly_remain_str"] = f"{est_weekly_rem / 1000000.0:.2f}M" if est_weekly_rem >= 1000000 else f"{est_weekly_rem / 100.0:.0f}k"
             self.cached_metrics["w_cost_weighted"] = (est_weekly_rem / 1000000.0) * BLENDED_RATE_PER_M
             self.cached_metrics["w_cost_in"] = (est_weekly_rem / 1000000.0) * PRICE_INPUT_PER_M
             self.cached_metrics["w_cost_out"] = (est_weekly_rem / 1000000.0) * PRICE_OUTPUT_PER_M
@@ -880,6 +902,12 @@ class Api:
     def force_sync(self):
         self.engine.query_official_usage()
         return True
+
+    def drag_window(self):
+        hwnd = get_hud_hwnd()
+        if hwnd:
+            user32.ReleaseCapture()
+            user32.SendMessageW(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0)
 
     def toggle_on_top(self):
         self.is_on_top = not self.is_on_top
