@@ -3,201 +3,219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CYBER-DECK M-808 — Modular Hardware Synthesizer &amp; Step Sequencer</title>
+  <title>CYBER-DECK M-808 — Professional Analog Studio Synthesizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Cabinet+Grotesk:wght@700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Cabinet+Grotesk:wght@700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
     .font-mono-jb { font-family: 'JetBrains Mono', monospace; }
     .font-cabinet { font-family: 'Cabinet Grotesk', sans-serif; }
     .font-space { font-family: 'Space Grotesk', sans-serif; }
 
-    /* Hardware Chassis Textures */
-    .rack-chassis {
-      background: radial-gradient(circle at 50% 0%, #1e222b 0%, #0d0f14 100%);
-      box-shadow: inset 0 2px 4px rgba(255,255,255,0.08), 0 25px 50px -12px rgba(0,0,0,0.9);
-    }
-    .module-card {
-      background: linear-gradient(180deg, #181b22 0%, #12141a 100%);
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 20px rgba(0,0,0,0.5);
-    }
-    .crt-screen {
-      background: #020b06;
-      box-shadow: inset 0 0 20px rgba(16,185,129,0.25), inset 0 0 5px rgba(16,185,129,0.5);
+    /* Authentic Studio Hardware Textures */
+    body {
+      background-color: #0c0d10;
+      background-image: radial-gradient(#171920 1px, transparent 1px);
+      background-size: 16px 16px;
     }
 
-    /* Key Animation */
+    .rack-chassis {
+      background: linear-gradient(180deg, #181a20 0%, #111216 100%);
+      border: 2px solid #232732;
+      box-shadow: 0 30px 60px -15px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .module-card {
+      background: #14161c;
+      border: 1px solid #232732;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    /* Muted Vintage Amber CRT Phosphor */
+    .crt-screen {
+      background: #0d0a04;
+      border: 1.5px solid #332612;
+      box-shadow: inset 0 0 25px rgba(217, 119, 6, 0.15), inset 0 0 4px rgba(217, 119, 6, 0.3);
+    }
+
+    /* Tactile Step Buttons */
+    .seq-step {
+      background: #1a1d24;
+      border: 1px solid #2d3240;
+      color: #6b7280;
+      transition: all 0.15s ease;
+    }
     .seq-step.active-step {
-      border-color: #10b981;
-      background: #10b981;
-      box-shadow: 0 0 15px #10b981;
+      background: #c28834;
+      border-color: #dfa44e;
+      color: #111216;
+      box-shadow: 0 0 12px rgba(194, 136, 52, 0.4);
     }
     .seq-step.triggered {
-      transform: scale(1.1);
-      box-shadow: 0 0 25px #34d399;
+      transform: scale(1.08);
+      filter: brightness(1.3);
+      box-shadow: 0 0 20px rgba(245, 178, 77, 0.8);
     }
 
-    /* Rotary Knob Dial */
-    .knob-control {
-      touch-action: none;
-      cursor: ns-resize;
+    /* Range Sliders */
+    input[type=range] {
+      accent-color: #c28834;
     }
   </style>
 </head>
-<body class="bg-[#060709] text-[#e0e4ed] font-mono-jb min-h-screen flex flex-col p-4 sm:p-8 antialiased">
+<body class="text-[#c8cdd9] font-mono-jb min-h-screen flex flex-col p-4 sm:p-8 antialiased">
 
-  <!-- ================= 19-INCH RACK TOP BAR ================= -->
-  <div class="max-w-6xl w-full mx-auto rack-chassis border-2 border-[#2b303d] rounded-3xl p-6 sm:p-8 space-y-6">
+  <!-- ================= 19-INCH RACK CHASSIS ================= -->
+  <div class="max-w-6xl w-full mx-auto rack-chassis rounded-3xl p-6 sm:p-8 space-y-6">
     
-    <!-- Rack Unit Header Plate -->
-    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-6 border-b border-[#2b303d] text-xs">
+    <!-- Header Faceplate with Brushed Metal Screws -->
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-6 border-b border-[#232732]">
       <div class="flex items-center gap-4">
-        <!-- Rack Screws -->
-        <div class="w-4 h-4 rounded-full bg-[#1e222d] border border-white/20 flex items-center justify-center shadow-inner">
-          <div class="w-2.5 h-0.5 bg-[#4a5266]"></div>
+        <!-- Rack Screw -->
+        <div class="w-4 h-4 rounded-full bg-[#181a20] border border-[#3b4152] flex items-center justify-center shadow-inner">
+          <div class="w-2.5 h-0.5 bg-[#4f576d]"></div>
         </div>
         <div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <span class="text-white font-cabinet font-black text-xl tracking-wider">CYBER-DECK M-808</span>
-            <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">WEBAUDIO ANALOG SYNTH</span>
+            <span class="px-2 py-0.5 rounded bg-[#241c10] text-[#c28834] border border-[#6b4919] text-[10px] font-bold">ANALOG MODELING SYNTHESIZER</span>
           </div>
-          <span class="text-[10px] text-[#6b7280]">19-INCH RACKMOUNT DUAL-OSCILLATOR &amp; 8-STEP DRUM COMPUTER</span>
+          <span class="text-[10px] text-[#6b7280]">VALVE DRIVE DSP • 8-STEP CV/GATE SEQUENCER • 48kHz REALTIME ENGINE</span>
         </div>
       </div>
 
-      <!-- Master Transport Controls -->
+      <!-- Transport Controls -->
       <div class="flex items-center gap-3">
-        <button id="powerBtn" onclick="togglePower()" class="px-4 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-500/40 text-xs font-bold transition-all flex items-center gap-2 shadow-lg">
-          <i data-lucide="power" class="w-4 h-4 text-rose-400"></i>
-          <span id="powerStatus">POWER ON</span>
+        <button id="powerBtn" onclick="togglePower()" class="px-4 py-2 rounded-xl bg-[#201515] hover:bg-[#2e1d1d] text-[#b85c5c] border border-[#522929] text-xs font-bold transition-all flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#b85c5c] animate-pulse"></span>
+          <span id="powerStatus">POWER: ON</span>
         </button>
 
-        <button id="playBtn" onclick="togglePlay()" class="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-all shadow-lg shadow-emerald-500/25 flex items-center gap-2">
+        <button id="playBtn" onclick="togglePlay()" class="px-6 py-2.5 rounded-xl bg-[#c28834] hover:bg-[#d69942] text-[#111216] text-xs font-bold transition-all shadow-lg shadow-[#c28834]/20 flex items-center gap-2">
           <i data-lucide="play" class="w-4 h-4 fill-current"></i>
           <span id="playLabel">RUN SEQUENCER</span>
         </button>
       </div>
     </div>
 
-    <!-- ================= MODULE RACK GRID ================= -->
+    <!-- ================= HARDWARE MODULES GRID ================= -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- MODULE 1: DUAL OSCILLATOR & FILTER (4 cols) -->
+      <!-- MODULE A: ANALOG OSCILLATOR & LADDER FILTER (4 cols) -->
       <div class="lg:col-span-4 module-card rounded-2xl p-5 space-y-5">
-        <div class="flex justify-between items-center border-b border-white/10 pb-2.5">
-          <span class="text-xs font-bold text-amber-400 tracking-wider">MODULE A // OSCILLATORS</span>
-          <span class="text-[10px] text-[#6b7280]">VCO 1 &amp; 2</span>
+        <div class="flex justify-between items-center border-b border-[#232732] pb-2.5">
+          <span class="text-xs font-bold text-[#e6dfcf] tracking-wider">01 // OSCILLATOR &amp; VCF</span>
+          <span class="text-[10px] text-[#6b7280]">ANALOG CORE</span>
         </div>
 
         <!-- Waveform Selector -->
         <div class="space-y-2">
-          <label class="text-[10px] text-[#9ca3af] uppercase font-bold">VCO 1 Waveform</label>
+          <label class="text-[10px] text-[#858c9c] uppercase font-bold tracking-wider">Waveform Shape</label>
           <div class="grid grid-cols-4 gap-1.5 text-xs text-center font-bold">
-            <button onclick="setWaveform('sawtooth')" class="wave-btn active p-2 rounded-lg bg-amber-500/20 border border-amber-500 text-amber-300">SAW</button>
-            <button onclick="setWaveform('square')" class="wave-btn p-2 rounded-lg bg-white/5 border border-white/10 text-neutral-400 hover:text-white">SQR</button>
-            <button onclick="setWaveform('sine')" class="wave-btn p-2 rounded-lg bg-white/5 border border-white/10 text-neutral-400 hover:text-white">SIN</button>
-            <button onclick="setWaveform('triangle')" class="wave-btn p-2 rounded-lg bg-white/5 border border-white/10 text-neutral-400 hover:text-white">TRI</button>
+            <button onclick="setWaveform('sawtooth')" class="wave-btn active p-2 rounded-lg bg-[#241c10] border border-[#c28834] text-[#c28834]">SAW</button>
+            <button onclick="setWaveform('square')" class="wave-btn p-2 rounded-lg bg-[#181a20] border border-[#2d3240] text-[#858c9c] hover:text-white">SQR</button>
+            <button onclick="setWaveform('sine')" class="wave-btn p-2 rounded-lg bg-[#181a20] border border-[#2d3240] text-[#858c9c] hover:text-white">SIN</button>
+            <button onclick="setWaveform('triangle')" class="wave-btn p-2 rounded-lg bg-[#181a20] border border-[#2d3240] text-[#858c9c] hover:text-white">TRI</button>
           </div>
         </div>
 
-        <!-- Cutoff & Resonance Knobs -->
-        <div class="grid grid-cols-2 gap-4 text-center pt-2">
+        <!-- Cutoff & Resonance -->
+        <div class="grid grid-cols-2 gap-4 text-center pt-1">
           <div class="space-y-2">
-            <label class="text-[10px] text-[#9ca3af] uppercase font-bold">VCF Cutoff</label>
-            <input type="range" id="cutoffSlider" min="100" max="6000" value="1800" oninput="updateCutoff(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-amber-400 cursor-pointer">
-            <div id="cutoffReadout" class="text-xs font-bold text-amber-400">1800 Hz</div>
+            <label class="text-[10px] text-[#858c9c] uppercase font-bold">Moog Cutoff</label>
+            <input type="range" id="cutoffSlider" min="100" max="6000" value="1800" oninput="updateCutoff(this.value)" class="w-full h-1.5 bg-[#232732] rounded-lg appearance-none cursor-pointer">
+            <div id="cutoffReadout" class="text-xs font-bold text-[#c28834]">1800 Hz</div>
           </div>
           <div class="space-y-2">
-            <label class="text-[10px] text-[#9ca3af] uppercase font-bold">Resonance (Q)</label>
-            <input type="range" id="resSlider" min="0" max="20" step="0.5" value="6" oninput="updateResonance(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-amber-400 cursor-pointer">
-            <div id="resReadout" class="text-xs font-bold text-amber-400">6.0 Q</div>
+            <label class="text-[10px] text-[#858c9c] uppercase font-bold">Resonance (Q)</label>
+            <input type="range" id="resSlider" min="0" max="20" step="0.5" value="6" oninput="updateResonance(this.value)" class="w-full h-1.5 bg-[#232732] rounded-lg appearance-none cursor-pointer">
+            <div id="resReadout" class="text-xs font-bold text-[#c28834]">6.0 Q</div>
           </div>
         </div>
 
         <!-- Envelope Attack & Decay -->
-        <div class="grid grid-cols-2 gap-4 text-center pt-2 border-t border-white/5">
+        <div class="grid grid-cols-2 gap-4 text-center pt-2 border-t border-[#232732]">
           <div class="space-y-2">
-            <label class="text-[10px] text-[#9ca3af] uppercase font-bold">Attack Time</label>
-            <input type="range" id="attackSlider" min="0.01" max="1" step="0.01" value="0.05" oninput="updateAttack(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-emerald-400 cursor-pointer">
-            <div id="attackReadout" class="text-xs font-bold text-emerald-400">0.05s</div>
+            <label class="text-[10px] text-[#858c9c] uppercase font-bold">Attack Time</label>
+            <input type="range" id="attackSlider" min="0.01" max="1" step="0.01" value="0.05" oninput="updateAttack(this.value)" class="w-full h-1.5 bg-[#232732] rounded-lg appearance-none cursor-pointer">
+            <div id="attackReadout" class="text-xs font-bold text-[#e6dfcf]">0.05s</div>
           </div>
           <div class="space-y-2">
-            <label class="text-[10px] text-[#9ca3af] uppercase font-bold">Decay / Release</label>
-            <input type="range" id="decaySlider" min="0.05" max="2" step="0.05" value="0.4" oninput="updateDecay(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-emerald-400 cursor-pointer">
-            <div id="decayReadout" class="text-xs font-bold text-emerald-400">0.40s</div>
+            <label class="text-[10px] text-[#858c9c] uppercase font-bold">Decay Time</label>
+            <input type="range" id="decaySlider" min="0.05" max="2" step="0.05" value="0.4" oninput="updateDecay(this.value)" class="w-full h-1.5 bg-[#232732] rounded-lg appearance-none cursor-pointer">
+            <div id="decayReadout" class="text-xs font-bold text-[#e6dfcf]">0.40s</div>
           </div>
         </div>
       </div>
 
-      <!-- MODULE 2: CRT OSCILLOSCOPE & AUDIO VISUALIZER (5 cols) -->
+      <!-- MODULE B: AMBER CRT OSCILLOSCOPE (5 cols) -->
       <div class="lg:col-span-5 module-card rounded-2xl p-5 space-y-4">
-        <div class="flex justify-between items-center border-b border-white/10 pb-2.5">
-          <span class="text-xs font-bold text-emerald-400 tracking-wider">MODULE B // CRT OSCILLOSCOPE</span>
-          <span class="text-[10px] text-emerald-500 font-mono-jb animate-pulse">● 60 FPS REALTIME</span>
+        <div class="flex justify-between items-center border-b border-[#232732] pb-2.5">
+          <span class="text-xs font-bold text-[#e6dfcf] tracking-wider">02 // CRT PHOSPHOR OSCILLOSCOPE</span>
+          <span class="text-[10px] text-[#c28834] font-mono-jb">● 60 FPS PHOSPHOR</span>
         </div>
 
-        <!-- Phosphor CRT Display -->
-        <div class="crt-screen rounded-xl p-3 border border-emerald-500/40 relative overflow-hidden h-56 flex items-center justify-center">
+        <!-- Amber CRT Monitor -->
+        <div class="crt-screen rounded-xl p-3 relative overflow-hidden h-56 flex items-center justify-center">
           <canvas id="scopeCanvas" class="w-full h-full"></canvas>
-          <div class="absolute top-2 left-3 text-[10px] text-emerald-400 font-mono-jb pointer-events-none">
-            CH-1: AUDIO_SIGNAL • TIME/DIV: 2ms
+          <div class="absolute top-2 left-3 text-[9px] text-[#a6742a] font-mono-jb pointer-events-none">
+            TRACE-A: AUDIO_OUT • CALIBRATED: 50mV/DIV
           </div>
         </div>
 
         <div class="flex justify-between items-center text-[10px] text-[#6b7280] font-mono-jb pt-1">
-          <span>SAMPLE RATE: 48.0 kHz</span>
-          <span class="text-emerald-400">DSP LATENCY: 1.8ms</span>
+          <span>AUDIO ENGINE: WebAudio DSP</span>
+          <span class="text-[#c28834]">BUFFER: 512 SAMPLES</span>
         </div>
       </div>
 
-      <!-- MODULE 3: MASTER TEMPO & FX (3 cols) -->
+      <!-- MODULE C: MASTER CLOCK & TUBE GAIN (3 cols) -->
       <div class="lg:col-span-3 module-card rounded-2xl p-5 space-y-5">
-        <div class="flex justify-between items-center border-b border-white/10 pb-2.5">
-          <span class="text-xs font-bold text-cyan-400 tracking-wider">MODULE C // MASTER</span>
-          <span class="text-[10px] text-[#6b7280]">CLOCK</span>
+        <div class="flex justify-between items-center border-b border-[#232732] pb-2.5">
+          <span class="text-xs font-bold text-[#e6dfcf] tracking-wider">03 // MASTER CLOCK</span>
+          <span class="text-[10px] text-[#6b7280]">BPM</span>
         </div>
 
         <!-- BPM Slider -->
         <div class="space-y-2">
           <div class="flex justify-between text-xs">
-            <span class="text-[#9ca3af]">BPM TEMPO</span>
-            <span id="bpmReadout" class="text-cyan-400 font-bold font-cabinet text-base">124 BPM</span>
+            <span class="text-[#858c9c]">MASTER TEMPO</span>
+            <span id="bpmReadout" class="text-[#c28834] font-bold font-cabinet text-base">124 BPM</span>
           </div>
-          <input type="range" id="bpmSlider" min="70" max="175" value="124" oninput="updateBPM(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-cyan-400 cursor-pointer">
+          <input type="range" id="bpmSlider" min="70" max="175" value="124" oninput="updateBPM(this.value)" class="w-full h-1.5 bg-[#232732] rounded-lg appearance-none cursor-pointer">
         </div>
 
         <!-- Distortion / Drive -->
         <div class="space-y-2">
           <div class="flex justify-between text-xs">
-            <span class="text-[#9ca3af]">TUBE DRIVE FX</span>
-            <span id="driveReadout" class="text-cyan-400 font-bold">15%</span>
+            <span class="text-[#858c9c]">VALVE SATURATION</span>
+            <span id="driveReadout" class="text-[#c28834] font-bold">15%</span>
           </div>
-          <input type="range" id="driveSlider" min="0" max="100" value="15" oninput="updateDrive(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-cyan-400 cursor-pointer">
+          <input type="range" id="driveSlider" min="0" max="100" value="15" oninput="updateDrive(this.value)" class="w-full h-1.5 bg-[#232732] rounded-lg appearance-none cursor-pointer">
         </div>
 
         <!-- Master Volume -->
         <div class="space-y-2">
           <div class="flex justify-between text-xs">
-            <span class="text-[#9ca3af]">MASTER GAIN</span>
+            <span class="text-[#858c9c]">MASTER GAIN</span>
             <span id="volReadout" class="text-white font-bold">75%</span>
           </div>
-          <input type="range" id="volSlider" min="0" max="100" value="75" oninput="updateVolume(this.value)" class="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none accent-white cursor-pointer">
+          <input type="range" id="volSlider" min="0" max="100" value="75" oninput="updateVolume(this.value)" class="w-full h-1.5 bg-[#232732] rounded-lg appearance-none cursor-pointer">
         </div>
       </div>
 
     </div>
 
-    <!-- ================= 8-STEP PATTERN SEQUENCER GRID ================= -->
+    <!-- ================= 8-STEP CV/GATE SEQUENCER MATRIX ================= -->
     <div class="module-card rounded-2xl p-6 space-y-4">
-      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+      <div class="flex justify-between items-center border-b border-[#232732] pb-3">
         <div class="flex items-center gap-2">
-          <i data-lucide="grid" class="w-4 h-4 text-emerald-400"></i>
-          <span class="text-xs font-bold text-white tracking-wider">8-STEP HARDWARE PATTERN MATRIX</span>
+          <i data-lucide="disc" class="w-4 h-4 text-[#c28834]"></i>
+          <span class="text-xs font-bold text-white tracking-wider">8-STEP PATTERN MATRIX (ROLAND TR-808 EMULATION)</span>
         </div>
-        <span class="text-[10px] text-[#6b7280]">Click steps to toggle active beats</span>
+        <span class="text-[10px] text-[#6b7280]">Click step pads to program rhythm</span>
       </div>
 
       <!-- Sequencer Tracks -->
@@ -205,78 +223,76 @@
         
         <!-- Track 1: Kick -->
         <div class="flex items-center gap-3">
-          <span class="w-16 text-[11px] font-bold text-rose-400">BD KICK</span>
+          <span class="w-20 text-[11px] font-bold text-[#858c9c]">01 // KICK</span>
           <div class="grid grid-cols-8 gap-2 flex-1" id="track-kick">
-            <!-- 8 Step Buttons -->
-            <button onclick="toggleStep(0, 0)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">1</button>
-            <button onclick="toggleStep(0, 1)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">2</button>
-            <button onclick="toggleStep(0, 2)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">3</button>
-            <button onclick="toggleStep(0, 3)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">4</button>
-            <button onclick="toggleStep(0, 4)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">5</button>
-            <button onclick="toggleStep(0, 5)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">6</button>
-            <button onclick="toggleStep(0, 6)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">7</button>
-            <button onclick="toggleStep(0, 7)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">8</button>
+            <button onclick="toggleStep(0, 0)" class="seq-step active-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">1</button>
+            <button onclick="toggleStep(0, 1)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">2</button>
+            <button onclick="toggleStep(0, 2)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">3</button>
+            <button onclick="toggleStep(0, 3)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">4</button>
+            <button onclick="toggleStep(0, 4)" class="seq-step active-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">5</button>
+            <button onclick="toggleStep(0, 5)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">6</button>
+            <button onclick="toggleStep(0, 6)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">7</button>
+            <button onclick="toggleStep(0, 7)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">8</button>
           </div>
         </div>
 
         <!-- Track 2: Snare -->
         <div class="flex items-center gap-3">
-          <span class="w-16 text-[11px] font-bold text-amber-400">SD SNARE</span>
+          <span class="w-20 text-[11px] font-bold text-[#858c9c]">02 // SNARE</span>
           <div class="grid grid-cols-8 gap-2 flex-1" id="track-snare">
-            <button onclick="toggleStep(1, 0)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">1</button>
-            <button onclick="toggleStep(1, 1)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">2</button>
-            <button onclick="toggleStep(1, 2)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">3</button>
-            <button onclick="toggleStep(1, 3)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">4</button>
-            <button onclick="toggleStep(1, 4)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">5</button>
-            <button onclick="toggleStep(1, 5)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">6</button>
-            <button onclick="toggleStep(1, 6)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">7</button>
-            <button onclick="toggleStep(1, 7)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">8</button>
+            <button onclick="toggleStep(1, 0)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">1</button>
+            <button onclick="toggleStep(1, 1)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">2</button>
+            <button onclick="toggleStep(1, 2)" class="seq-step active-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">3</button>
+            <button onclick="toggleStep(1, 3)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">4</button>
+            <button onclick="toggleStep(1, 4)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">5</button>
+            <button onclick="toggleStep(1, 5)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">6</button>
+            <button onclick="toggleStep(1, 6)" class="seq-step active-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">7</button>
+            <button onclick="toggleStep(1, 7)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">8</button>
           </div>
         </div>
 
         <!-- Track 3: Synth Lead -->
         <div class="flex items-center gap-3">
-          <span class="w-16 text-[11px] font-bold text-cyan-400">SYN LEAD</span>
+          <span class="w-20 text-[11px] font-bold text-[#858c9c]">03 // LEAD</span>
           <div class="grid grid-cols-8 gap-2 flex-1" id="track-synth">
-            <button onclick="toggleStep(2, 0)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">C3</button>
-            <button onclick="toggleStep(2, 1)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">D3</button>
-            <button onclick="toggleStep(2, 2)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">Eb3</button>
-            <button onclick="toggleStep(2, 3)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">F3</button>
-            <button onclick="toggleStep(2, 4)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">G3</button>
-            <button onclick="toggleStep(2, 5)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">Bb3</button>
-            <button onclick="toggleStep(2, 6)" class="seq-step active-step h-12 rounded-xl border border-white/20 bg-white/5 transition-all text-xs font-bold text-black flex items-center justify-center">C4</button>
-            <button onclick="toggleStep(2, 7)" class="seq-step h-12 rounded-xl border border-white/10 bg-white/5 transition-all text-xs font-bold text-neutral-500 flex items-center justify-center">G3</button>
+            <button onclick="toggleStep(2, 0)" class="seq-step active-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">C3</button>
+            <button onclick="toggleStep(2, 1)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">D3</button>
+            <button onclick="toggleStep(2, 2)" class="seq-step active-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">Eb3</button>
+            <button onclick="toggleStep(2, 3)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">F3</button>
+            <button onclick="toggleStep(2, 4)" class="seq-step active-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">G3</button>
+            <button onclick="toggleStep(2, 5)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">Bb3</button>
+            <button onclick="toggleStep(2, 6)" class="seq-step active-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">C4</button>
+            <button onclick="toggleStep(2, 7)" class="seq-step h-12 rounded-xl text-xs font-bold flex items-center justify-center">G3</button>
           </div>
         </div>
 
       </div>
     </div>
 
-    <!-- Interactive Musical Keyboard Bar -->
+    <!-- Tactile Studio Piano Keyboard Trigger -->
     <div class="module-card rounded-2xl p-5 space-y-3">
       <div class="flex justify-between items-center text-xs">
-        <span class="text-[#9ca3af]">MANUAL KEYBOARD TRIGGER</span>
-        <span class="text-amber-400">CLICK OR PRESS KEYS TO TEST SOUND</span>
+        <span class="text-[#858c9c]">MANUAL KEYBOARD AUDITION</span>
+        <span class="text-[#c28834] font-bold">CLICK KEYS TO TRIGGER REALTIME SYNTH SOUND</span>
       </div>
       <div class="flex gap-2 justify-center">
-        <button onmousedown="playManualNote(261.63)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">C</button>
-        <button onmousedown="playManualNote(293.66)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">D</button>
-        <button onmousedown="playManualNote(329.63)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">E</button>
-        <button onmousedown="playManualNote(349.23)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">F</button>
-        <button onmousedown="playManualNote(392.00)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">G</button>
-        <button onmousedown="playManualNote(440.00)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">A</button>
-        <button onmousedown="playManualNote(493.88)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">B</button>
-        <button onmousedown="playManualNote(523.25)" class="flex-1 py-6 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 active:bg-amber-400 transition-colors shadow">C5</button>
+        <button onmousedown="playManualNote(261.63)" class="flex-1 py-6 rounded-xl bg-[#e6dfcf] text-[#111216] font-bold text-xs hover:bg-white active:bg-[#c28834] transition-colors shadow">C</button>
+        <button onmousedown="playManualNote(293.66)" class="flex-1 py-6 rounded-xl bg-[#e6dfcf] text-[#111216] font-bold text-xs hover:bg-white active:bg-[#c28834] transition-colors shadow">D</button>
+        <button onmousedown="playManualNote(329.63)" class="flex-1 py-6 rounded-xl bg-[#e6dfcf] text-[#111216] font-bold text-xs hover:bg-white active:bg-[#c28834] transition-colors shadow">E</button>
+        <button onmousedown="playManualNote(349.23)" class="flex-1 py-6 rounded-xl bg-[#e6dfcf] text-[#111216] font-bold text-xs hover:bg-white active:bg-[#c28834] transition-colors shadow">F</button>
+        <button onmousedown="playManualNote(392.00)" class="flex-1 py-6 rounded-xl bg-[#e6dfcf] text-[#111216] font-bold text-xs hover:bg-white active:bg-[#c28834] transition-colors shadow">G</button>
+        <button onmousedown="playManualNote(440.00)" class="flex-1 py-6 rounded-xl bg-[#e6dfcf] text-[#111216] font-bold text-xs hover:bg-white active:bg-[#c28834] transition-colors shadow">A</button>
+        <button onmousedown="playManualNote(493.88)" class="flex-1 py-6 rounded-xl bg-[#e6dfcf] text-[#111216] font-bold text-xs hover:bg-white active:bg-[#c28834] transition-colors shadow">B</button>
+        <button onmousedown="playManualNote(523.25)" class="flex-1 py-6 rounded-xl bg-[#e6dfcf] text-[#111216] font-bold text-xs hover:bg-white active:bg-[#c28834] transition-colors shadow">C5</button>
       </div>
     </div>
 
   </div>
 
-  <!-- ================= WEBAUDIO SYNTHESIZER JAVASCRIPT ================= -->
+  <!-- ================= WEBAUDIO DSP JAVASCRIPT ================= -->
   <script>
     lucide.createIcons();
 
-    // 1. Audio Context & DSP Routing
     let audioCtx = null;
     let masterGain = null;
     let filterNode = null;
@@ -294,11 +310,10 @@
     let attackTime = 0.05;
     let decayTime = 0.40;
 
-    // Pattern Matrix [Track][Step]
     const pattern = [
-      [true, false, false, false, true, false, false, false], // Kick
-      [false, false, true, false, false, false, true, false], // Snare
-      [true, false, true, false, true, false, true, false]    // Synth
+      [true, false, false, false, true, false, false, false],
+      [false, false, true, false, false, false, true, false],
+      [true, false, true, false, true, false, true, false]
     ];
     const synthPitches = [261.63, 293.66, 311.13, 349.23, 392.00, 466.16, 523.25, 392.00];
 
@@ -325,7 +340,6 @@
       }
     }
 
-    // Sound Triggers
     function playKick(time) {
       ensureAudio();
       let osc = audioCtx.createOscillator();
@@ -342,7 +356,6 @@
 
     function playSnare(time) {
       ensureAudio();
-      // White noise buffer
       let bufferSize = audioCtx.sampleRate * 0.15;
       let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
       let data = buffer.getChannelData(0);
@@ -380,19 +393,16 @@
       playSynthNote(pitch, audioCtx.currentTime);
     }
 
-    // Step Sequencer Engine
     function runClock() {
       if (!isPlaying) return;
       ensureAudio();
 
       let now = audioCtx.currentTime;
 
-      // Trigger Sounds
       if (pattern[0][currentStep]) playKick(now);
       if (pattern[1][currentStep]) playSnare(now);
       if (pattern[2][currentStep]) playSynthNote(synthPitches[currentStep], now);
 
-      // Highlight step UI
       document.querySelectorAll('.seq-step').forEach(btn => btn.classList.remove('triggered'));
       [0, 1, 2].forEach(track => {
         let parent = track === 0 ? 'track-kick' : track === 1 ? 'track-snare' : 'track-synth';
@@ -410,11 +420,11 @@
       isPlaying = !isPlaying;
       if (isPlaying) {
         document.getElementById('playLabel').innerText = 'STOP SEQUENCER';
-        document.getElementById('playBtn').classList.replace('bg-emerald-500', 'bg-amber-500');
+        document.getElementById('playBtn').classList.replace('bg-[#c28834]', 'bg-[#b85c5c]');
         runClock();
       } else {
         document.getElementById('playLabel').innerText = 'RUN SEQUENCER';
-        document.getElementById('playBtn').classList.replace('bg-amber-500', 'bg-emerald-500');
+        document.getElementById('playBtn').classList.replace('bg-[#b85c5c]', 'bg-[#c28834]');
         clearTimeout(stepTimer);
         document.querySelectorAll('.seq-step').forEach(btn => btn.classList.remove('triggered'));
       }
@@ -425,28 +435,22 @@
       let parent = track === 0 ? 'track-kick' : track === 1 ? 'track-snare' : 'track-synth';
       let btn = document.getElementById(parent).children[step];
       btn.classList.toggle('active-step', pattern[track][step]);
-      if (pattern[track][step]) {
-        btn.classList.replace('text-neutral-500', 'text-black');
-      } else {
-        btn.classList.replace('text-black', 'text-neutral-500');
-      }
     }
 
     function togglePower() {
       isPowered = !isPowered;
-      document.getElementById('powerStatus').innerText = isPowered ? 'POWER ON' : 'OFFLINE';
+      document.getElementById('powerStatus').innerText = isPowered ? 'POWER: ON' : 'POWER: OFF';
       if (!isPowered && isPlaying) togglePlay();
     }
 
-    // UI Updates
     function setWaveform(w) {
       waveform = w;
       document.querySelectorAll('.wave-btn').forEach(b => {
-        b.classList.remove('active', 'bg-amber-500/20', 'border-amber-500', 'text-amber-300');
-        b.classList.add('bg-white/5', 'border-white/10', 'text-neutral-400');
+        b.classList.remove('active', 'bg-[#241c10]', 'border-[#c28834]', 'text-[#c28834]');
+        b.classList.add('bg-[#181a20]', 'border-[#2d3240]', 'text-[#858c9c]');
       });
-      event.currentTarget.classList.add('active', 'bg-amber-500/20', 'border-amber-500', 'text-amber-300');
-      event.currentTarget.classList.remove('bg-white/5', 'border-white/10', 'text-neutral-400');
+      event.currentTarget.classList.add('active', 'bg-[#241c10]', 'border-[#c28834]', 'text-[#c28834]');
+      event.currentTarget.classList.remove('bg-[#181a20]', 'border-[#2d3240]', 'text-[#858c9c]');
     }
 
     function updateCutoff(v) {
@@ -485,7 +489,7 @@
       if (masterGain) masterGain.gain.setValueAtTime(v / 100, audioCtx.currentTime);
     }
 
-    // 2. 60FPS Phosphor Oscilloscope Canvas
+    // Amber CRT Phosphor Oscilloscope
     const scopeCanvas = document.getElementById('scopeCanvas');
     const scopeCtx = scopeCanvas.getContext('2d');
     let scopeWidth, scopeHeight;
@@ -497,11 +501,11 @@
     window.addEventListener('resize', initScope);
 
     function drawScope() {
-      scopeCtx.fillStyle = 'rgba(2, 11, 6, 0.25)';
+      scopeCtx.fillStyle = 'rgba(13, 10, 4, 0.25)';
       scopeCtx.fillRect(0, 0, scopeWidth, scopeHeight);
 
-      // Grid Lines
-      scopeCtx.strokeStyle = 'rgba(16, 185, 129, 0.08)';
+      // Amber Grid Lines
+      scopeCtx.strokeStyle = 'rgba(217, 119, 6, 0.06)';
       scopeCtx.lineWidth = 1;
       for (let x = 0; x < scopeWidth; x += 30) {
         scopeCtx.beginPath(); scopeCtx.moveTo(x, 0); scopeCtx.lineTo(x, scopeHeight); scopeCtx.stroke();
@@ -516,9 +520,9 @@
         analyserNode.getByteTimeDomainData(dataArray);
 
         scopeCtx.lineWidth = 2;
-        scopeCtx.strokeStyle = '#10b981';
-        scopeCtx.shadowBlur = 8;
-        scopeCtx.shadowColor = '#10b981';
+        scopeCtx.strokeStyle = '#d97706';
+        scopeCtx.shadowBlur = 10;
+        scopeCtx.shadowColor = '#d97706';
         scopeCtx.beginPath();
 
         let sliceWidth = scopeWidth * 1.0 / bufferLength;
@@ -534,9 +538,8 @@
         scopeCtx.stroke();
         scopeCtx.shadowBlur = 0;
       } else {
-        // Flatline
         scopeCtx.lineWidth = 1.5;
-        scopeCtx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+        scopeCtx.strokeStyle = 'rgba(217, 119, 6, 0.3)';
         scopeCtx.beginPath();
         scopeCtx.moveTo(0, scopeHeight / 2);
         scopeCtx.lineTo(scopeWidth, scopeHeight / 2);
