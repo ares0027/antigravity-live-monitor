@@ -52,7 +52,7 @@ Translates abstract percentage limits and token pools into concrete pay-as-you-g
 ### 2. Installation
 Clone the repository and install dependencies:
 ```bash
-git clone https://github.com/baran-dev/antigravity-live-monitor.git
+git clone https://github.com/ares0027/antigravity-live-monitor.git
 cd antigravity-live-monitor
 pip install -r requirements.txt
 ```
