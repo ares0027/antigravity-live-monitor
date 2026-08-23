@@ -47,9 +47,10 @@ For both model tiers, the monitor calculates quota dollar values using four dist
 ### 3. Cross-Project Slot Tracking
 ### 4. Modern Frameless Desktop HUD & Autostart
 - **Custom Draggable Titlebar:** Borderless dark dashboard aesthetic with `-webkit-app-region: drag` and smooth cursor-tracking movement.
-- **Auto-Prime 5h Cooldown (Enabled by Default):** Background worker monitors quota status; whenever the 5-hour quota is sitting idle at 100%, it automatically sends a minimal ephemeral ping to start the 5-hour cooldown timer in advance. This unlocks a back-to-back double-burst capacity (~1.7M tokens) when starting coding sessions.
+- **Global YOLO Mode (Enabled by Default):** Integrated with Antigravity's `PreToolUse` lifecycle hook (`~/.gemini/config/hooks.json`). Automatically approves all tool execution permission prompts across every session and conversation (including when jumping between feature chats with `/switch`), with an instant toggle button in the HUD.
+- **Auto-Prime Dual Cooldowns (Enabled by Default):** Background worker monitors quota status; whenever the 5-hour quota is sitting idle at 100%, it automatically sends an ultra-low token ping (`~4 in, 1 out`, using cheapest models) to start the 5-hour cooldown timer in advance. This unlocks a back-to-back double-burst capacity (~1.7M tokens) when starting coding sessions.
 - **Detailed Multi-Unit Timers:** Resets display precise days, hours, and minutes (`e.g., Resets in 6 days, 3 hours, 21 mins`).
-- **Persistent Preferences:** Pin and Auto-Prime settings are saved to `hud_config.json` and automatically restored on launch.
+- **Persistent Preferences:** Pin, Auto-Prime, and Global YOLO settings are saved to `hud_config.json` and automatically restored on launch.
 - **Single-Instance Enforcement:** Protected by a Windows Named Mutex (`Local\AntigravityLiveMonitor_SingleInstance_Mutex`).
 - **Windows & CLI Autostart:** Automatically launches on PC boot (`shell:startup`) and hooks into Antigravity session starts (`~/.gemini/config/hooks.json`).
 - **Zero Console Popups:** Runs silently in the background with `CREATE_NO_WINDOW`.

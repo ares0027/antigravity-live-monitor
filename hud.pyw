@@ -53,7 +53,7 @@ def check_single_instance():
     return mutex
 
 def load_hud_config():
-    default_config = {"pinned": True, "auto_prime": True, "active_tab": "5h"}
+    default_config = {"pinned": True, "auto_prime": True, "global_yolo": True, "active_tab": "5h"}
     if os.path.exists(HUD_CONFIG_FILE):
         try:
             with open(HUD_CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -155,6 +155,12 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     <!-- Controls -->
     <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+      <!-- Global YOLO Mode Toggle -->
+      <button onclick="toggleYolo()" id="yoloBtn" class="px-2 py-0.5 rounded bg-red-950/80 border border-red-800/60 text-red-400 hover:text-red-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Global YOLO Mode (Auto-Approve All Permissions)">
+        <span id="yoloDot" class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
+        <span id="yoloText">YOLO: ON</span>
+      </button>
+
       <!-- Auto-Prime Toggle -->
       <button onclick="togglePrime()" id="primeBtn" class="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-800/60 text-amber-400 hover:text-amber-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Auto-Prime Dual Cooldowns (Gemini + Claude/GPT)">
         <span id="primeDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
@@ -448,6 +454,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     let activeTab = '5h';
     let isPinned = true;
     let isAutoPrime = true;
+    let isGlobalYolo = true;
     let isDragging = false;
     let startX = 0, startY = 0;
 
@@ -480,6 +487,24 @@ HTML_CONTENT = """<!DOCTYPE html>
         window.addEventListener('mouseup', () => {
           isDragging = false;
         });
+      }
+    }
+
+    function applyYoloVisual(enabled) {
+      isGlobalYolo = enabled;
+      const dot = document.getElementById('yoloDot');
+      const text = document.getElementById('yoloText');
+      const btn = document.getElementById('yoloBtn');
+      if (isGlobalYolo) {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse';
+        btn.className = 'px-2 py-0.5 rounded bg-red-950/80 border border-red-800/60 text-red-400 hover:text-red-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
+        text.textContent = 'YOLO: ON';
+        btn.title = 'Global YOLO Mode (Enabled - Auto-Approve All Permissions)';
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-500';
+        btn.className = 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
+        text.textContent = 'YOLO: OFF';
+        btn.title = 'Global YOLO Mode (Disabled - Standard Permission Prompts)';
       }
     }
 
@@ -531,6 +556,17 @@ HTML_CONTENT = """<!DOCTYPE html>
         t5.className = 'px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer';
       }
       refreshData();
+    }
+
+    async function toggleYolo() {
+      if (window.pywebview && window.pywebview.api) {
+        try {
+          const newState = await window.pywebview.api.toggle_global_yolo();
+          applyYoloVisual(newState);
+        } catch (e) {
+          console.error(e);
+        }
+      }
     }
 
     async function togglePrime() {
@@ -684,6 +720,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           if (cfg) {
             if (typeof cfg.pinned === 'boolean') applyPinVisual(cfg.pinned);
             if (typeof cfg.auto_prime === 'boolean') applyPrimeVisual(cfg.auto_prime);
+            if (typeof cfg.global_yolo === 'boolean') applyYoloVisual(cfg.global_yolo);
           }
         } catch(e) {}
       }
@@ -1180,6 +1217,7 @@ class Api:
         self.window = None
         self.is_on_top = config.get("pinned", True)
         self.is_auto_prime = config.get("auto_prime", True)
+        self.is_global_yolo = config.get("global_yolo", True)
 
     def set_window(self, window):
         self.window = window
@@ -1207,6 +1245,12 @@ class Api:
                 self.window.move(self.window.x + dx, self.window.y + dy)
             except Exception:
                 pass
+
+    def toggle_global_yolo(self):
+        self.is_global_yolo = not self.is_global_yolo
+        self.config["global_yolo"] = self.is_global_yolo
+        save_hud_config(self.config)
+        return self.is_global_yolo
 
     def toggle_auto_prime(self):
         self.is_auto_prime = not self.is_auto_prime
