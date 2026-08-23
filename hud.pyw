@@ -47,7 +47,7 @@ def check_single_instance():
     return mutex
 
 def load_hud_config():
-    default_config = {"pinned": True}
+    default_config = {"pinned": True, "auto_prime": True}
     if os.path.exists(HUD_CONFIG_FILE):
         try:
             with open(HUD_CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -143,6 +143,12 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     <!-- Controls -->
     <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+      <!-- Auto-Prime Cooldown Toggle -->
+      <button onclick="togglePrime()" id="primeBtn" class="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-800/60 text-amber-400 hover:text-amber-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Auto-Prime 5h Cooldown (Enabled by Default)">
+        <span id="primeDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+        <span id="primeText">PRIME: ON</span>
+      </button>
+
       <!-- Always on Top Toggle -->
       <button onclick="togglePin()" id="pinBtn" class="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Always on Top (Enabled)">
         <span id="pinDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -332,6 +338,7 @@ HTML_CONTENT = """<!DOCTYPE html>
   <script>
     let activeTab = '5h';
     let isPinned = true;
+    let isAutoPrime = true;
     let isDragging = false;
     let startX = 0, startY = 0;
 
@@ -367,6 +374,24 @@ HTML_CONTENT = """<!DOCTYPE html>
       }
     }
 
+    function applyPrimeVisual(enabled) {
+      isAutoPrime = enabled;
+      const dot = document.getElementById('primeDot');
+      const text = document.getElementById('primeText');
+      const btn = document.getElementById('primeBtn');
+      if (isAutoPrime) {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
+        btn.className = 'px-2 py-0.5 rounded bg-amber-950/80 border border-amber-800/60 text-amber-400 hover:text-amber-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
+        text.textContent = 'PRIME: ON';
+        btn.title = 'Auto-Prime 5h Cooldown (Enabled - Max Burst Mode)';
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-500';
+        btn.className = 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
+        text.textContent = 'PRIME: OFF';
+        btn.title = 'Auto-Prime 5h Cooldown (Disabled)';
+      }
+    }
+
     function applyPinVisual(pinned) {
       isPinned = pinned;
       const dot = document.getElementById('pinDot');
@@ -399,6 +424,17 @@ HTML_CONTENT = """<!DOCTYPE html>
         document.getElementById('slotTokensLabel').textContent = 'Tokens in Current Weekly Slot:';
       }
       refreshData();
+    }
+
+    async function togglePrime() {
+      if (window.pywebview && window.pywebview.api) {
+        try {
+          const newState = await window.pywebview.api.toggle_auto_prime();
+          applyPrimeVisual(newState);
+        } catch (e) {
+          console.error(e);
+        }
+      }
     }
 
     async function togglePin() {
@@ -448,7 +484,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           const d = await window.pywebview.api.get_metrics();
           if (!d) return;
 
-          // 1. Gemini Weekly
+          // 1. Gemini Weekly (Exact Days, Hours, and Minutes)
           document.getElementById('geminiWeeklyPct').textContent = d.gemini_weekly_pct + '%';
           document.getElementById('geminiWeeklyDesc').textContent = d.gemini_weekly_desc;
           document.getElementById('estWeeklyRemain').textContent = '~' + d.est_weekly_remain_str + ' left';
@@ -523,8 +559,9 @@ HTML_CONTENT = """<!DOCTYPE html>
       if (window.pywebview && window.pywebview.api) {
         try {
           const cfg = await window.pywebview.api.get_config();
-          if (cfg && typeof cfg.pinned === 'boolean') {
-            applyPinVisual(cfg.pinned);
+          if (cfg) {
+            if (typeof cfg.pinned === 'boolean') applyPinVisual(cfg.pinned);
+            if (typeof cfg.auto_prime === 'boolean') applyPrimeVisual(cfg.auto_prime);
           }
         } catch(e) {}
       }
@@ -546,7 +583,7 @@ class MetricsEngine:
         self.weekly_start_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
         self.cached_metrics = {
             "gemini_weekly_pct": 97,
-            "gemini_weekly_desc": "Resets in 6 days, 5 hours",
+            "gemini_weekly_desc": "Resets in 6 days, 5 hours, 0 mins",
             "gemini_5h_pct": 85,
             "gemini_5h_desc": "Resets in 1 hour, 16 minutes",
             "est_5h_remain_str": "733k",
@@ -651,15 +688,17 @@ class MetricsEngine:
                     mins = (diff_secs % 3600) // 60
 
                     if days > 0:
-                        h_txt = f"{hours} hour" if hours == 1 else f"{hours} hours"
                         d_txt = f"{days} day" if days == 1 else f"{days} days"
-                        time_txt = f"{d_txt}, {h_txt}"
+                        h_txt = f"{hours} hour" if hours == 1 else f"{hours} hours"
+                        m_txt = f"{mins} min" if mins == 1 else f"{mins} mins"
+                        time_txt = f"{d_txt}, {h_txt}, {m_txt}"
                     elif hours > 0:
                         h_txt = f"{hours} hour" if hours == 1 else f"{hours} hours"
-                        m_txt = f"{mins} minute" if mins == 1 else f"{mins} minutes"
+                        m_txt = f"{mins} min" if mins == 1 else f"{mins} mins"
                         time_txt = f"{h_txt}, {m_txt}"
                     else:
-                        time_txt = f"{mins} minutes"
+                        m_txt = f"{mins} min" if mins == 1 else f"{mins} mins"
+                        time_txt = f"{m_txt}"
 
                     short_desc = f"Resets in {time_txt}"
 
@@ -897,12 +936,53 @@ class MetricsEngine:
         self.cached_metrics["turns"] = turns
         self.cached_metrics["session_total_tokens"] = in_tokens + out_tokens
 
+class AutoPrimerWorker(threading.Thread):
+    def __init__(self, engine, config):
+        super().__init__(daemon=True)
+        self.engine = engine
+        self.config = config
+        self.running = True
+        self.last_prime_attempt = 0
+
+    def run(self):
+        while self.running:
+            try:
+                if self.config.get("auto_prime", True):
+                    cur_5h = self.engine.cached_metrics.get("gemini_5h_pct", 100)
+                    now_ts = time.time()
+                    # If 5-hour quota is 100% (idle, no timer active) and we haven't primed in last 3 mins
+                    if cur_5h >= 100 and (now_ts - self.last_prime_attempt) > 180:
+                        self.last_prime_attempt = now_ts
+                        self.trigger_prime()
+            except Exception:
+                pass
+            time.sleep(30.0)
+
+    def trigger_prime(self):
+        try:
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = subprocess.SW_HIDE
+            subprocess.Popen(
+                ["agy", "-p", "1"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                startupinfo=si,
+                creationflags=CREATE_NO_WINDOW
+            )
+            time.sleep(6.0)
+            self.engine.query_official_usage()
+        except Exception:
+            pass
+
 class Api:
     def __init__(self, engine, config):
         self.engine = engine
         self.config = config
         self.window = None
         self.is_on_top = config.get("pinned", True)
+        self.is_auto_prime = config.get("auto_prime", True)
 
     def set_window(self, window):
         self.window = window
@@ -930,6 +1010,12 @@ class Api:
                 self.window.move(self.window.x + dx, self.window.y + dy)
             except Exception:
                 pass
+
+    def toggle_auto_prime(self):
+        self.is_auto_prime = not self.is_auto_prime
+        self.config["auto_prime"] = self.is_auto_prime
+        save_hud_config(self.config)
+        return self.is_auto_prime
 
     def toggle_on_top(self):
         self.is_on_top = not self.is_on_top
@@ -961,6 +1047,9 @@ def main():
     config = load_hud_config()
 
     engine = MetricsEngine()
+    primer = AutoPrimerWorker(engine, config)
+    primer.start()
+
     api = Api(engine, config)
 
     window = webview.create_window(

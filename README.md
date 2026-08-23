@@ -27,15 +27,13 @@ Translates abstract percentage limits and token pools into concrete pay-as-you-g
 - **4. Cache Only ($0.075/M):** Full quota value if consumed strictly as cached context reads (90% cache discount).
 
 ### 3. Cross-Project Slot Tracking
-- Scans all workspace transcripts across both Antigravity CLI (`~/.gemini/antigravity-cli/brain`) and Desktop App (`~/.gemini/antigravity/brain`).
-- Interactive toggle tabs between **[Current 5h Slot]** and **[Current Weekly Slot]** showing total tokens consumed and dollar spend across all projects on your PC.
-
 ### 4. Modern Frameless Desktop HUD & Autostart
-- **Custom Draggable Titlebar:** Borderless dark dashboard aesthetic with `-webkit-app-region: drag`.
-- **Persistent Always-on-Top State:** Pin preferences are saved to `hud_config.json` and automatically restored on startup.
-- **Single-Instance Enforcement:** Uses a Windows Named Mutex (`Global\AntigravityLiveMonitor_SingleInstance_Mutex`) to prevent duplicate instances.
-- **Windows Auto-Start:** Configurable via Windows Startup folder (`shell:startup`) for seamless boot launches.
-- **Antigravity Lifecycle Auto-Start:** Integrates with `~/.gemini/config/hooks.json` (`PreInvocation`) to auto-launch the monitor whenever `agy` starts in CLI, Desktop, or VS Code.
+- **Custom Draggable Titlebar:** Borderless dark dashboard aesthetic with `-webkit-app-region: drag` and smooth cursor-tracking movement.
+- **Auto-Prime 5h Cooldown (Enabled by Default):** Background worker monitors quota status; whenever the 5-hour quota is sitting idle at 100%, it automatically sends a minimal ephemeral ping to start the 5-hour cooldown timer in advance. This unlocks a back-to-back double-burst capacity (~1.7M tokens) when starting coding sessions.
+- **Detailed Multi-Unit Timers:** Resets display precise days, hours, and minutes (`e.g., Resets in 6 days, 3 hours, 21 mins`).
+- **Persistent Preferences:** Pin and Auto-Prime settings are saved to `hud_config.json` and automatically restored on launch.
+- **Single-Instance Enforcement:** Protected by a Windows Named Mutex (`Local\AntigravityLiveMonitor_SingleInstance_Mutex`).
+- **Windows & CLI Autostart:** Automatically launches on PC boot (`shell:startup`) and hooks into Antigravity session starts (`~/.gemini/config/hooks.json`).
 - **Zero Console Popups:** Runs silently in the background with `CREATE_NO_WINDOW`.
 
 ### 5. Interactive Workspace Hub (`hub.py`)
