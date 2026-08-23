@@ -30,23 +30,16 @@ kernel32 = ctypes.windll.kernel32
 user32.SetWindowPos.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_uint]
 user32.SetWindowPos.restype = ctypes.c_bool
 
-user32.ReleaseCapture.argtypes = []
-user32.ReleaseCapture.restype = ctypes.c_bool
-
-user32.SendMessageW.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.c_void_p, ctypes.c_void_p]
-user32.SendMessageW.restype = ctypes.c_void_p
-
 HWND_TOPMOST = -1
 HWND_NOTOPMOST = -2
 SWP_NOSIZE = 0x0001
 SWP_NOMOVE = 0x0002
+SWP_NOZORDER = 0x0004
 SWP_NOACTIVATE = 0x0010
 SWP_SHOWWINDOW = 0x0040
-WM_NCLBUTTONDOWN = 0x00A1
-HTCAPTION = 2
 
 def check_single_instance():
-    mutex_name = "Global\\AntigravityLiveMonitor_SingleInstance_Mutex"
+    mutex_name = "Local\\AntigravityLiveMonitor_SingleInstance_Mutex"
     mutex = kernel32.CreateMutexW(None, True, mutex_name)
     last_error = kernel32.GetLastError()
     if last_error == 183:  # ERROR_ALREADY_EXISTS
@@ -131,10 +124,10 @@ HTML_CONTENT = """<!DOCTYPE html>
       transform: rotate(-90deg);
       transform-origin: 50% 50%;
     }
-    .drag-bar {
+    .drag-handle {
       cursor: grab;
     }
-    .drag-bar:active {
+    .drag-handle:active {
       cursor: grabbing;
     }
   </style>
@@ -142,7 +135,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 <body class="flex flex-col h-screen box-border antialiased rounded-2xl border border-zinc-800/90 shadow-2xl overflow-hidden bg-[#0D0E12]">
 
   <!-- 0. SLEEK CUSTOM TITLEBAR (DRAGGABLE) -->
-  <div id="titlebar" class="drag-bar flex items-center justify-between px-3 py-2 bg-[#12141A] border-b border-[#23262F] select-none flex-shrink-0">
+  <div id="titlebar" class="drag-handle flex items-center justify-between px-3 py-2 bg-[#12141A] border-b border-[#23262F] select-none flex-shrink-0">
     <div class="flex items-center gap-2 pointer-events-none">
       <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
       <span class="text-xs font-bold text-zinc-200 tracking-wide mono">Antigravity Live Monitor</span>
@@ -339,16 +332,37 @@ HTML_CONTENT = """<!DOCTYPE html>
   <script>
     let activeTab = '5h';
     let isPinned = true;
+    let isDragging = false;
+    let startX = 0, startY = 0;
 
-    // Attach native Win32 window drag handler
     function setupDrag() {
       const tb = document.getElementById('titlebar');
       if (tb) {
         tb.addEventListener('mousedown', (e) => {
           if (e.target.closest('button') || e.target.closest('input')) return;
-          if (e.button === 0 && window.pywebview && window.pywebview.api) {
-            window.pywebview.api.drag_window();
+          if (e.button === 0) {
+            isDragging = true;
+            startX = e.screenX;
+            startY = e.screenY;
           }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (isDragging) {
+            const dx = e.screenX - startX;
+            const dy = e.screenY - startY;
+            if (dx !== 0 || dy !== 0) {
+              startX = e.screenX;
+              startY = e.screenY;
+              if (window.pywebview && window.pywebview.api) {
+                window.pywebview.api.move_by(dx, dy);
+              }
+            }
+          }
+        });
+
+        window.addEventListener('mouseup', () => {
+          isDragging = false;
         });
       }
     }
@@ -903,11 +917,19 @@ class Api:
         self.engine.query_official_usage()
         return True
 
-    def drag_window(self):
+    def move_by(self, dx, dy):
         hwnd = get_hud_hwnd()
         if hwnd:
-            user32.ReleaseCapture()
-            user32.SendMessageW(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0)
+            rect = (ctypes.c_long * 4)()
+            user32.GetWindowRect(hwnd, rect)
+            cur_x = rect[0]
+            cur_y = rect[1]
+            user32.SetWindowPos(hwnd, 0, cur_x + dx, cur_y + dy, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE)
+        elif self.window:
+            try:
+                self.window.move(self.window.x + dx, self.window.y + dy)
+            except Exception:
+                pass
 
     def toggle_on_top(self):
         self.is_on_top = not self.is_on_top
