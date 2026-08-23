@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUMINA — Architectural Optics &amp; Spatial Kinetic Systems</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@500;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    .font-cabinet { font-family: 'Cabinet Grotesk', sans-serif; }
+    .font-serif-fraunces { font-family: 'Fraunces', Georgia, serif; }
+    .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-mono-jb { font-family: 'JetBrains Mono', monospace; }
+
+    /* Custom Smooth Keyframes */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(226, 177, 112, 0.4)); }
+    }
+    .animate-glow {
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
+
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(0.5deg); }
+    }
+    .animate-float {
+      animation: floatSlow 6s ease-in-out infinite;
+    }
+
+    /* Interactive 3D Card Hover */
+    .card-hover-3d {
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+    }
+    .card-hover-3d:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), 0 0 30px rgba(226, 177, 112, 0.12);
+      border-color: rgba(226, 177, 112, 0.4);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #07080a; }
+    ::-webkit-scrollbar-thumb { background: #1c202a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2f3647; }
+  </style>
+</head>
+<body class="bg-[#07080a] text-[#edeef2] font-jakarta antialiased selection:bg-[#e2b170] selection:text-black min-h-screen flex flex-col overflow-x-hidden">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.07] bg-[#07080a]/80 backdrop-blur-2xl">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10 h-20 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#161a24] to-[#252c3d] border border-white/10 flex items-center justify-center text-[#e2b170] group-hover:border-[#e2b170]/50 transition-all duration-300 shadow-lg">
+          <i data-lucide="aperture" class="w-5 h-5 group-hover:rotate-90 transition-transform duration-700"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-cabinet text-lg font-black tracking-widest text-white">LUMINA</span>
+          <span class="text-[9px] font-mono-jb text-[#8e95a5] uppercase tracking-widest -mt-1">Optics &amp; Spatial Kinetic</span>
+        </div>
+      </a>
+
+      <!-- Center Links -->
+      <nav class="hidden md:flex items-center gap-8 text-xs font-semibold text-[#8e95a5]">
+        <a href="#systems" class="hover:text-white transition-colors">Optical Systems</a>
+        <a href="#configurator" class="hover:text-white transition-colors">Kinetic Configurator</a>
+        <a href="#acoustics" class="hover:text-white transition-colors">Spatial Resonance</a>
+        <a href="#installations" class="hover:text-white transition-colors">Architecture</a>
+        <a href="#specs" class="hover:text-white transition-colors">Engineering Data</a>
+      </nav>
+
+      <!-- Right Action CTA -->
+      <div class="flex items-center gap-4">
+        <span class="hidden sm:flex items-center gap-2 text-[11px] font-mono-jb text-[#10b981] bg-[#10b981]/10 border border-[#10b981]/30 px-3 py-1 rounded-full font-bold">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-ping"></span> LAB ACTIVE • S-44
+        </span>
+        <button class="px-5 py-2.5 rounded-xl bg-[#e2b170] text-[#07080a] text-xs font-bold font-cabinet hover:bg-[#edd09f] transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#e2b170]/20 flex items-center gap-2">
+          <span>Request Spec Sheet</span>
+          <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= HERO SECTION WITH INTERACTIVE 3D CANVAS ================= -->
+  <section class="relative min-h-screen pt-28 pb-20 flex flex-col justify-center items-center overflow-hidden">
+    <!-- Interactive Background Particle Canvas -->
+    <canvas id="heroCanvas" class="absolute inset-0 w-full h-full pointer-events-auto opacity-75"></canvas>
+    
+    <!-- Ambient Radial Glows -->
+    <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-[#e2b170]/10 to-[#818cf8]/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+    <div class="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 pointer-events-none">
+      
+      <!-- Eyebrow Pill -->
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl text-xs font-mono-jb text-[#e2b170] shadow-2xl pointer-events-auto">
+        <i data-lucide="shield-check" class="w-4 h-4 text-[#e2b170]"></i>
+        <span>GEN-4 PRECISION PHOTONIC HARDWARE</span>
+      </div>
+
+      <!-- Headline -->
+      <h1 class="text-5xl sm:text-7xl lg:text-8xl font-serif-fraunces italic font-normal tracking-tight text-white leading-[1.05]">
+        Light sculpted as <br>
+        <span class="font-cabinet not-italic font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#f3e7d3] to-[#e2b170]">
+          Kinetic Architecture.
+        </span>
+      </h1>
+
+      <!-- Description -->
+      <p class="max-w-2xl mx-auto text-base sm:text-lg text-[#9da4b4] leading-relaxed font-normal pointer-events-auto">
+        LUMINA engineers variable-focal optics and motorized astronomical lenses designed for world-class architectural spaces, museums, and private residences.
+      </p>
+
+      <!-- Primary Action Buttons -->
+      <div class="pt-4 flex flex-wrap justify-center items-center gap-4 pointer-events-auto">
+        <a href="#configurator" class="px-8 py-4 rounded-2xl bg-[#e2b170] text-[#07080a] text-sm font-bold font-cabinet hover:bg-[#edd09f] transition-all transform hover:scale-105 shadow-2xl shadow-[#e2b170]/30 flex items-center gap-3">
+          <i data-lucide="sliders" class="w-4 h-4"></i>
+          <span>Launch Interactive Studio</span>
+        </a>
+        <a href="#systems" class="px-8 py-4 rounded-2xl bg-white/[0.05] border border-white/10 hover:border-white/25 text-white text-sm font-bold transition-all flex items-center gap-2.5 backdrop-blur-xl">
+          <i data-lucide="play-circle" class="w-4 h-4 text-[#e2b170]"></i>
+          <span>Watch 4K Monograph</span>
+        </a>
+      </div>
+
+      <!-- Live Interaction Hint -->
+      <div class="pt-8 text-[11px] font-mono-jb text-[#616877] flex justify-center items-center gap-2 pointer-events-none">
+        <i data-lucide="mouse-pointer" class="w-3.5 h-3.5 text-[#e2b170] animate-bounce"></i>
+        <span>Move cursor across the viewport to manipulate the real-time photonic field</span>
+      </div>
+
+    </div>
+
+    <!-- Floating Live Metric Bar -->
+    <div class="relative z-10 mt-16 max-w-5xl w-full mx-auto px-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-3xl bg-[#0e1017]/90 border border-white/[0.08] backdrop-blur-2xl shadow-2xl text-left">
+        <div class="space-y-1">
+          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Luminous Flux Output</div>
+          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">48,500 <span class="text-xs font-mono-jb text-[#e2b170]">LM</span></div>
+          <div class="text-[11px] text-[#10b981] flex items-center gap-1 font-semibold">
+            <i data-lucide="trending-up" class="w-3 h-3"></i> 99.8% CRI Rating
+          </div>
+        </div>
+
+        <div class="space-y-1 border-l border-white/[0.06] pl-4">
+          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Kinetic Axis Resolution</div>
+          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">0.002° <span class="text-xs font-mono-jb text-[#e2b170]">ARC</span></div>
+          <div class="text-[11px] text-[#8e95a5]">Piezo-stepper precision</div>
+        </div>
+
+        <div class="space-y-1 border-l border-white/[0.06] pl-4">
+          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Optical Thermal Drift</div>
+          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">&lt; 0.04 <span class="text-xs font-mono-jb text-[#e2b170]">ΔE</span></div>
+          <div class="text-[11px] text-[#10b981] flex items-center gap-1 font-semibold">
+            <i data-lucide="check" class="w-3 h-3"></i> Cryo-stabilized
+          </div>
+        </div>
+
+        <div class="space-y-1 border-l border-white/[0.06] pl-4">
+          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Operational Lifespan</div>
+          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">120,000 <span class="text-xs font-mono-jb text-[#e2b170]">HRS</span></div>
+          <div class="text-[11px] text-[#8e95a5]">Sapphire crystal optics</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3D INTERACTIVE CONFIGURATOR ================= -->
+  <section id="configurator" class="py-24 border-t border-white/[0.07] bg-[#0a0c10] relative">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10 space-y-16">
+      
+      <!-- Section Title -->
+      <div class="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-white/[0.08] pb-8">
+        <div class="space-y-3 max-w-xl">
+          <span class="text-xs font-mono-jb text-[#e2b170] uppercase tracking-widest font-bold">INTERACTIVE HARDWARE STUDIO</span>
+          <h2 class="text-4xl sm:text-5xl font-cabinet font-black text-white tracking-tight">
+            Configure Your Spatial Pendant.
+          </h2>
+          <p class="text-sm text-[#8e95a5] leading-relaxed">
+            Select metallurgical chassis finishes, adjust beam dispersion angles, and watch optical properties dynamically simulate in real time.
+          </p>
+        </div>
+
+        <!-- Live Status Pill -->
+        <div class="flex items-center gap-3 bg-white/[0.03] border border-white/10 px-4 py-2 rounded-2xl">
+          <i data-lucide="cpu" class="w-4 h-4 text-[#e2b170]"></i>
+          <span class="text-xs font-mono-jb text-white">REAL-TIME TELEMETRY ENGINE</span>
+        </div>
+      </div>
+
+      <!-- Configurator Two-Column Workbench -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        
+        <!-- Left: Dynamic Product Stage -->
+        <div class="lg:col-span-7 relative group">
+          <div class="relative bg-gradient-to-b from-[#12151d] to-[#0d0f14] border border-white/10 rounded-[36px] p-8 sm:p-12 overflow-hidden shadow-2xl">
+            <!-- Simulated Light Cone -->
+            <div id="lightCone" class="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-b from-[#e2b170]/40 to-transparent blur-3xl transition-all duration-700 pointer-events-none"></div>
+
+            <!-- Product Showcase Image -->
+            <div class="relative z-10 flex justify-center items-center py-6">
+              <img id="productImage" src="https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=800&q=80" alt="Lumina Pendant" class="w-full max-w-md h-80 object-cover rounded-3xl shadow-2xl border border-white/10 transform group-hover:scale-105 transition-transform duration-700">
+            </div>
+
+            <!-- Dynamic Floating Spec Tag -->
+            <div class="relative z-10 mt-6 flex justify-between items-center bg-[#07080a]/90 backdrop-blur-xl border border-white/10 p-4 rounded-2xl">
+              <div>
+                <div id="selectedChassisName" class="text-sm font-bold text-white font-cabinet">AEROSPACE TITANIUM GRADE-5</div>
+                <div id="selectedSpecDetails" class="text-[11px] font-mono-jb text-[#8e95a5]">Anodized Satin PVD Finish • 4,200K Neutral Warm</div>
+              </div>
+              <div id="productPriceTag" class="text-xl font-bold font-mono-jb text-[#e2b170]">$8,450</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Interactive Control Dials -->
+        <div class="lg:col-span-5 space-y-8 bg-[#0e1117] border border-white/[0.08] p-8 rounded-[36px] shadow-2xl">
+          
+          <!-- Material Selector -->
+          <div class="space-y-4">
+            <label class="text-xs font-mono-jb text-[#8e95a5] uppercase font-bold flex justify-between">
+              <span>1. Chassis Metallurgy</span>
+              <span id="materialBadge" class="text-[#e2b170]">TITANIUM</span>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="setMaterial('titanium')" class="material-btn active p-4 rounded-2xl border border-[#e2b170] bg-[#e2b170]/10 text-left transition-all">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-[#a1a1aa]"></span>
+                  <span class="text-xs font-bold text-white font-cabinet">Raw Titanium</span>
+                </div>
+                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+0.00 USD</div>
+              </button>
+
+              <button onclick="setMaterial('obsidian')" class="material-btn p-4 rounded-2xl border border-white/10 bg-white/[0.02] text-left hover:border-white/20 transition-all">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-[#18181b]"></span>
+                  <span class="text-xs font-bold text-white font-cabinet">Obsidian Black</span>
+                </div>
+                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+450 USD</div>
+              </button>
+
+              <button onclick="setMaterial('brass')" class="material-btn p-4 rounded-2xl border border-white/10 bg-white/[0.02] text-left hover:border-white/20 transition-all">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-[#d4af37]"></span>
+                  <span class="text-xs font-bold text-white font-cabinet">Brushed Brass</span>
+                </div>
+                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+900 USD</div>
+              </button>
+
+              <button onclick="setMaterial('walnut')" class="material-btn p-4 rounded-2xl border border-white/10 bg-white/[0.02] text-left hover:border-white/20 transition-all">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-[#78350f]"></span>
+                  <span class="text-xs font-bold text-white font-cabinet">Nordic Walnut</span>
+                </div>
+                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+1,200 USD</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Beam Angle Slider -->
+          <div class="space-y-3">
+            <div class="flex justify-between text-xs font-mono-jb">
+              <span class="text-[#8e95a5] font-bold">2. Beam Dispersion Field</span>
+              <span id="beamAngleValue" class="text-[#e2b170] font-bold">36° Precision Spot</span>
+            </div>
+            <input type="range" id="beamSlider" min="12" max="90" value="36" oninput="updateBeam(this.value)" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#e2b170]">
+            <div class="flex justify-between text-[10px] text-[#616877] font-mono-jb">
+              <span>12° Surgical</span>
+              <span>36° Gallery</span>
+              <span>60° Ambient</span>
+              <span>90° Flood</span>
+            </div>
+          </div>
+
+          <!-- Color Temperature Tuner -->
+          <div class="space-y-3">
+            <div class="flex justify-between text-xs font-mono-jb">
+              <span class="text-[#8e95a5] font-bold">3. Photonic Temperature</span>
+              <span id="kelvinValue" class="text-[#e2b170] font-bold">3,800K Warm Neutral</span>
+            </div>
+            <input type="range" id="kelvinSlider" min="2200" max="6500" value="3800" oninput="updateKelvin(this.value)" class="w-full h-2 bg-gradient-to-r from-amber-500 via-yellow-100 to-cyan-300 rounded-lg appearance-none cursor-pointer">
+          </div>
+
+          <!-- Checkout / Order Button -->
+          <button class="w-full py-4 rounded-2xl bg-[#e2b170] hover:bg-[#edd09f] text-[#07080a] font-black font-cabinet text-sm transition-all transform hover:-translate-y-0.5 shadow-xl shadow-[#e2b170]/25 flex items-center justify-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            <span>Export CAD &amp; Reserve Fabrication Slot</span>
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= ARCHITECTURAL SHOWCASE BENTO ================= -->
+  <section id="systems" class="py-24 bg-[#07080a] relative">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10 space-y-16">
+      
+      <!-- Section Intro -->
+      <div class="text-center max-w-2xl mx-auto space-y-4">
+        <span class="text-xs font-mono-jb text-[#e2b170] uppercase tracking-widest font-bold">KINETIC OPTICAL SUITE</span>
+        <h2 class="text-4xl sm:text-6xl font-serif-fraunces italic font-normal text-white">
+          Engineered for spaces that outlast trends.
+        </h2>
+      </div>
+
+      <!-- Bento Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <!-- Large Bento 1: Optical Shutter -->
+        <div class="md:col-span-8 card-hover-3d bg-[#0d0f15] border border-white/[0.08] rounded-[36px] p-8 sm:p-12 flex flex-col justify-between space-y-8 relative overflow-hidden group">
+          <div class="space-y-4 max-w-md relative z-10">
+            <div class="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#e2b170]">
+              <i data-lucide="eye" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-3xl font-cabinet font-black text-white">Continuous Variable Aperture.</h3>
+            <p class="text-sm text-[#8e95a5] leading-relaxed">
+              18 carbon-fiber iris blades rotate in seamless mechanical synchrony, adjusting ambient cutoff without casting harsh peripheral shadows.
+            </p>
+          </div>
+
+          <div class="relative z-10 overflow-hidden rounded-2xl border border-white/10">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80" alt="Modern Architecture" class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-700">
+          </div>
+        </div>
+
+        <!-- Bento 2: Wireless DMX / Art-Net -->
+        <div class="md:col-span-4 card-hover-3d bg-[#0d0f15] border border-white/[0.08] rounded-[36px] p-8 flex flex-col justify-between space-y-6">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#e2b170]">
+              <i data-lucide="radio" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-2xl font-cabinet font-bold text-white">Sub-Millisecond Art-Net Sync.</h3>
+            <p class="text-xs text-[#8e95a5] leading-relaxed">
+              Zero-latency integration with architectural building automation, Lutron, and Crestron systems.
+            </p>
+          </div>
+          
+          <div class="p-4 bg-[#07080a] rounded-2xl border border-white/[0.06] space-y-2 text-xs font-mono-jb">
+            <div class="flex justify-between text-neutral-400">
+              <span>FREQUENCY</span>
+              <span class="text-[#10b981]">2.4 GHz Ultra-Wide</span>
+            </div>
+            <div class="flex justify-between text-neutral-400">
+              <span>LATENCY</span>
+              <span class="text-white">&lt; 1.2 ms</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bento 3: Acoustic Dampening -->
+        <div class="md:col-span-4 card-hover-3d bg-[#0d0f15] border border-white/[0.08] rounded-[36px] p-8 flex flex-col justify-between space-y-6">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#e2b170]">
+              <i data-lucide="waves" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-2xl font-cabinet font-bold text-white">Acoustic Resonance Core.</h3>
+            <p class="text-xs text-[#8e95a5] leading-relaxed">
+              Micro-perforated Helmholtz chambers absorb reverberant sound frequencies in double-height atrium spaces.
+            </p>
+          </div>
+          <span class="text-xs font-mono-jb text-[#e2b170] bg-[#e2b170]/10 border border-[#e2b170]/30 px-3 py-1.5 rounded-xl self-start font-bold">NRC 0.85 CERTIFIED</span>
+        </div>
+
+        <!-- Bento 4: Sustainable Cryo-Passive Heat Sinks -->
+        <div class="md:col-span-8 card-hover-3d bg-[#0d0f15] border border-white/[0.08] rounded-[36px] p-8 sm:p-12 flex flex-col justify-between space-y-6 relative overflow-hidden">
+          <div class="space-y-3 max-w-lg">
+            <div class="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#e2b170]">
+              <i data-lucide="thermometer-snowflake" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-3xl font-cabinet font-black text-white">Silent Convective Heat Sinks.</h3>
+            <p class="text-sm text-[#8e95a5] leading-relaxed">
+              100% fanless thermal dissipation crafted from aerospace aluminum billet. Operates at zero decibels in silent recording halls and libraries.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-6 pt-4 border-t border-white/[0.06] text-xs font-mono-jb text-[#8e95a5]">
+            <div class="flex items-center gap-2">
+              <i data-lucide="volume-x" class="w-4 h-4 text-[#10b981]"></i> 0 dBA Noise Floor
+            </div>
+            <div class="flex items-center gap-2">
+              <i data-lucide="shield" class="w-4 h-4 text-[#e2b170]"></i> 25-Year Chassis Warranty
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= GLOBAL ARCHITECTURE GALLERY ================= -->
+  <section id="installations" class="py-24 border-t border-white/[0.07] bg-[#090b10]">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10 space-y-12">
+      <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+        <div>
+          <span class="text-xs font-mono-jb text-[#e2b170] uppercase tracking-widest font-bold">SELECTED MONOGRAPHS</span>
+          <h2 class="text-4xl font-cabinet font-black text-white">Notable Global Installations</h2>
+        </div>
+        <a href="#" class="text-xs font-bold text-[#e2b170] hover:underline flex items-center gap-1.5">
+          <span>View All 84 Projects</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Project 1 -->
+        <div class="group space-y-4">
+          <div class="overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80" alt="Nordic Pavilion" class="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700">
+          </div>
+          <div>
+            <span class="text-[10px] font-mono-jb text-[#8e95a5] uppercase">OSLO, NORWAY • 2025</span>
+            <h4 class="text-lg font-bold font-cabinet text-white group-hover:text-[#e2b170] transition-colors">Nordic Contemporary Pavilion</h4>
+          </div>
+        </div>
+
+        <!-- Project 2 -->
+        <div class="group space-y-4">
+          <div class="overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800&q=80" alt="Kyoto Sanctuary" class="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700">
+          </div>
+          <div>
+            <span class="text-[10px] font-mono-jb text-[#8e95a5] uppercase">KYOTO, JAPAN • 2024</span>
+            <h4 class="text-lg font-bold font-cabinet text-white group-hover:text-[#e2b170] transition-colors">Higashiyama Zen Sanctuary</h4>
+          </div>
+        </div>
+
+        <!-- Project 3 -->
+        <div class="group space-y-4">
+          <div class="overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=800&q=80" alt="Zurich Vault" class="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700">
+          </div>
+          <div>
+            <span class="text-[10px] font-mono-jb text-[#8e95a5] uppercase">ZURICH, SWITZERLAND • 2025</span>
+            <h4 class="text-lg font-bold font-cabinet text-white group-hover:text-[#e2b170] transition-colors">Alpine Kinetic Observatory</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ENGINEERING FAQ ACCORDION ================= -->
+  <section class="py-24 border-t border-white/[0.07] bg-[#07080a]">
+    <div class="max-w-4xl mx-auto px-6 space-y-12">
+      <div class="text-center space-y-3">
+        <h2 class="text-3xl sm:text-4xl font-cabinet font-black text-white">Frequently Addressed Inquiries</h2>
+        <p class="text-xs text-[#8e95a5]">Aperture mechanics, control protocols, and custom architectural fabrication.</p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- FAQ 1 -->
+        <details class="group p-6 rounded-2xl bg-[#0e1117] border border-white/[0.08] open:border-[#e2b170]/40 transition-colors">
+          <summary class="flex justify-between items-center font-bold text-sm text-white cursor-pointer list-none">
+            <span>What are the lead times for custom architectural fabrication?</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-[#e2b170] group-open:rotate-180 transition-transform"></i>
+          </summary>
+          <p class="text-xs text-[#8e95a5] mt-3 leading-relaxed">
+            Standard serialized fixtures ship within 14 business days. Custom dimensional pendants engineered for high-ceiling auditoriums or bespoke metallurgy require 6 to 8 weeks for precision CNC milling, hand-finishing, and cryogenic optical calibration.
+          </p>
+        </details>
+
+        <!-- FAQ 2 -->
+        <details class="group p-6 rounded-2xl bg-[#0e1117] border border-white/[0.08] open:border-[#e2b170]/40 transition-colors">
+          <summary class="flex justify-between items-center font-bold text-sm text-white cursor-pointer list-none">
+            <span>Can LUMINA systems interface directly with Lutron HomeWorks and DALI-2?</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-[#e2b170] group-open:rotate-180 transition-transform"></i>
+          </summary>
+          <p class="text-xs text-[#8e95a5] mt-3 leading-relaxed">
+            Yes. Every LUMINA pendant integrates native multi-protocol transceivers supporting DALI-2, DMX512-A, Art-Net 4, sACN, and native 0–10V analog dimming with zero flicker down to 0.01% current threshold.
+          </p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINAL CALL TO ACTION ================= -->
+  <section class="py-24 border-t border-white/[0.07] bg-gradient-to-b from-[#0e1117] to-[#07080a] text-center relative overflow-hidden">
+    <div class="max-w-4xl mx-auto px-6 space-y-8 relative z-10">
+      <h2 class="text-4xl sm:text-6xl font-serif-fraunces italic font-normal text-white">
+        Transform your next commission.
+      </h2>
+      <p class="text-sm text-[#8e95a5] max-w-lg mx-auto leading-relaxed">
+        Speak directly with our senior optical engineering team to integrate LUMINA into your architectural blueprints.
+      </p>
+      <div class="pt-2 flex flex-wrap justify-center gap-4">
+        <button class="px-8 py-4 rounded-2xl bg-[#e2b170] text-[#07080a] font-black font-cabinet text-sm hover:bg-[#edd09f] transition-all transform hover:scale-105 shadow-2xl shadow-[#e2b170]/30">
+          Book Architectural Consultation
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="border-t border-white/[0.07] bg-[#050608] py-12 text-xs text-[#616877]">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10 flex flex-col sm:flex-row justify-between items-center gap-6 font-mono-jb">
+      <div class="flex items-center gap-2 text-white font-bold">
+        <i data-lucide="aperture" class="w-4 h-4 text-[#e2b170]"></i>
+        <span>LUMINA OPTICS CORP.</span>
+      </div>
+      <div>© 2026 LUMINA Spatial Systems. All rights reserved. Zero AI Slop Standard.</div>
+      <div class="flex gap-6">
+        <a href="#" class="hover:text-white transition-colors">Privacy</a>
+        <a href="#" class="hover:text-white transition-colors">Specs</a>
+        <a href="#" class="hover:text-white transition-colors">CAD Portal</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= INTERACTIVE ENGINE JAVASCRIPT ================= -->
+  <script>
+    lucide.createIcons();
+
+    // -------------------------------------------------------------
+    // 1. Interactive 60FPS Particle Physics Field on Canvas
+    // -------------------------------------------------------------
+    const canvas = document.getElementById('heroCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let particles = [];
+    let mouse = { x: null, y: null, radius: 140 };
+
+    function initCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      particles = [];
+      const particleCount = Math.floor((width * height) / 12000);
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: (Math.random() - 0.5) * 0.6,
+          radius: Math.random() * 2 + 0.8,
+          alpha: Math.random() * 0.5 + 0.2
+        });
+      }
+    }
+
+    window.addEventListener('resize', initCanvas);
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    window.addEventListener('mouseleave', () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, width, height);
+
+      for (let i = 0; i < particles.length; i++) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
+
+        // Mouse gravity / repulsion
+        if (mouse.x !== null && mouse.y !== null) {
+          let dx = mouse.x - p.x;
+          let dy = mouse.y - p.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < mouse.radius) {
+            let force = (mouse.radius - dist) / mouse.radius;
+            p.x -= (dx / dist) * force * 3;
+            p.y -= (dy / dist) * force * 3;
+          }
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(226, 177, 112, ${p.alpha})`;
+        ctx.fill();
+
+        // Connect nearby nodes
+        for (let j = i + 1; j < particles.length; j++) {
+          let p2 = particles[j];
+          let dx = p.x - p2.x;
+          let dy = p.y - p2.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(226, 177, 112, ${0.12 * (1 - dist / 100)})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(animateParticles);
+    }
+
+    initCanvas();
+    animateParticles();
+
+    // -------------------------------------------------------------
+    // 2. Interactive Material Configurator Logic
+    // -------------------------------------------------------------
+    const materialData = {
+      titanium: {
+        name: "AEROSPACE TITANIUM GRADE-5",
+        badge: "TITANIUM",
+        details: "Anodized Satin PVD Finish • 4,200K Neutral Warm",
+        price: "$8,450",
+        img: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=800&q=80",
+        glow: "rgba(226, 177, 112, 0.4)"
+      },
+      obsidian: {
+        name: "OBSIDIAN CRYSTAL & BLACK BILLET",
+        badge: "OBSIDIAN",
+        details: "High-Gloss Mirror Finish • Anti-Reflective Sapphire Coated",
+        price: "$8,900",
+        img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=800&q=80",
+        glow: "rgba(129, 140, 248, 0.4)"
+      },
+      brass: {
+        name: "BRUSHED ARCHITECTURAL BRASS",
+        badge: "BRUSHED BRASS",
+        details: "Hand-Waxed Living Patina • 2,700K Candlelight Warm",
+        price: "$9,350",
+        img: "https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&w=800&q=80",
+        glow: "rgba(212, 175, 55, 0.5)"
+      },
+      walnut: {
+        name: "NORDIC WALNUT & TITANIUM HYBRID",
+        badge: "NORDIC WALNUT",
+        details: "FSC Certified Hardwood • Integrated Ambient Core",
+        price: "$9,650",
+        img: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=800&q=80",
+        glow: "rgba(234, 88, 12, 0.35)"
+      }
+    };
+
+    function setMaterial(key) {
+      const data = materialData[key];
+      if (!data) return;
+
+      document.querySelectorAll('.material-btn').forEach(btn => {
+        btn.classList.remove('active', 'border-[#e2b170]', 'bg-[#e2b170]/10');
+        btn.classList.add('border-white/10', 'bg-white/[0.02]');
+      });
+      event.currentTarget.classList.add('active', 'border-[#e2b170]', 'bg-[#e2b170]/10');
+      event.currentTarget.classList.remove('border-white/10', 'bg-white/[0.02]');
+
+      document.getElementById('selectedChassisName').innerText = data.name;
+      document.getElementById('selectedSpecDetails').innerText = data.details;
+      document.getElementById('productPriceTag').innerText = data.price;
+      document.getElementById('materialBadge').innerText = data.badge;
+      document.getElementById('productImage').src = data.img;
+      document.getElementById('lightCone').style.background = `radial-gradient(circle, ${data.glow} 0%, transparent 70%)`;
+    }
+
+    function updateBeam(val) {
+      let desc = "36° Gallery Spot";
+      if (val < 25) desc = val + "° Surgical Pinpoint";
+      else if (val < 50) desc = val + "° Architectural Gallery";
+      else if (val < 75) desc = val + "° Wide Ambient";
+      else desc = val + "° Full Atrium Flood";
+
+      document.getElementById('beamAngleValue').innerText = desc;
+      document.getElementById('lightCone').style.width = (val * 8) + "px";
+    }
+
+    function updateKelvin(val) {
+      let desc = val + "K Daylight";
+      if (val < 3000) desc = val + "K Candlelight Warm";
+      else if (val < 4500) desc = val + "K Gallery Neutral";
+      document.getElementById('kelvinValue').innerText = desc;
+    }
+  </script>
+</body>
+</html>
