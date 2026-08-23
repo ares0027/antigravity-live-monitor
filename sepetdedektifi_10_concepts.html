@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sepet Dedektifi — 10 Radical Interactive Experiences</title>
+  <title>Sepet Dedektifi — 10 Tam Ölçekli Mimari Tasarım Laboratuvarı</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
     .font-cabinet { font-family: 'Cabinet Grotesk', sans-serif; }
@@ -28,73 +28,73 @@
     .animate-ticker {
       display: flex;
       width: 200%;
-      animation: tickerSlide 25s linear infinite;
+      animation: tickerSlide 22s linear infinite;
     }
     .animate-ticker:hover { animation-play-state: paused; }
 
-    @keyframes radarSweep {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    @keyframes radarSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
-    .animate-radar {
-      animation: radarSweep 3s linear infinite;
+    .animate-radar-sweep {
+      animation: radarSpin 4s linear infinite;
     }
 
-    @keyframes laserScan {
-      0%, 100% { top: 0%; opacity: 0.8; }
-      50% { top: 95%; opacity: 1; }
+    @keyframes laserBeam {
+      0%, 100% { top: 5%; opacity: 0.7; }
+      50% { top: 92%; opacity: 1; }
     }
-    .animate-laser {
+    .animate-laser-beam {
       position: absolute;
       left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, transparent, #22c55e, transparent);
-      box-shadow: 0 0 15px #22c55e, 0 0 30px #22c55e;
-      animation: laserScan 2.5s ease-in-out infinite;
+      background: linear-gradient(90deg, transparent, #10b981, #34d399, transparent);
+      box-shadow: 0 0 15px #10b981, 0 0 25px #34d399;
+      animation: laserBeam 2.8s ease-in-out infinite;
     }
 
-    @keyframes floatCard {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.03); }
     }
-    .animate-float {
-      animation: floatCard 4s ease-in-out infinite;
+    .animate-glow-pulse {
+      animation: pulseGlow 3s ease-in-out infinite;
     }
 
-    /* 3D Shelf Perspective */
-    .perspective-container {
+    /* 3D Perspective Card Deck */
+    .perspective-grid {
       perspective: 1200px;
     }
-    .shelf-card-3d {
+    .card-3d {
       transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       transform-style: preserve-3d;
     }
-    .shelf-card-3d:hover {
-      transform: translateY(-12px) rotateX(8deg) rotateY(-4deg) scale(1.03);
-      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
+    .card-3d:hover {
+      transform: translateY(-10px) rotateX(6deg) rotateY(-3deg) scale(1.02);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    /* Target & Tab active states */
-    .view-target-btn.active {
-      background: rgba(255, 255, 255, 0.22);
+    /* Target & Concept Active Styles */
+    .target-btn.active {
+      background: rgba(255, 255, 255, 0.2);
       color: #ffffff;
       border-color: rgba(255, 255, 255, 0.4);
-      box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
     }
     .concept-tab.active {
       border-color: #f59e0b;
-      background: rgba(245, 158, 11, 0.18);
+      background: rgba(245, 158, 11, 0.2);
       color: #fbbf24;
       box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
     }
 
     /* Custom Scrollbar */
     ::-webkit-scrollbar { height: 6px; width: 6px; }
-    ::-webkit-scrollbar-track { background: #0c0e12; }
+    ::-webkit-scrollbar-track { background: #0b0d10; }
     ::-webkit-scrollbar-thumb { background: #262c38; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #3d4659; }
   </style>
 </head>
-<body class="bg-[#08090c] text-[#e2e6f0] font-dmsans min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-black">
+<body class="bg-[#07080a] text-[#e3e6ed] font-dmsans min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-black">
 
   <!-- ================= TOP CONTROLLER ================= -->
   <header class="border-b border-white/10 bg-[#0d1015]/95 backdrop-blur-lg sticky top-0 z-50 shadow-2xl">
@@ -105,22 +105,22 @@
         </div>
         <div>
           <div class="flex items-center gap-2.5">
-            <h1 class="text-base font-bold text-white tracking-tight">Sepet Dedektifi — 10 İnteraktif Mimari Tasarım</h1>
-            <span class="text-[10px] font-mono-jb bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> CANLI WIDGET'LAR
+            <h1 class="text-base font-bold text-white tracking-tight">Sepet Dedektifi — 10 Tam Ölçekli Mimari Tasarım</h1>
+            <span class="text-[10px] font-mono-jb bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> CANLI TASARIM LABORATUVARI
             </span>
           </div>
-          <p class="text-xs text-neutral-400">Her konsept tamamen çalışan canlı hesaplayıcılar, grafikler ve bağımsız UX akışlarıyla donatıldı.</p>
+          <p class="text-xs text-neutral-400">10 farklı tasarım sistemi, gerçek görsel varlıklar, canlı hesaplayıcılar ve interaktif bileşenler.</p>
         </div>
       </div>
 
       <!-- TARGET TOGGLE (Main Landing vs Market App) -->
       <div class="flex items-center gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-white/15 shadow-inner">
-        <button id="btn-target-main" onclick="setTarget('main')" class="view-target-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all border border-transparent flex items-center gap-2 text-white">
+        <button id="btn-target-main" onclick="setTarget('main')" class="target-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all border border-transparent flex items-center gap-2 text-white">
           <i data-lucide="globe" class="w-4 h-4 text-amber-400"></i>
           <span>Ana Sayfa (sepetdedektifi.com)</span>
         </button>
-        <button id="btn-target-market" onclick="setTarget('market')" class="view-target-btn px-4 py-2 rounded-xl text-xs font-bold transition-all border border-transparent text-neutral-400 hover:text-white flex items-center gap-2">
+        <button id="btn-target-market" onclick="setTarget('market')" class="target-btn px-4 py-2 rounded-xl text-xs font-bold transition-all border border-transparent text-neutral-400 hover:text-white flex items-center gap-2">
           <i data-lucide="store" class="w-4 h-4 text-cyan-400"></i>
           <span>Market Portalı (market.sepetdedektifi.com)</span>
         </button>
@@ -148,9 +148,10 @@
     <!-- ------------------------------------------------------------- -->
     <!-- CONCEPT 1: THE INFLATION & RECEIPT GAZETTE                    -->
     <!-- ------------------------------------------------------------- -->
-    <div id="c-1-main" class="stage-pane space-y-6">
-      <div class="bg-[#fcfaf5] text-[#1a1917] rounded-3xl p-8 sm:p-14 border border-[#e5dfd3] shadow-2xl space-y-10 font-serif-news">
-        <!-- Broadsheet Masthead -->
+    <div id="c-1-main" class="stage-pane space-y-8 font-serif-news text-[#1a1917]">
+      <div class="bg-[#fcfaf5] rounded-3xl p-8 sm:p-14 border border-[#e5dfd3] shadow-2xl space-y-12">
+        
+        <!-- Newspaper Masthead -->
         <div class="text-center border-b-4 border-[#1a1917] pb-6 space-y-3">
           <div class="text-xs font-dmsans uppercase tracking-[0.3em] text-[#6b6760] font-bold">Mutfak Enflasyonu &amp; Fiyat Dedektifliği Araştırma Raporu</div>
           <h2 class="text-5xl sm:text-8xl font-bold tracking-tight text-[#1a1917] italic">Sepet Dedektifi</h2>
@@ -161,7 +162,7 @@
           </div>
         </div>
 
-        <!-- Story & Interactive Receipt Forensics -->
+        <!-- Hero Story with Photo -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div class="lg:col-span-7 space-y-6">
             <span class="inline-block bg-[#c85a32] text-white text-xs font-dmsans font-bold uppercase tracking-wider px-3.5 py-1 rounded-md shadow-sm">MANŞET ARAŞTIRMASI</span>
@@ -173,57 +174,68 @@
               <button class="px-7 py-4 bg-[#1a1917] text-white rounded-2xl text-sm font-bold hover:bg-[#c85a32] transition-all transform hover:-translate-y-1 shadow-2xl flex items-center gap-3">
                 <i data-lucide="download" class="w-4 h-4"></i> Chrome / Edge'e Ücretsiz Ekle
               </button>
-              <button class="px-7 py-4 border-2 border-[#1a1917] rounded-2xl text-sm font-bold hover:bg-[#1a1917]/5 transition-all flex items-center gap-2">
-                <i data-lucide="newspaper" class="w-4 h-4"></i> Günlük Fiyat Bülteni
-              </button>
             </div>
           </div>
 
-          <!-- Live Interactive Inflation Receipt Simulator -->
-          <div class="lg:col-span-5 bg-[#f4eee1] p-6 rounded-2xl border-2 border-[#dfd6c4] shadow-xl space-y-4 font-dmsans">
-            <div class="flex justify-between items-center border-b border-[#dfd6c4] pb-3">
-              <div>
-                <div class="font-bold text-xs uppercase text-[#1a1917]">Canlı Fiş Denetim Simülatörü</div>
-                <div class="text-[11px] text-[#6b6760]">Enflasyon sepetini canlı test edin</div>
-              </div>
-              <span class="text-[10px] bg-emerald-700 text-white font-bold px-2 py-0.5 rounded">GÜNCEL</span>
-            </div>
-
-            <div class="space-y-2.5 text-xs">
-              <div class="p-3 bg-white rounded-xl border border-[#dfd6c4] flex justify-between items-center shadow-sm">
-                <div>
-                  <div class="font-bold text-[#1a1917]">Sütaş Kaşar Peyniri 700g</div>
-                  <div class="text-[#6b6760] text-[11px]">En Ucuz: CarrefourSA</div>
+          <!-- Product Card with Real Photo -->
+          <div class="lg:col-span-5 relative group">
+            <div class="overflow-hidden rounded-3xl border-4 border-[#1a1917] shadow-2xl bg-white">
+              <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80" alt="Supermarket groceries" class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500">
+              <div class="p-6 bg-[#f4eee1] space-y-3 font-dmsans">
+                <div class="flex justify-between items-center text-xs font-bold uppercase text-[#1a1917]">
+                  <span>Günün Dedektif İncelemesi</span>
+                  <span class="text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full font-bold">DOĞRULANDI</span>
                 </div>
-                <div class="text-right">
-                  <div class="font-bold text-emerald-800 text-sm">₺219,90</div>
-                  <div class="text-rose-700 line-through text-[10px]">₺284,50 (Migros)</div>
+                <div class="text-base font-bold text-[#1a1917]">Sütaş Kaşar Peyniri 700g</div>
+                <div class="flex justify-between items-baseline text-xs pt-2 border-t border-[#dfd6c4]">
+                  <span class="text-emerald-800 font-bold text-sm">En Ucuz: CarrefourSA (₺219,90)</span>
+                  <span class="text-rose-700 font-bold">Diğer: ₺284,50 (+%29)</span>
                 </div>
               </div>
-
-              <div class="p-3 bg-white rounded-xl border border-[#dfd6c4] flex justify-between items-center shadow-sm">
-                <div>
-                  <div class="font-bold text-[#1a1917]">Yudum Ayçiçek Yağı 5L</div>
-                  <div class="text-[#6b6760] text-[11px]">En Ucuz: A101</div>
-                </div>
-                <div class="text-right">
-                  <div class="font-bold text-emerald-800 text-sm">₺249,00</div>
-                  <div class="text-rose-700 line-through text-[10px]">₺295,00 (Carrefour)</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="p-3.5 bg-[#c85a32]/10 border border-[#c85a32]/30 rounded-xl text-xs text-[#c85a32] font-semibold flex items-center gap-2.5">
-              <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i>
-              <span>Dedektif Uyarısı: Yudum Ayçiçek Yağında 3 markette ₺46 fiyat makası var!</span>
             </div>
           </div>
         </div>
+
+        <!-- Live Interactive Inflation Calculator -->
+        <div class="p-8 bg-[#f4eee1] rounded-3xl border-2 border-[#dfd6c4] space-y-6 font-dmsans">
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-[#dfd6c4] pb-4">
+            <div>
+              <h4 class="font-bold text-lg font-serif-news text-[#1a1917]">İnteraktif Mutfak Enflasyonu Simülatörü</h4>
+              <p class="text-xs text-[#6b6760]">Ürünleri sepete ekleyin, marketler arasındaki reel makası anında hesaplayın.</p>
+            </div>
+            <span class="text-xs bg-[#1a1917] text-white px-3 py-1.5 rounded-xl font-bold">CANLI MOTOR</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div class="p-4 bg-white rounded-2xl border border-[#dfd6c4] flex justify-between items-center shadow-sm">
+              <div>
+                <div class="font-bold text-sm">Sütaş Kaşar 700g</div>
+                <div class="text-[#6b6760]">Birim: ₺314,14/kg</div>
+              </div>
+              <div class="text-right font-bold text-emerald-800 text-sm">₺219,90</div>
+            </div>
+            <div class="p-4 bg-white rounded-2xl border border-[#dfd6c4] flex justify-between items-center shadow-sm">
+              <div>
+                <div class="font-bold text-sm">Yudum Yağ 5L</div>
+                <div class="text-[#6b6760]">Birim: ₺49,80/L</div>
+              </div>
+              <div class="text-right font-bold text-emerald-800 text-sm">₺249,00</div>
+            </div>
+            <div class="p-4 bg-white rounded-2xl border border-[#dfd6c4] flex justify-between items-center shadow-sm">
+              <div>
+                <div class="font-bold text-sm">Fairy Tablet 72'li</div>
+                <div class="text-[#6b6760]">Birim: ₺6,65/adet</div>
+              </div>
+              <div class="text-right font-bold text-emerald-800 text-sm">₺479,00</div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <div id="c-1-market" class="stage-pane hidden space-y-6 font-serif-news">
-      <div class="bg-[#fcfaf5] text-[#1a1917] rounded-3xl p-8 sm:p-10 border border-[#e5dfd3] shadow-2xl space-y-6">
+    <div id="c-1-market" class="stage-pane hidden space-y-6 font-serif-news text-[#1a1917]">
+      <div class="bg-[#fcfaf5] rounded-3xl p-8 sm:p-10 border border-[#e5dfd3] shadow-2xl space-y-6">
         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#1a1917]/20 pb-4 font-dmsans">
           <div>
             <div class="text-xs uppercase tracking-widest text-[#6b6760] font-bold">Resmi Market Fiyat Denetim Masası</div>
@@ -285,11 +297,11 @@
     </div>
 
     <!-- ------------------------------------------------------------- -->
-    <!-- CONCEPT 2: GROCERY ARBITRAGE TERMINAL (BLOOMBERG FINTECH PRO) -->
+    <!-- CONCEPT 2: GROCERY ARBITRAGE TERMINAL (BLOOMBERG PRO)         -->
     <!-- ------------------------------------------------------------- -->
     <div id="c-2-main" class="stage-pane hidden space-y-6 font-mono-jb">
       <!-- Live Running Ticker Tape -->
-      <div class="overflow-hidden bg-[#12151c] border border-[#252b3b] rounded-xl p-2.5 text-xs text-neutral-300">
+      <div class="overflow-hidden bg-[#12151c] border border-[#252b3b] rounded-2xl p-3 text-xs text-neutral-300">
         <div class="animate-ticker gap-8 font-mono-jb">
           <span class="flex items-center gap-1.5"><b class="text-white">MIGROS/CRR:</b> Nutella 750g <span class="text-emerald-400 font-bold">+%17,5 SPREAD ▲</span></span>
           <span class="flex items-center gap-1.5"><b class="text-white">A101/SOK:</b> Fairy 72'li <span class="text-emerald-400 font-bold">+%27,7 SPREAD ▲</span></span>
@@ -404,7 +416,7 @@
     </div>
 
     <!-- ------------------------------------------------------------- -->
-    <!-- CONCEPT 3: RADICAL TRANSPARENCY BENTO (VERCEL/LINEAR SAAS)    -->
+    <!-- CONCEPT 3: RADICAL TRANSPARENCY BENTO                         -->
     <!-- ------------------------------------------------------------- -->
     <div id="c-3-main" class="stage-pane hidden space-y-6 font-inter">
       <div class="bg-[#09090b] text-[#fafafa] rounded-3xl border border-[#27272a] p-8 sm:p-14 shadow-2xl space-y-10">
@@ -479,7 +491,7 @@
     </div>
 
     <!-- ------------------------------------------------------------- -->
-    <!-- CONCEPT 4: WARM NORDIC PANTRY & RECIPE BUDGETER               -->
+    <!-- CONCEPT 4: WARM NORDIC CRAFT                                  -->
     <!-- ------------------------------------------------------------- -->
     <div id="c-4-main" class="stage-pane hidden space-y-6 font-serif-fraunces">
       <div class="bg-[#f7f4ed] text-[#2b2d42] rounded-3xl p-8 sm:p-14 border border-[#e8e2d5] shadow-2xl space-y-8">
@@ -545,7 +557,7 @@
     </div>
 
     <!-- ------------------------------------------------------------- -->
-    <!-- CONCEPT 5: SWISS NEO-BRUTALIST CONSUMER RADAR                 -->
+    <!-- CONCEPT 5: SWISS NEO-BRUTALIST RADAR                          -->
     <!-- ------------------------------------------------------------- -->
     <div id="c-5-main" class="stage-pane hidden space-y-6 font-space">
       <div class="bg-[#fef9ef] text-black border-4 border-black p-8 sm:p-14 shadow-[14px_14px_0px_0px_rgba(0,0,0,1)] space-y-8">
@@ -596,7 +608,7 @@
     </div>
 
     <!-- ------------------------------------------------------------- -->
-    <!-- CONCEPT 6: SPOTLIGHT COMMAND SEARCH (RAYCAST OMNIBOX)         -->
+    <!-- CONCEPT 6: SPOTLIGHT COMMAND-K SEARCH                         -->
     <!-- ------------------------------------------------------------- -->
     <div id="c-6-main" class="stage-pane hidden space-y-6 font-inter">
       <div class="bg-[#0f1117] text-white rounded-3xl border border-white/10 p-8 sm:p-16 shadow-2xl space-y-8">
@@ -627,7 +639,7 @@
     </div>
 
     <!-- ------------------------------------------------------------- -->
-    <!-- CONCEPT 7: OPEN COMMUNITY VAULT (THE LEDGER)                  -->
+    <!-- CONCEPT 7: OPEN COMMUNITY VAULT (LASER RECEIPT SCANNER)       -->
     <!-- ------------------------------------------------------------- -->
     <div id="c-7-main" class="stage-pane hidden space-y-6 font-inter">
       <div class="bg-[#0e1117] text-[#e6edf3] rounded-3xl border border-[#30363d] p-8 sm:p-14 space-y-8 shadow-2xl">
@@ -637,7 +649,23 @@
           </div>
           <span class="text-xs font-mono-jb text-emerald-400 bg-emerald-950/60 px-3.5 py-1.5 rounded-full border border-emerald-500/30 font-bold">Topluluk Verisi: 45.890 Katkı</span>
         </div>
-        <p class="text-sm text-neutral-400 leading-relaxed max-w-2xl">Gönüllü tüketicilerin tarayıcı eklentisiyle anonim olarak paylaştığı anlık market raf fiyatları havuzu. Şeffaf, bağımsız ve açık veri.</p>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 space-y-4">
+            <h3 class="text-2xl sm:text-4xl font-bold">Topluluk Tarafından Doğrulanan Fiş Havuzu</h3>
+            <p class="text-sm text-neutral-400 leading-relaxed">Binlerce kullanıcının yüklediği fişler optik tarayıcı ile taranır, anonimleştirilir ve süpermarketlerin gizli fiyat artışları afişe edilir.</p>
+          </div>
+
+          <!-- Animated Laser Scanner Box -->
+          <div class="lg:col-span-5 relative p-6 bg-[#161b22] border border-[#30363d] rounded-2xl overflow-hidden">
+            <div class="animate-laser-beam"></div>
+            <div class="space-y-2 text-xs font-mono-jb">
+              <div class="text-neutral-400">TARAMA: FİŞ_ID #8904</div>
+              <div class="text-white font-bold">CARREFOURSA • 3 KALEM</div>
+              <div class="text-emerald-400 font-bold">DOĞRULANAN TASARRUF: ₺84,50</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -657,18 +685,18 @@
     <div id="c-8-main" class="stage-pane hidden space-y-6 font-jakarta">
       <div class="bg-[#14151a] text-white rounded-3xl border border-white/10 p-8 sm:p-14 space-y-8 shadow-2xl">
         <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Sanal Market Reyonları (Visual 3D Shelf)</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 perspective-container">
-          <div class="shelf-card-3d bg-[#1c1e24] p-7 rounded-3xl border border-white/10 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 perspective-grid">
+          <div class="card-3d bg-[#1c1e24] p-7 rounded-3xl border border-white/10 space-y-4">
             <div class="text-xs text-amber-400 font-bold uppercase tracking-wider">Süt &amp; Kahvaltılık</div>
             <div class="text-lg font-bold">Günün En Avantajlı Marketi: <span class="text-emerald-400">ŞOK</span></div>
             <div class="text-xs text-neutral-400">Ortalama Sepet Tasarrufu: ₺84,50</div>
           </div>
-          <div class="shelf-card-3d bg-[#1c1e24] p-7 rounded-3xl border border-white/10 space-y-4">
+          <div class="card-3d bg-[#1c1e24] p-7 rounded-3xl border border-white/10 space-y-4">
             <div class="text-xs text-cyan-400 font-bold uppercase tracking-wider">Deterjan &amp; Temizlik</div>
             <div class="text-lg font-bold">Günün En Avantajlı Marketi: <span class="text-emerald-400">A101</span></div>
             <div class="text-xs text-neutral-400">Ortalama Sepet Tasarrufu: ₺142,00</div>
           </div>
-          <div class="shelf-card-3d bg-[#1c1e24] p-7 rounded-3xl border border-white/10 space-y-4">
+          <div class="card-3d bg-[#1c1e24] p-7 rounded-3xl border border-white/10 space-y-4">
             <div class="text-xs text-rose-400 font-bold uppercase tracking-wider">Et, Tavuk &amp; Balık</div>
             <div class="text-lg font-bold">Günün En Avantajlı Marketi: <span class="text-emerald-400">CarrefourSA</span></div>
             <div class="text-xs text-neutral-400">Ortalama Sepet Tasarrufu: ₺115,00</div>
@@ -701,9 +729,21 @@
           </div>
           <span class="text-xs bg-cyan-950/80 px-3.5 py-1.5 rounded-full border border-cyan-500/40 font-bold">OTOMATİK_DENETİM</span>
         </div>
-        <div class="p-6 bg-[#0a0e14] border border-cyan-500/20 rounded-2xl text-xs space-y-3">
-          <div class="text-white font-bold text-base">Örnek Tespit: Kaşar Peyniri 500g -&gt; 400g (%20 Gizli Zam)</div>
-          <div class="text-neutral-400 leading-relaxed">Fiyat ₺150 sabit tutulurken birim fiyat ₺300/kg'dan ₺375/kg'a yükseltildi. Tüketici fark etmeden %20 daha fazla ödüyor.</div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-8 p-6 bg-[#0a0e14] border border-cyan-500/20 rounded-2xl text-xs space-y-3">
+            <div class="text-white font-bold text-base">Örnek Tespit: Kaşar Peyniri 500g -&gt; 400g (%20 Gizli Zam)</div>
+            <div class="text-neutral-400 leading-relaxed">Fiyat ₺150 sabit tutulurken birim fiyat ₺300/kg'dan ₺375/kg'a yükseltildi. Tüketici fark etmeden %20 daha fazla ödüyor.</div>
+          </div>
+
+          <!-- Animated Radar Sweep Widget -->
+          <div class="lg:col-span-4 flex justify-center">
+            <div class="w-36 h-36 rounded-full border-2 border-cyan-500/40 relative flex items-center justify-center bg-cyan-950/20">
+              <div class="absolute inset-0 rounded-full border border-cyan-500/20"></div>
+              <div class="w-full h-full rounded-full animate-radar-sweep origin-center" style="background: conic-gradient(from 0deg, transparent 70%, rgba(6, 182, 212, 0.4) 100%);"></div>
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -757,11 +797,10 @@
 
   </main>
 
-  <!-- ================= STATE CONTROLLER JAVASCRIPT ================= -->
+  <!-- ================= MASTER STATE CONTROLLER ================= -->
   <script>
     lucide.createIcons();
 
-    // Central application state
     let currentTarget = 'main'; // 'main' or 'market'
     let currentConcept = 1;      // 1 to 10
 
@@ -769,18 +808,18 @@
       // Hide all panes
       document.querySelectorAll('.stage-pane').forEach(el => el.classList.add('hidden'));
 
-      // Target ID convention: c-{concept}-{target}
+      // Show selected target pane
       const targetId = 'c-' + currentConcept + '-' + currentTarget;
-      const activeElement = document.getElementById(targetId);
-      if (activeElement) {
-        activeElement.classList.remove('hidden');
+      const activeEl = document.getElementById(targetId);
+      if (activeEl) {
+        activeEl.classList.remove('hidden');
       }
 
-      // Update Target Button UI states
+      // Update Target Button UI
       document.getElementById('btn-target-main').classList.toggle('active', currentTarget === 'main');
       document.getElementById('btn-target-market').classList.toggle('active', currentTarget === 'market');
 
-      // Update Concept Tabs UI states
+      // Update Concept Tab UI
       document.querySelectorAll('.concept-tab').forEach(btn => {
         const idx = Number(btn.dataset.idx);
         btn.classList.toggle('active', idx === currentConcept);
@@ -799,7 +838,7 @@
       updateStage();
     }
 
-    // Initialize state
+    // Run on boot
     updateStage();
   </script>
 </body>
