@@ -30,10 +30,12 @@ Translates abstract percentage limits and token pools into concrete pay-as-you-g
 - Scans all workspace transcripts across both Antigravity CLI (`~/.gemini/antigravity-cli/brain`) and Desktop App (`~/.gemini/antigravity/brain`).
 - Interactive toggle tabs between **[Current 5h Slot]** and **[Current Weekly Slot]** showing total tokens consumed and dollar spend across all projects on your PC.
 
-### 4. Modern Frameless Desktop HUD
+### 4. Modern Frameless Desktop HUD & Autostart
 - **Custom Draggable Titlebar:** Borderless dark dashboard aesthetic with `-webkit-app-region: drag`.
-- **Always on Top Toggle:** Click `[● PINNED]` to dynamically pin/unpin the monitor without UI freezing (native Win32 `SetWindowPos` non-blocking binding).
-- **Third-Party Model Status:** Compact badge for Claude & GPT quotas that expands when actively used.
+- **Persistent Always-on-Top State:** Pin preferences are saved to `hud_config.json` and automatically restored on startup.
+- **Single-Instance Enforcement:** Uses a Windows Named Mutex (`Global\AntigravityLiveMonitor_SingleInstance_Mutex`) to prevent duplicate instances.
+- **Windows Auto-Start:** Configurable via Windows Startup folder (`shell:startup`) for seamless boot launches.
+- **Antigravity Lifecycle Auto-Start:** Integrates with `~/.gemini/config/hooks.json` (`PreInvocation`) to auto-launch the monitor whenever `agy` starts in CLI, Desktop, or VS Code.
 - **Zero Console Popups:** Runs silently in the background with `CREATE_NO_WINDOW`.
 
 ### 5. Interactive Workspace Hub (`hub.py`)

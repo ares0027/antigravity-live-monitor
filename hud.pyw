@@ -13,6 +13,7 @@ USER_HOME = os.path.expanduser("~")
 CLI_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity-cli", "brain")
 DESKTOP_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity", "brain")
 QUOTA_HISTORY_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "quota_history.json")
+HUD_CONFIG_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud_config.json")
 
 CREATE_NO_WINDOW = 0x08000000
 
@@ -24,6 +25,8 @@ BLENDED_RATE_PER_M = 2.25      # Weighted valuation rate
 
 # Win32 Native Setup
 user32 = ctypes.windll.user32
+kernel32 = ctypes.windll.kernel32
+
 user32.SetWindowPos.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_uint]
 user32.SetWindowPos.restype = ctypes.c_bool
 
@@ -33,6 +36,34 @@ SWP_NOSIZE = 0x0001
 SWP_NOMOVE = 0x0002
 SWP_NOACTIVATE = 0x0010
 SWP_SHOWWINDOW = 0x0040
+
+def check_single_instance():
+    mutex_name = "Global\\AntigravityLiveMonitor_SingleInstance_Mutex"
+    mutex = kernel32.CreateMutexW(None, True, mutex_name)
+    last_error = kernel32.GetLastError()
+    if last_error == 183:  # ERROR_ALREADY_EXISTS
+        sys.exit(0)
+    return mutex
+
+def load_hud_config():
+    default_config = {"pinned": True}
+    if os.path.exists(HUD_CONFIG_FILE):
+        try:
+            with open(HUD_CONFIG_FILE, "r", encoding="utf-8") as f:
+                d = json.load(f)
+                if isinstance(d, dict):
+                    default_config.update(d)
+        except Exception:
+            pass
+    return default_config
+
+def save_hud_config(config_dict):
+    try:
+        os.makedirs(os.path.dirname(HUD_CONFIG_FILE), exist_ok=True)
+        with open(HUD_CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config_dict, f, indent=2)
+    except Exception:
+        pass
 
 def get_hud_hwnd():
     my_pid = os.getpid()
@@ -301,6 +332,24 @@ HTML_CONTENT = """<!DOCTYPE html>
     let activeTab = '5h';
     let isPinned = true;
 
+    function applyPinVisual(pinned) {
+      isPinned = pinned;
+      const dot = document.getElementById('pinDot');
+      const text = document.getElementById('pinText');
+      const btn = document.getElementById('pinBtn');
+      if (isPinned) {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+        btn.className = 'px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
+        text.textContent = 'PINNED';
+        btn.title = 'Always on Top (Enabled)';
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-500';
+        btn.className = 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
+        text.textContent = 'UNPIN';
+        btn.title = 'Always on Top (Disabled)';
+      }
+    }
+
     function switchTab(tab) {
       activeTab = tab;
       const t5 = document.getElementById('tab5h');
@@ -320,21 +369,8 @@ HTML_CONTENT = """<!DOCTYPE html>
     async function togglePin() {
       if (window.pywebview && window.pywebview.api) {
         try {
-          isPinned = await window.pywebview.api.toggle_on_top();
-          const dot = document.getElementById('pinDot');
-          const text = document.getElementById('pinText');
-          const btn = document.getElementById('pinBtn');
-          if (isPinned) {
-            dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
-            btn.className = 'px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
-            text.textContent = 'PINNED';
-            btn.title = 'Always on Top (Enabled)';
-          } else {
-            dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-500';
-            btn.className = 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
-            text.textContent = 'UNPIN';
-            btn.title = 'Always on Top (Disabled)';
-          }
+          const newState = await window.pywebview.api.toggle_on_top();
+          applyPinVisual(newState);
         } catch (e) {
           console.error(e);
         }
@@ -447,7 +483,15 @@ HTML_CONTENT = """<!DOCTYPE html>
       }
     }
 
-    function init() {
+    async function init() {
+      if (window.pywebview && window.pywebview.api) {
+        try {
+          const cfg = await window.pywebview.api.get_config();
+          if (cfg && typeof cfg.pinned === 'boolean') {
+            applyPinVisual(cfg.pinned);
+          }
+        } catch(e) {}
+      }
       refreshData();
       setInterval(refreshData, 1000);
     }
@@ -641,7 +685,7 @@ class MetricsEngine:
 
             cur_weekly_pct = self.cached_metrics["gemini_weekly_pct"]
             est_weekly_rem = int(learned_weekly_cap * (cur_weekly_pct / 100.0))
-            self.cached_metrics["est_weekly_remain_str"] = f"{est_weekly_rem / 1000000.0:.2f}M" if est_weekly_rem >= 1000000 else f"{est_weekly_rem / 100.0:.0f}k"
+            self.cached_metrics["est_weekly_remain_str"] = f"{est_weekly_rem / 1000000.0:.2f}M" if est_weekly_rem >= 1000000 else f"{est_weekly_rem / 1000.0:.0f}k"
             self.cached_metrics["w_cost_weighted"] = (est_weekly_rem / 1000000.0) * BLENDED_RATE_PER_M
             self.cached_metrics["w_cost_in"] = (est_weekly_rem / 1000000.0) * PRICE_INPUT_PER_M
             self.cached_metrics["w_cost_out"] = (est_weekly_rem / 1000000.0) * PRICE_OUTPUT_PER_M
@@ -818,13 +862,17 @@ class MetricsEngine:
         self.cached_metrics["session_total_tokens"] = in_tokens + out_tokens
 
 class Api:
-    def __init__(self, engine):
+    def __init__(self, engine, config):
         self.engine = engine
+        self.config = config
         self.window = None
-        self.is_on_top = True
+        self.is_on_top = config.get("pinned", True)
 
     def set_window(self, window):
         self.window = window
+
+    def get_config(self):
+        return self.config
 
     def get_metrics(self):
         return self.engine.cached_metrics
@@ -835,6 +883,9 @@ class Api:
 
     def toggle_on_top(self):
         self.is_on_top = not self.is_on_top
+        self.config["pinned"] = self.is_on_top
+        save_hud_config(self.config)
+        
         hwnd = get_hud_hwnd()
         if hwnd:
             flag = HWND_TOPMOST if self.is_on_top else HWND_NOTOPMOST
@@ -856,8 +907,11 @@ class Api:
             threading.Thread(target=self.window.destroy, daemon=True).start()
 
 def main():
+    _mutex = check_single_instance()
+    config = load_hud_config()
+
     engine = MetricsEngine()
-    api = Api(engine)
+    api = Api(engine, config)
 
     window = webview.create_window(
         title="Antigravity Live Monitor",
@@ -866,7 +920,7 @@ def main():
         width=480,
         height=660,
         frameless=True,
-        on_top=True,
+        on_top=config.get("pinned", True),
         resizable=True,
         background_color="#0D0E12"
     )
