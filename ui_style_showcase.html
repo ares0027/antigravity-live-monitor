@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bespoke UI Engine — 10 Style Showcase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#0c0d0e] text-[#ededed] font-sans min-h-screen flex flex-col antialiased">
+  <header class="border-b border-white/10 bg-[#121316]/90 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+            <i data-lucide="palette" class="w-5 h-5"></i>
+          </span>
+          <h1 class="text-lg font-semibold tracking-tight text-white">Bespoke UI Engine — 10 Style Showcase</h1>
+        </div>
+        <p class="text-xs text-neutral-400 mt-0.5">Live interactive preview of 10 human-designed aesthetics. Zero AI tropes, zero emoji clutter.</p>
+      </div>
+      <div class="flex items-center gap-2 text-xs font-mono text-neutral-400 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Target: Crypto Price Signal App</span>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 overflow-x-auto flex gap-2">
+      <button onclick="switchStyle('style-1')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-indigo-500 bg-indigo-500/10 text-indigo-300" data-target="style-1">1. Linear Dark SaaS</button><button onclick="switchStyle('style-2')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-target="style-2">2. Vercel Clean Light</button><button onclick="switchStyle('style-3')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-target="style-3">3. Warm Nordic Craft</button><button onclick="switchStyle('style-4')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-target="style-4">4. Pro Fintech Terminal</button><button onclick="switchStyle('style-5')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-target="style-5">5. Swiss Neo-Brutalist</button><button onclick="switchStyle('style-6')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-target="style-6">6. Obsidian Emerald Matrix</button><button onclick="switchStyle('style-7')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-target="style-7">7. Luxury Monochromatic</button><button onclick="switchStyle('style-8')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-target="style-8">8. Japanese Wabi-Sabi</button><button onclick="switchStyle('style-9')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-target="style-9">9. Retro Amber CRT</button><button onclick="switchStyle('style-10')" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-target="style-10">10. Cupertino Frosted</button>
+    </div>
+  </header>
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8">
+    
+    <section id="style-1" class="style-pane  space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-indigo-400">Style 01</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Linear & Shadcn Precision Dark</h2>
+          <p class="text-sm text-neutral-400 mt-1">Deep blacks, razor-sharp 1px neutral borders, crisp typography.</p>
+        </div>
+      </div>
+      <div class="bg-[#09090b] text-white rounded-xl border-[#27272a] p-6 sm:p-8 space-y-6 font-sans">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-[#121215] border-[#27272a] rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-[#121215] border-[#27272a] rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="style-2" class="style-pane hidden space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-slate-900">Style 02</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Vercel & Geist Clean Light</h2>
+          <p class="text-sm text-neutral-400 mt-1">High-contrast white backgrounds, crisp neutral slate borders, and sharp typography.</p>
+        </div>
+      </div>
+      <div class="bg-white text-slate-900 rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6 font-sans">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-white border border-slate-200 shadow-sm rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 shadow-sm rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-rose-50 text-rose-700 border border-rose-200">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="style-3" class="style-pane hidden space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-[#d4a373]">Style 03</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Warm Nordic & Editorial Craft</h2>
+          <p class="text-sm text-neutral-400 mt-1">Warm cream canvas, organic stone cards, terracotta accents, magazine typography.</p>
+        </div>
+      </div>
+      <div class="bg-[#f7f4ed] text-[#2b2d42] rounded-2xl border border-[#e8e2d5] shadow-sm p-6 sm:p-8 space-y-6 font-serif">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-white border border-[#e8e2d5] shadow-sm rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-[#e8f5e9] text-[#2e7d32] border border-[#c8e6c9]">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-white border border-[#e8e2d5] shadow-sm rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-[#fbe9e7] text-[#c62828] border border-[#ffccbc]">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="style-4" class="style-pane hidden space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-emerald-400">Style 04</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Pro Fintech & Trading Terminal</h2>
+          <p class="text-sm text-neutral-400 mt-1">High-density graphite layout, tabular numbers, emerald/crimson indicators.</p>
+        </div>
+      </div>
+      <div class="bg-[#101114] text-[#d1d4dc] rounded-lg border border-[#2a2e39] p-6 sm:p-8 space-y-6 font-mono">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-[#16181d] border border-[#2a2e39] rounded-lg p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-[#089981]/20 text-[#089981] border border-[#089981]/40">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-[#16181d] border border-[#2a2e39] rounded-lg p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-[#f23645]/20 text-[#f23645] border border-[#f23645]/40">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="style-5" class="style-pane hidden space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-yellow-500">Style 05</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Swiss Neo-Brutalist</h2>
+          <p class="text-sm text-neutral-400 mt-1">Bold 2px black borders, hard 4px offset shadows, bold grotesque typography.</p>
+        </div>
+      </div>
+      <div class="bg-[#fef9ef] text-black rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 sm:p-8 space-y-6 font-sans font-bold">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-[#7ed957] text-black border-2 border-black font-extrabold">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-[#ff5757] text-white border-2 border-black font-extrabold">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="style-6" class="style-pane hidden space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-emerald-400">Style 06</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Obsidian Emerald Cyber Matrix</h2>
+          <p class="text-sm text-neutral-400 mt-1">Deep pitch-black obsidian, subtle forest hairline borders, neon cyber accents.</p>
+        </div>
+      </div>
+      <div class="bg-[#050807] text-[#e0f2fe] rounded-xl border border-[#1a382a] p-6 sm:p-8 space-y-6 font-mono">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-[#0a120e] border border-[#1a382a] rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-emerald-950/60 text-emerald-400 border border-emerald-500/40">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-[#0a120e] border border-[#1a382a] rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-rose-950/60 text-rose-400 border border-rose-500/40">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="style-7" class="style-pane hidden space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-[#d4af37]">Style 07</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Luxury Monochromatic & Gold</h2>
+          <p class="text-sm text-neutral-400 mt-1">Pure midnight velvet black, champagne gold micro-accents.</p>
+        </div>
+      </div>
+      <div class="bg-black text-[#f5f5f5] rounded-xl border border-[#222222] p-6 sm:p-8 space-y-6 font-serif">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-[#080808] border border-[#222222] rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md text-[#d4af37] border border-[#d4af37]/40 bg-[#d4af37]/10">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-[#080808] border border-[#222222] rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md text-[#f87171] border border-[#f87171]/40 bg-[#f87171]/10">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="style-8" class="style-pane hidden space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-[#c85a32]">Style 08</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Japanese Paper & Sumi Ink</h2>
+          <p class="text-sm text-neutral-400 mt-1">Washi beige, deep indigo & terracotta tones.</p>
+        </div>
+      </div>
+      <div class="bg-[#efece6] text-[#2c2b29] rounded-xl border border-[#dedad2] shadow-sm p-6 sm:p-8 space-y-6 font-sans">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-[#f9f8f5] border border-[#dedad2] shadow-sm rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-[#2e6b4f]/10 text-[#2e6b4f] border border-[#2e6b4f]/30">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-[#f9f8f5] border border-[#dedad2] shadow-sm rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-[#c85a32]/10 text-[#c85a32] border border-[#c85a32]/30">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="style-9" class="style-pane hidden space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-[#ffb000]">Style 09</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Retro Amber CRT Terminal</h2>
+          <p class="text-sm text-neutral-400 mt-1">Vintage 1980s monochrome phosphor amber on pitch black.</p>
+        </div>
+      </div>
+      <div class="bg-[#0d0900] text-[#ffb000] rounded-lg border-2 border-[#ffb000]/60 shadow-[0_0_15px_rgba(255,176,0,0.2)] p-6 sm:p-8 space-y-6 font-mono">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-[#150f00] border-2 border-[#ffb000]/60 shadow-[0_0_15px_rgba(255,176,0,0.2)] rounded-lg p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md border border-[#ffb000] text-[#ffb000]">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-[#150f00] border-2 border-[#ffb000]/60 shadow-[0_0_15px_rgba(255,176,0,0.2)] rounded-lg p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md border border-[#ffb000] text-[#ffb000]">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="style-10" class="style-pane hidden space-y-6">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div>
+          <span class="text-xs font-mono uppercase tracking-widest text-blue-500">Style 10</span>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Cupertino Frosted Pill (Apple HIG)</h2>
+          <p class="text-sm text-neutral-400 mt-1">Soft rounded squircle cards, gentle blur drop-shadows, iOS blue badges.</p>
+        </div>
+      </div>
+      <div class="bg-[#f2f2f7] text-[#1c1c1e] rounded-3xl border border-white/80 shadow-md p-6 sm:p-8 space-y-6 font-sans">
+        <div class="flex items-center justify-between pb-4 border-b border-current/10">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-current/10 flex items-center justify-center font-bold text-sm">▲</div>
+            <div>
+              <div class="text-base font-bold tracking-tight">CryptoSignal Pro</div>
+              <div class="text-xs opacity-60 font-mono">Live Multi-Asset Feed</div>
+            </div>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full bg-current/10">Auto-Sync 5s</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-white border border-white/80 shadow-md rounded-3xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Ethereum (ETH)</div>
+                <div class="text-xs opacity-60">Layer 1 Benchmark</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-emerald-100 text-emerald-800 font-semibold">▲ BUY SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$3,420.50</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $3,282.60</span>
+              <span class="font-bold">+4.20% (Lower than 24h)</span>
+            </div>
+          </div>
+          <div class="bg-white border border-white/80 shadow-md rounded-3xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-bold text-base">Solana (SOL)</div>
+                <div class="text-xs opacity-60">High-Throughput L1</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-md bg-rose-100 text-rose-800 font-semibold">▼ SELL SIGNAL</span>
+            </div>
+            <div class="text-3xl font-extrabold tracking-tight font-mono">$184.20</div>
+            <div class="pt-3 border-t border-current/10 text-xs opacity-80 flex justify-between font-mono">
+              <span>Yesterday: $189.50</span>
+              <span class="font-bold">-2.80% (Higher than 24h)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+  </main>
+  <script>
+    lucide.createIcons();
+    function switchStyle(styleId) {
+      document.querySelectorAll('.style-pane').forEach(el => el.classList.add('hidden'));
+      document.getElementById(styleId).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.target === styleId) {
+          btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-indigo-500 bg-indigo-500/10 text-indigo-300';
+        } else {
+          btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white';
+        }
+      });
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
