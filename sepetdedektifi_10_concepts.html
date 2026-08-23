@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sepet Dedektifi — 10 Radical Architecture Concepts</title>
+  <title>Sepet Dedektifi — 10 Farklı Mimari & Tasarım Konsepti</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@500;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@500;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@500;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <style>
     .font-cabinet { font-family: 'Cabinet Grotesk', sans-serif; }
     .font-serif-news { font-family: 'Newsreader', Georgia, serif; }
@@ -17,485 +18,412 @@
     .font-mono-jb { font-family: 'JetBrains Mono', monospace; }
     .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
     .font-space { font-family: 'Space Grotesk', sans-serif; }
+    .font-inter { font-family: 'Inter', sans-serif; }
+
+    /* Custom Animations */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.75; transform: scale(1.04); }
+    }
+    .animate-glow {
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
     
     .view-target-btn.active {
-      background: rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.2);
       color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.35);
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
     }
+
+    .concept-tab.active {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { height: 6px; width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f1115; }
+    ::-webkit-scrollbar-thumb { background: #262a33; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b4252; }
   </style>
 </head>
-<body class="bg-[#0b0c0e] text-[#e3e6ed] font-dmsans min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-black">
+<body class="bg-[#08090b] text-[#e3e6ed] font-dmsans min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-black">
 
-  <!-- Top Controller Bar -->
-  <header class="border-b border-white/10 bg-[#101216]/95 backdrop-blur sticky top-0 z-50 shadow-md">
+  <!-- ================= MASTER CONTROLLER HEADER ================= -->
+  <header class="border-b border-white/10 bg-[#0d0f13]/95 backdrop-blur-md sticky top-0 z-50 shadow-2xl">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
       <div>
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold shadow-inner">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/30 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold shadow-lg shadow-amber-500/10">
             <i data-lucide="compass" class="w-5 h-5"></i>
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-base font-bold text-white tracking-tight">Sepet Dedektifi — 10 Radical Architecture Alternatives</h1>
-              <span class="text-[10px] font-mono-jb bg-amber-400/10 text-amber-300 border border-amber-400/20 px-2 py-0.5 rounded-full font-semibold">G: EXTENSION &amp; PORTAL</span>
+            <div class="flex items-center gap-2.5">
+              <h1 class="text-base font-bold text-white tracking-tight">Sepet Dedektifi — 10 Radikal Tasarım &amp; Mimari Konsepti</h1>
+              <span class="text-[10px] font-mono-jb bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                CANLI VERİ ENTEGRASYONU
+              </span>
             </div>
-            <p class="text-xs text-neutral-400">Migros, CarrefourSA, ŞOK, A101, BİM, Getir market verileriyle 10 farklı kullanıcı deneyimi ve tasarım felsefesi.</p>
+            <p class="text-xs text-neutral-400">Her konsept için hem Ana Sayfa (sepetdedektifi.com) hem de Market Portalı (market.sepetdedektifi.com) sıfırdan tasarlandı.</p>
           </div>
         </div>
       </div>
 
-      <!-- Page Target Switcher (Main Landing vs Market App) -->
-      <div class="flex items-center gap-1.5 bg-black/50 p-1 rounded-xl border border-white/10">
-        <button id="target-main" onclick="switchPageTarget('main')" class="view-target-btn active px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all border border-transparent flex items-center gap-1.5 text-white">
-          <i data-lucide="globe" class="w-3.5 h-3.5 text-amber-400"></i>
+      <!-- TARGET PAGE TOGGLER -->
+      <div class="flex items-center gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-white/15 shadow-inner">
+        <button id="btn-target-main" onclick="setTarget('main')" class="view-target-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all border border-transparent flex items-center gap-2 text-white">
+          <i data-lucide="globe" class="w-4 h-4 text-amber-400"></i>
           <span>Ana Sayfa (sepetdedektifi.com)</span>
         </button>
-        <button id="target-market" onclick="switchPageTarget('market')" class="view-target-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all border border-transparent text-neutral-400 hover:text-white flex items-center gap-1.5">
-          <i data-lucide="store" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <button id="btn-target-market" onclick="setTarget('market')" class="view-target-btn px-4 py-2 rounded-xl text-xs font-bold transition-all border border-transparent text-neutral-400 hover:text-white flex items-center gap-2">
+          <i data-lucide="store" class="w-4 h-4 text-cyan-400"></i>
           <span>Market Portalı (market.sepetdedektifi.com)</span>
         </button>
       </div>
     </div>
 
-    <!-- 10 Concepts Horizontal Tabs -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 overflow-x-auto flex gap-2 border-t border-white/5 no-scrollbar">
-      <button onclick="switchConcept(1)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-amber-500 bg-amber-500/10 text-amber-300 shadow-sm" data-idx="1">1. Enflasyon Gazetesi (Editorial)</button>
-      <button onclick="switchConcept(2)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="2">2. Arbitraj Terminali (Bloomberg Pro)</button>
-      <button onclick="switchConcept(3)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="3">3. Radikal Şeffaflık (Vercel Bento)</button>
-      <button onclick="switchConcept(4)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="4">4. Doğal Mutfak (Nordic Craft)</button>
-      <button onclick="switchConcept(5)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="5">5. Tüketici Radarı (Swiss Brutalist)</button>
-      <button onclick="switchConcept(6)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="6">6. Spot Işık Arama (Spotlight / Raycast)</button>
-      <button onclick="switchConcept(7)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="7">7. Topluluk Kasası (Open Vault)</button>
-      <button onclick="switchConcept(8)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="8">8. Sanal Reyon Rafları (Visual Shelf)</button>
-      <button onclick="switchConcept(9)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="9">9. Gizli Zam Radarı (Anti-Shrinkflation)</button>
-      <button onclick="switchConcept(10)" class="concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="10">10. İkili Sepet Arenası (Head-to-Head)</button>
+    <!-- 10 CONCEPTS SELECTOR TABS -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 overflow-x-auto flex gap-2 border-t border-white/5 no-scrollbar">
+      <button onclick="setConcept(1)" class="concept-tab active px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-amber-500/40 text-neutral-300" data-idx="1">1. Enflasyon Gazetesi (Editorial)</button>
+      <button onclick="setConcept(2)" class="concept-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="2">2. Arbitraj Terminali (Bloomberg Pro)</button>
+      <button onclick="setConcept(3)" class="concept-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="3">3. Radikal Şeffaflık (Vercel Bento)</button>
+      <button onclick="setConcept(4)" class="concept-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="4">4. Doğal Mutfak &amp; Kiler (Nordic Craft)</button>
+      <button onclick="setConcept(5)" class="concept-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="5">5. Tüketici Hakları Radarı (Swiss Brutalist)</button>
+      <button onclick="setConcept(6)" class="concept-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="6">6. Spot Işık Arama (Spotlight / Raycast)</button>
+      <button onclick="setConcept(7)" class="concept-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="7">7. Topluluk Kasası (Open Vault)</button>
+      <button onclick="setConcept(8)" class="concept-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="8">8. Sanal Reyon Rafları (Visual Shelf)</button>
+      <button onclick="setConcept(9)" class="concept-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="9">9. Gizli Zam Radarı (Anti-Shrinkflation)</button>
+      <button onclick="setConcept(10)" class="concept-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white" data-idx="10">10. Canlı Sepet Arenası (Head-to-Head)</button>
     </div>
   </header>
 
-  <!-- Showcase Canvas -->
+  <!-- ================= SHOWCASE MAIN STAGE ================= -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8">
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 1: THE INFLATION & RECEIPT GAZETTE (EDITORIAL / NEWSPAPER) -->
-    <!-- ================================================================= -->
-    <div id="concept-1" class="concept-view space-y-6">
-      
-      <!-- SUB-VIEW: MAIN LANDING PAGE -->
-      <div class="target-pane-main space-y-6">
-        <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
-          <div>
-            <span class="text-xs font-mono-jb uppercase tracking-widest text-amber-400">Concept 01 // Ana Sayfa (sepetdedektifi.com)</span>
-            <h2 class="text-2xl font-bold text-white tracking-tight">The Investigative Inflation Gazette</h2>
-            <p class="text-sm text-neutral-400 mt-0.5">Tüketiciyi koruyan otoriter araştırma gazetesi formatı. Büyük serif manşetler, enflasyon barometresi ve market ifşaları.</p>
+    <!-- CONCEPT 1: THE INFLATION & RECEIPT GAZETTE -->
+    <div id="c-1-main" class="stage-pane space-y-6">
+      <div class="bg-[#fdfbf7] text-[#1a1917] rounded-3xl p-8 sm:p-12 border border-[#e5dfd3] shadow-2xl space-y-10 font-serif-news">
+        <!-- Newspaper Masthead -->
+        <div class="text-center border-b-2 border-[#1a1917] pb-6 space-y-3">
+          <div class="text-xs font-dmsans uppercase tracking-[0.3em] text-[#6b6760] font-bold">Mutfak Enflasyonu &amp; Fiyat Dedektifliği Araştırma Raporu</div>
+          <h2 class="text-5xl sm:text-7xl font-bold tracking-tight text-[#1a1917] italic">Sepet Dedektifi</h2>
+          <div class="flex justify-between items-center text-xs font-dmsans border-t border-b border-[#1a1917]/20 py-2 mt-4 px-2 text-[#4a4740]">
+            <span>CİLT IV • SAYI 118</span>
+            <span>CANLI MARKET VERİSİ: MİGROS, CARREFOUR, ŞOK, A101, BİM, GETİR</span>
+            <span>ÜCRETSİZ TÜKETİCİ REHBERİ</span>
           </div>
-          <span class="hidden sm:inline-flex text-xs font-mono-jb bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-neutral-300">sepetdedektifi.com</span>
         </div>
 
-        <div class="bg-[#fcfaf5] text-[#1a1917] rounded-2xl p-8 sm:p-12 border border-[#e5dfd3] shadow-2xl space-y-10 font-serif-news">
-          <div class="text-center border-b-2 border-[#1a1917] pb-6 space-y-3">
-            <div class="text-xs font-dmsans uppercase tracking-[0.25em] text-[#6b6760] font-bold">Mutfak Enflasyonu &amp; Fiyat Dedektifliği Gazetesi</div>
-            <h3 class="text-5xl sm:text-7xl font-bold tracking-tight text-[#1a1917] italic">Sepet Dedektifi</h3>
-            <div class="flex justify-between items-center text-xs font-dmsans border-t border-b border-[#1a1917]/20 py-2 mt-4 px-2 text-[#4a4740]">
-              <span>CİLT IV • SAYI 118</span>
-              <span>CANLI MARKET VERİSİ: MİGROS, CARREFOUR, ŞOK, A101, BİM, GETİR</span>
-              <span>ÜCRETSİZ TÜKETİCİ REHBERİ</span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 space-y-6">
+            <span class="inline-block bg-[#c85a32] text-white text-xs font-dmsans font-bold uppercase tracking-wider px-3 py-1 rounded">MANŞET ARAŞTIRMASI</span>
+            <h3 class="text-3xl sm:text-5xl font-bold leading-tight">Aynı 10 Ürünlük Temel Mutfak Sepetinde Marketler Arası Fark <span class="italic text-[#c85a32]">₺342,80</span>'ye Ulaştı.</h3>
+            <p class="font-dmsans text-sm sm:text-base text-[#4a4740] leading-relaxed">
+              Zincir marketler aynı barkodlu kaşar peyniri, ayçiçek yağı, çay ve bulaşık tabletini farklı algoritmalarla fiyatlandırıyor. Sepet Dedektifi tarayıcı eklentisi, siz alışveriş yaparken 6 büyük zinciri anlık denetler ve sepetinizi en ucuza getiren market kombinasyonunu gösterir.
+            </p>
+            <div class="flex flex-wrap items-center gap-4 pt-2 font-dmsans">
+              <button class="px-7 py-4 bg-[#1a1917] text-white rounded-2xl text-sm font-bold hover:bg-[#c85a32] transition-all transform hover:-translate-y-0.5 shadow-xl flex items-center gap-2.5">
+                <i data-lucide="download" class="w-4 h-4"></i> Chrome / Edge / Firefox'a Ücretsiz Ekle
+              </button>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <div class="lg:col-span-7 space-y-6">
-              <span class="inline-block bg-[#c85a32] text-white text-xs font-dmsans font-bold uppercase tracking-wider px-3 py-1 rounded">GÜNÜN MANŞETİ</span>
-              <h4 class="text-3xl sm:text-4xl font-bold leading-tight font-serif-news">Aynı 10 Ürünlük Temel Mutfak Sepetinde Marketler Arası Fark <span class="italic text-[#c85a32]">₺342,80</span>'ye Ulaştı.</h4>
-              <p class="font-dmsans text-sm sm:text-base text-[#4a4740] leading-relaxed">
-                Zincir marketler aynı barkodlu süt, peynir, deterjan ve yumurtayı farklı algoritmalarla fiyatlandırıyor. Sepet Dedektifi tarayıcı eklentisi, siz gezinirken arkada 6 büyük zinciri anlık tarar ve sepetinizi en ucuza getiren market kombinasyonunu gösterir.
-              </p>
-              
-              <div class="flex flex-wrap items-center gap-4 pt-2 font-dmsans">
-                <button class="px-6 py-3.5 bg-[#1a1917] text-white rounded-xl text-sm font-semibold hover:bg-[#c85a32] transition-colors flex items-center gap-2">
-                  <i data-lucide="chrome" class="w-4 h-4"></i> Chrome / Edge'e Ücretsiz Ekle
-                </button>
-                <button class="px-6 py-3.5 border border-[#1a1917] rounded-xl text-sm font-semibold hover:bg-[#1a1917]/5 transition-colors flex items-center gap-2">
-                  <i data-lucide="search" class="w-4 h-4"></i> Canlı Fiyat Bültenini İncele
-                </button>
-              </div>
-            </div>
-
-            <div class="lg:col-span-5 bg-[#f4eee1] p-6 rounded-xl border border-[#dfd6c4] space-y-4 font-dmsans">
-              <div class="flex justify-between items-center border-b border-[#dfd6c4] pb-3">
-                <h5 class="font-bold text-xs uppercase tracking-wider text-[#1a1917]">Günün Sepet Karşılaştırma Özeti</h5>
-                <span class="text-[10px] bg-emerald-700 text-white font-bold px-2 py-0.5 rounded">GÜNCEL</span>
-              </div>
-              
-              <div class="space-y-3 text-xs">
-                <div class="flex justify-between items-center p-3 bg-white/80 rounded-lg border border-[#dfd6c4]">
-                  <div>
-                    <div class="font-bold text-sm">Sütaş Kaşar Peyniri 700g</div>
-                    <div class="text-[#6b6760] text-[11px]">En Ucuz: CarrefourSA</div>
-                  </div>
-                  <div class="text-right">
-                    <div class="font-bold text-emerald-700 text-sm">₺219,90</div>
-                    <div class="text-rose-700 text-[10px] line-through">₺284,50 (Diğer)</div>
-                  </div>
+          <div class="lg:col-span-5 relative group">
+            <div class="overflow-hidden rounded-2xl border-4 border-[#1a1917] shadow-2xl bg-white">
+              <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80" alt="Supermarket groceries" class="w-full h-64 object-cover">
+              <div class="p-5 bg-[#f4eee1] space-y-3 font-dmsans">
+                <div class="flex justify-between items-center text-xs font-bold uppercase text-[#1a1917]">
+                  <span>Günün Dedektif İncelemesi</span>
+                  <span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">DOĞRULANDI</span>
                 </div>
-
-                <div class="flex justify-between items-center p-3 bg-white/80 rounded-lg border border-[#dfd6c4]">
-                  <div>
-                    <div class="font-bold text-sm">Yudum Ayçiçek Yağı 5L</div>
-                    <div class="text-[#6b6760] text-[11px]">En Ucuz: A101</div>
-                  </div>
-                  <div class="text-right">
-                    <div class="font-bold text-emerald-700 text-sm">₺249,00</div>
-                    <div class="text-rose-700 text-[10px] line-through">₺295,00 (Diğer)</div>
-                  </div>
+                <div class="text-sm font-bold text-[#1a1917]">Sütaş Kaşar Peyniri 700g</div>
+                <div class="flex justify-between text-xs pt-1 border-t border-[#dfd6c4]">
+                  <span>En Ucuz: CarrefourSA (₺219,90)</span>
+                  <span class="text-rose-700 font-bold">Diğer: ₺284,50 (+%29)</span>
                 </div>
-              </div>
-
-              <div class="p-3 bg-[#c85a32]/10 border border-[#c85a32]/30 rounded-lg text-xs text-[#c85a32] font-medium flex items-center gap-2">
-                <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
-                <span>Dedektif Uyarısı: 12 üründe gizli gramaj düşüşü tespit edildi.</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- SUB-VIEW: MARKET APP (market.sepetdedektifi.com) -->
-      <div class="target-pane-market hidden space-y-6">
-        <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
-          <div>
-            <span class="text-xs font-mono-jb uppercase tracking-widest text-cyan-400">Concept 01 // Market Portalı (market.sepetdedektifi.com)</span>
-            <h2 class="text-2xl font-bold text-white tracking-tight">The Investigative Market Price Bulletin</h2>
-            <p class="text-sm text-neutral-400 mt-0.5">Gazete formatında günlük piyasa bülteni, market fiyat denetimi ve F/P sıralaması.</p>
-          </div>
-          <span class="hidden sm:inline-flex text-xs font-mono-jb bg-cyan-950/40 border border-cyan-500/30 px-3 py-1.5 rounded-lg text-cyan-300">market.sepetdedektifi.com</span>
-        </div>
-
-        <div class="bg-[#fcfaf5] text-[#1a1917] rounded-2xl p-6 sm:p-10 border border-[#e5dfd3] shadow-2xl space-y-8 font-serif-news">
-          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#1a1917]/20 pb-4">
-            <div>
-              <div class="text-xs font-dmsans uppercase tracking-widest text-[#6b6760]">Canlı Fiyat Denetim Masası</div>
-              <h3 class="text-3xl font-bold italic">Market Fiyat Endeksi &amp; Canlı Takip</h3>
-            </div>
-            <div class="flex gap-2 font-dmsans">
-              <input type="text" placeholder="Ürün, barkod veya marka ara..." class="px-4 py-2 bg-white border border-[#dfd6c4] rounded-lg text-xs w-64 focus:outline-none focus:border-[#1a1917]">
-              <button class="px-4 py-2 bg-[#1a1917] text-white rounded-lg text-xs font-semibold">Ara</button>
-            </div>
-          </div>
-
-          <div class="overflow-x-auto font-dmsans">
-            <table class="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr class="border-b-2 border-[#1a1917] text-[#1a1917] uppercase tracking-wider font-bold text-[11px]">
-                  <th class="py-3 px-3">Ürün &amp; Barkod</th>
-                  <th class="py-3 px-3 text-center">Migros</th>
-                  <th class="py-3 px-3 text-center">CarrefourSA</th>
-                  <th class="py-3 px-3 text-center">ŞOK</th>
-                  <th class="py-3 px-3 text-center">A101</th>
-                  <th class="py-3 px-3 text-right">En İyi Fiyat</th>
-                  <th class="py-3 px-3 text-right">Tasarruf</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-[#dfd6c4]">
-                <tr class="hover:bg-white/60 transition-colors">
-                  <td class="py-4 px-3">
-                    <div class="font-bold text-sm text-[#1a1917]">Nutella Kakaolu Fındık Kreması 750g</div>
-                    <div class="text-[11px] text-[#6b6760] font-mono-jb">Barkod: 8000500179963</div>
-                  </td>
-                  <td class="py-4 px-3 text-center">₺164,50</td>
-                  <td class="py-4 px-3 text-center text-emerald-800 font-bold bg-emerald-50/50 rounded">₺139,90 ★</td>
-                  <td class="py-4 px-3 text-center text-[#6b6760]">-</td>
-                  <td class="py-4 px-3 text-center">₺159,00</td>
-                  <td class="py-4 px-3 text-right font-bold text-sm text-emerald-800">₺139,90</td>
-                  <td class="py-4 px-3 text-right font-semibold text-[#c85a32]">+%17,5</td>
-                </tr>
-                <tr class="hover:bg-white/60 transition-colors">
-                  <td class="py-4 px-3">
-                    <div class="font-bold text-sm text-[#1a1917]">Fairy Platinum Bulaşık Tableti 72'li</div>
-                    <div class="text-[11px] text-[#6b6760] font-mono-jb">Barkod: 8001090875412</div>
-                  </td>
-                  <td class="py-4 px-3 text-center">₺589,90</td>
-                  <td class="py-4 px-3 text-center">₺612,00</td>
-                  <td class="py-4 px-3 text-center text-emerald-800 font-bold bg-emerald-50/50 rounded">₺479,00 ★</td>
-                  <td class="py-4 px-3 text-center">₺510,00</td>
-                  <td class="py-4 px-3 text-right font-bold text-sm text-emerald-800">₺479,00</td>
-                  <td class="py-4 px-3 text-right font-semibold text-[#c85a32]">+%27,7</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
     </div>
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 2: THE GROCERY ARBITRAGE TERMINAL (BLOOMBERG FINTECH PRO)  -->
-    <!-- ================================================================= -->
-    <div id="concept-2" class="concept-view hidden space-y-6 font-mono-jb">
-      
-      <!-- SUB-VIEW: MAIN LANDING PAGE -->
-      <div class="target-pane-main space-y-6">
-        <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
+    <div id="c-1-market" class="stage-pane hidden space-y-6 font-serif-news">
+      <div class="bg-[#fdfbf7] text-[#1a1917] rounded-3xl p-8 sm:p-10 border border-[#e5dfd3] shadow-2xl space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#1a1917]/20 pb-4">
           <div>
-            <span class="text-xs font-mono-jb uppercase tracking-widest text-amber-400">Concept 02 // Ana Sayfa (sepetdedektifi.com)</span>
-            <h2 class="text-2xl font-bold text-white tracking-tight">Grocery Wall Street Arbitrage OS</h2>
-            <p class="text-sm text-neutral-400 mt-0.5">Market alışverişini finansal arbitraj gibi ele alan, yoğun verili terminal arayüzü.</p>
+            <div class="text-xs font-dmsans uppercase tracking-widest text-[#6b6760] font-bold">Günlük Market Fiyat Endeksi</div>
+            <h3 class="text-3xl font-bold italic">Canlı Fiyat Denetim Bülteni</h3>
           </div>
-          <span class="hidden sm:inline-flex text-xs font-mono-jb bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-neutral-300">sepetdedektifi.com</span>
-        </div>
-
-        <div class="bg-[#0b0d10] text-[#d6d9e0] rounded-xl border border-[#202530] p-6 sm:p-10 shadow-2xl space-y-8 text-xs">
-          <div class="flex items-center justify-between border-b border-[#202530] pb-4">
-            <div class="flex items-center gap-3">
-              <span class="w-3 h-3 bg-emerald-500 rounded-sm"></span>
-              <span class="text-sm font-bold text-white tracking-wider">SEPET_DEDEKTIFI // MARKET_ARBITRAGE_OS v3.0</span>
-            </div>
-            <div class="flex items-center gap-4 text-[#8a919e]">
-              <span>TÜFE_BASKET_SYNC: REALTIME</span>
-              <span class="text-emerald-400">NODES_ONLINE: 6/6</span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div class="lg:col-span-7 space-y-5">
-              <span class="bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded text-[11px] font-bold">
-                HIGH-FREQUENCY GROCERY ARBITRAGE
-              </span>
-              <h3 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                Supermarket Arbitrage at Scale. Save 28% on Every Basket.
-              </h3>
-              <p class="text-sm text-[#8a919e] leading-relaxed font-dmsans">
-                Direct telemetry ingestion from Migros, CarrefourSA, Şok, A101, BİM and Getir. Detect price discrepancies in milliseconds and execute multi-market cart routing.
-              </p>
-              <div class="flex gap-4 pt-2">
-                <button class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded font-bold text-sm transition-colors flex items-center gap-2">
-                  <i data-lucide="download" class="w-4 h-4"></i> INSTALL EXTENSION
-                </button>
-                <button class="bg-[#161a22] hover:bg-[#202530] border border-[#2e3545] px-6 py-3 rounded font-bold text-sm text-white transition-colors">
-                  LAUNCH TERMINAL
-                </button>
-              </div>
-            </div>
-
-            <div class="lg:col-span-5 bg-[#12151c] border border-[#252b3b] p-5 rounded-lg space-y-4">
-              <div class="text-[11px] text-[#70798a] uppercase font-bold border-b border-[#252b3b] pb-2 flex justify-between">
-                <span>LIVE ARBITRAGE RADAR</span>
-                <span class="text-emerald-400">SPREAD DELTA</span>
-              </div>
-              
-              <div class="space-y-2.5">
-                <div class="p-2.5 bg-[#0b0d10] border border-[#202530] rounded flex justify-between items-center">
-                  <div>
-                    <div class="font-bold text-white">Lipton Yellow Label 100'lü</div>
-                    <div class="text-[10px] text-[#70798a]">MIG: ₺189.90 vs CRR: ₺144.50</div>
-                  </div>
-                  <span class="text-emerald-400 font-bold bg-emerald-950/60 px-2 py-1 rounded text-[11px] border border-emerald-500/30">+31.4% SPREAD</span>
-                </div>
-
-                <div class="p-2.5 bg-[#0b0d10] border border-[#202530] rounded flex justify-between items-center">
-                  <div>
-                    <div class="font-bold text-white">Domestos Çamaşır Suyu 750ml</div>
-                    <div class="text-[10px] text-[#70798a]">SOK: ₺34.50 vs A101: ₺48.90</div>
-                  </div>
-                  <span class="text-emerald-400 font-bold bg-emerald-950/60 px-2 py-1 rounded text-[11px] border border-emerald-500/30">+41.7% SPREAD</span>
-                </div>
-              </div>
-            </div>
+          <div class="flex gap-2 font-dmsans">
+            <input type="text" placeholder="Ürün adı veya barkod ara..." class="px-4 py-2 bg-white border border-[#dfd6c4] rounded-xl text-xs w-64 focus:outline-none focus:border-[#1a1917]">
           </div>
         </div>
-      </div>
 
-      <!-- SUB-VIEW: MARKET APP -->
-      <div class="target-pane-market hidden space-y-6">
-        <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
-          <div>
-            <span class="text-xs font-mono-jb uppercase tracking-widest text-cyan-400">Concept 02 // Market Portalı (market.sepetdedektifi.com)</span>
-            <h2 class="text-2xl font-bold text-white tracking-tight">Bloomberg Multi-Market Trading Matrix</h2>
-            <p class="text-sm text-neutral-400 mt-0.5">Süpermarket spread farkları, en ucuz emir yönlendirme ve arbitraj tablosu.</p>
-          </div>
-          <span class="hidden sm:inline-flex text-xs font-mono-jb bg-cyan-950/40 border border-cyan-500/30 px-3 py-1.5 rounded-lg text-cyan-300">market.sepetdedektifi.com</span>
-        </div>
-
-        <div class="bg-[#0b0d10] text-[#d6d9e0] rounded-xl border border-[#202530] p-6 shadow-2xl space-y-6 text-xs">
-          <div class="flex justify-between items-center border-b border-[#202530] pb-4">
-            <div class="flex items-center gap-3 font-bold text-white">
-              <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i> MATRIX // MULTI_MARKET_SPREAD_TABLE
-            </div>
-            <div class="flex gap-2">
-              <span class="px-2 py-1 bg-[#161a22] rounded border border-[#2e3545] text-[11px]">SORT: SPREAD_DESC</span>
-            </div>
-          </div>
-
-          <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto font-dmsans">
+          <table class="w-full text-left text-xs border-collapse">
             <thead>
-              <tr class="border-b border-[#202530] text-[#70798a] uppercase text-[11px]">
-                <th class="py-2.5 px-3">ASSET / PRODUCT</th>
-                <th class="py-2.5 px-3 text-right">MIGROS</th>
-                <th class="py-2.5 px-3 text-right">CARREFOUR</th>
-                <th class="py-2.5 px-3 text-right">SOK</th>
-                <th class="py-2.5 px-3 text-right">A101</th>
-                <th class="py-2.5 px-3 text-center">BEST EXECUTION</th>
+              <tr class="border-b-2 border-[#1a1917] text-[#1a1917] uppercase tracking-wider font-bold text-[11px]">
+                <th class="py-3.5 px-4">Ürün &amp; Görsel</th>
+                <th class="py-3.5 px-3 text-center">Migros</th>
+                <th class="py-3.5 px-3 text-center">CarrefourSA</th>
+                <th class="py-3.5 px-3 text-center">ŞOK</th>
+                <th class="py-3.5 px-3 text-center">A101</th>
+                <th class="py-3.5 px-4 text-right">En İyi Fiyat</th>
+                <th class="py-3.5 px-4 text-center">Tasarruf Oranı</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[#202530]">
-              <tr class="hover:bg-[#12151c]">
-                <td class="py-3 px-3 font-bold text-white">Lavazza Qualita Oro 250g</td>
-                <td class="py-3 px-3 text-right text-rose-400">₺290.00</td>
-                <td class="py-3 px-3 text-right text-emerald-400 font-bold">₺219.00 ★</td>
-                <td class="py-3 px-3 text-right text-neutral-600">N/A</td>
-                <td class="py-3 px-3 text-right">₺275.00</td>
-                <td class="py-3 px-3 text-center font-bold text-emerald-400">[ BUY CARREFOUR: -24.4% ]</td>
+            <tbody class="divide-y divide-[#dfd6c4]">
+              <tr class="hover:bg-white/80 transition-colors">
+                <td class="py-4 px-4 flex items-center gap-3">
+                  <img src="https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=120&q=80" class="w-12 h-12 object-cover rounded-lg border border-[#dfd6c4]">
+                  <div>
+                    <div class="font-bold text-sm text-[#1a1917]">Sütaş Kaşar Peyniri 700g</div>
+                    <div class="text-[11px] text-[#6b6760] font-mono-jb">₺314,14 / kg</div>
+                  </div>
+                </td>
+                <td class="py-4 px-3 text-center">₺284,50</td>
+                <td class="py-4 px-3 text-center font-bold text-emerald-800 bg-emerald-50/70 rounded-lg">₺219,90 ★</td>
+                <td class="py-4 px-3 text-center">₺265,00</td>
+                <td class="py-4 px-3 text-center">₺259,00</td>
+                <td class="py-4 px-4 text-right font-bold text-sm text-emerald-800">₺219,90</td>
+                <td class="py-4 px-4 text-center"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#c85a32]/15 text-[#c85a32]">%22,7 Tasarruf</span></td>
               </tr>
-              <tr class="hover:bg-[#12151c]">
-                <td class="py-3 px-3 font-bold text-white">Omo Active Fresh Sıvı 1690ml</td>
-                <td class="py-3 px-3 text-right">₺245.00</td>
-                <td class="py-3 px-3 text-right">₺239.90</td>
-                <td class="py-3 px-3 text-right text-emerald-400 font-bold">₺189.00 ★</td>
-                <td class="py-3 px-3 text-right">₺210.00</td>
-                <td class="py-3 px-3 text-center font-bold text-emerald-400">[ BUY SOK: -22.8% ]</td>
+              <tr class="hover:bg-white/80 transition-colors">
+                <td class="py-4 px-4 flex items-center gap-3">
+                  <img src="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=120&q=80" class="w-12 h-12 object-cover rounded-lg border border-[#dfd6c4]">
+                  <div>
+                    <div class="font-bold text-sm text-[#1a1917]">Yudum Ayçiçek Yağı 5L Köşeli</div>
+                    <div class="text-[11px] text-[#6b6760] font-mono-jb">₺49,80 / L</div>
+                  </div>
+                </td>
+                <td class="py-4 px-3 text-center">₺295,00</td>
+                <td class="py-4 px-3 text-center">₺289,90</td>
+                <td class="py-4 px-3 text-center">₺279,00</td>
+                <td class="py-4 px-3 text-center font-bold text-emerald-800 bg-emerald-50/70 rounded-lg">₺249,00 ★</td>
+                <td class="py-4 px-4 text-right font-bold text-sm text-emerald-800">₺249,00</td>
+                <td class="py-4 px-4 text-center"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#c85a32]/15 text-[#c85a32]">%15,6 Tasarruf</span></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 3: VERCEL/LINEAR BENTO GRID (RADICAL TRANSPARENCY)        -->
-    <!-- ================================================================= -->
-    <div id="concept-3" class="concept-view hidden space-y-6">
-      
-      <!-- SUB-VIEW: MAIN LANDING PAGE -->
-      <div class="target-pane-main space-y-6">
-        <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
-          <div>
-            <span class="text-xs font-mono-jb uppercase tracking-widest text-amber-400">Concept 03 // Ana Sayfa (sepetdedektifi.com)</span>
-            <h2 class="text-2xl font-bold text-white tracking-tight">Radical Price Transparency Bento</h2>
-            <p class="text-sm text-neutral-400 mt-0.5">Modern Vercel/Linear bento grid mimarisi. Veri akışları, otomatik sepet aktarımı ve şeffaf teknoloji.</p>
+    <!-- CONCEPT 2: GROCERY ARBITRAGE TERMINAL (BLOOMBERG PRO) -->
+    <div id="c-2-main" class="stage-pane hidden space-y-6 font-mono-jb">
+      <div class="bg-[#0b0d10] text-[#d6d9e0] rounded-2xl border border-[#202530] p-6 sm:p-10 shadow-2xl space-y-8 text-xs">
+        <div class="flex items-center justify-between border-b border-[#202530] pb-4">
+          <div class="flex items-center gap-3">
+            <span class="w-3 h-3 bg-emerald-500 rounded-sm animate-pulse"></span>
+            <span class="text-sm font-bold text-white tracking-wider">SEPET_DEDEKTIFI // MARKET_ARBITRAGE_OS v3.0</span>
           </div>
-          <span class="hidden sm:inline-flex text-xs font-mono-jb bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-neutral-300">sepetdedektifi.com</span>
+          <div class="flex items-center gap-4 text-[#8a919e]">
+            <span>CANLI_SEPET_SENKRON: AKTİF</span>
+            <span class="text-emerald-400">DÜĞÜMLER: 6/6 BAĞLI</span>
+          </div>
         </div>
 
-        <div class="bg-[#09090b] text-[#fafafa] rounded-2xl border border-[#27272a] p-8 sm:p-12 shadow-2xl space-y-10">
-          <div class="max-w-3xl space-y-4">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/5 border border-white/10 text-neutral-300">
-              <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> v3.0 Canlı Yayınlandı
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 space-y-5">
+            <span class="bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 px-3 py-1 rounded text-[11px] font-bold">
+              YÜKSEK FREKANSLI MARKET ARBİTRAJI
             </span>
-            <h3 class="text-4xl sm:text-6xl font-extrabold tracking-tight">Market Fiyatlarını Şeffaflaştıran Yeni Nesil Zeka.</h3>
-            <p class="text-base sm:text-lg text-neutral-400">
-              Sepet Dedektifi, Türkiye'nin önde gelen online süpermarketlerindeki milyonlarca fiyatı gerçek zamanlı indeksler ve sepetinizi anında optimize eder.
+            <h3 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight font-dmsans">
+              Süpermarket Fiyat Arbitrajı. Her Sepette Ortalama %28 Kazanç.
+            </h3>
+            <p class="text-sm text-[#8a919e] leading-relaxed font-dmsans">
+              Migros, CarrefourSA, Şok, A101, BİM ve Getir'den anlık telemetri çekimi. Fiyat uyumsuzluklarını milisaniyeler içinde yakalayın ve en ucuz sepet kombinasyonunu oluşturun.
             </p>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div class="md:col-span-2 bg-[#121215] border border-[#27272a] rounded-xl p-6 space-y-4 hover:border-neutral-600 transition-colors">
-              <div class="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <i data-lucide="cpu" class="w-5 h-5"></i>
-              </div>
-              <h4 class="text-xl font-bold">1-Tıkla Otomatik Sepet Eşleme</h4>
-              <p class="text-sm text-neutral-400">Migros'ta sepetinizi doldurun, tek tuşla aynı sepetin CarrefourSA, Şok ve A101'deki tutarını görün. Eksik veya muadil ürünleri anında eşleyin.</p>
-            </div>
-
-            <div class="bg-[#121215] border border-[#27272a] rounded-xl p-6 space-y-4 hover:border-neutral-600 transition-colors">
-              <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <i data-lucide="scale" class="w-5 h-5"></i>
-              </div>
-              <h4 class="text-xl font-bold">Gizli Gramaj Dedektifi</h4>
-              <p class="text-sm text-neutral-400">Fiyatı sabit kalıp gramajı 500g'dan 400g'a düşen ürünleri yakalayın ve uyarılın.</p>
+            <div class="flex gap-4 pt-2">
+              <button class="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3.5 rounded-xl font-bold text-sm transition-all transform hover:scale-105 flex items-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i> EKLENTİYİ KUR
+              </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- SUB-VIEW: MARKET APP -->
-      <div class="target-pane-market hidden space-y-6">
-        <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
-          <div>
-            <span class="text-xs font-mono-jb uppercase tracking-widest text-cyan-400">Concept 03 // Market Portalı (market.sepetdedektifi.com)</span>
-            <h2 class="text-2xl font-bold text-white tracking-tight">SaaS Price Stream Hub</h2>
-            <p class="text-sm text-neutral-400 mt-0.5">Bento kartları üzerinden anlık fiyat hareketleri ve birim fiyat optimizasyonu.</p>
-          </div>
-          <span class="hidden sm:inline-flex text-xs font-mono-jb bg-cyan-950/40 border border-cyan-500/30 px-3 py-1.5 rounded-lg text-cyan-300">market.sepetdedektifi.com</span>
-        </div>
-
-        <div class="bg-[#09090b] text-[#fafafa] rounded-2xl border border-[#27272a] p-8 shadow-2xl space-y-6">
-          <div class="flex justify-between items-center pb-4 border-b border-[#27272a]">
-            <div>
-              <h3 class="text-2xl font-bold tracking-tight">Market Fiyat İzleyici</h3>
-              <p class="text-xs text-neutral-400">Canlı fiyat akışı ve market karşılaştırma aracı</p>
+          <div class="lg:col-span-5 bg-[#12151c] border border-[#252b3b] p-5 rounded-xl space-y-4">
+            <div class="text-[11px] text-[#70798a] uppercase font-bold border-b border-[#252b3b] pb-2 flex justify-between">
+              <span>CANLI ARBİTRAJ SİNYALLERİ</span>
+              <span class="text-emerald-400">SPREAD FARK</span>
             </div>
-            <button class="px-4 py-2 bg-white text-black text-xs font-bold rounded-lg hover:bg-neutral-200 transition-colors">
-              + Yeni Fiyat Takibi Ekle
-            </button>
-          </div>
+            
+            <div class="space-y-2.5">
+              <div class="p-3 bg-[#0b0d10] border border-[#202530] rounded-lg flex justify-between items-center hover:border-emerald-500/40 transition-colors">
+                <div>
+                  <div class="font-bold text-white text-sm">Nutella Kakaolu Fındık 750g</div>
+                  <div class="text-[10px] text-[#70798a]">MİG: ₺164,50 vs CRR: ₺139,90</div>
+                </div>
+                <span class="text-emerald-400 font-bold bg-emerald-950/60 px-2.5 py-1 rounded text-xs border border-emerald-500/30">+%17,5 SPREAD</span>
+              </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-5 rounded-xl bg-[#121215] border border-[#27272a] space-y-3">
-              <div class="flex justify-between items-center">
-                <span class="text-xs text-neutral-400 font-mono-jb">BARKOD: 8690504123456</span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">CARREFOUR EN UCUZ</span>
-              </div>
-              <div class="text-lg font-bold">Pınar Süt 1L Tam Yağlı</div>
-              <div class="flex justify-between items-baseline pt-2 border-t border-[#27272a]">
-                <span class="text-2xl font-bold font-mono-jb">₺37,50</span>
-                <span class="text-xs text-neutral-400">Migros: ₺44,90 (+%19,7)</span>
-              </div>
-            </div>
-
-            <div class="p-5 rounded-xl bg-[#121215] border border-[#27272a] space-y-3">
-              <div class="flex justify-between items-center">
-                <span class="text-xs text-neutral-400 font-mono-jb">BARKOD: 8690637012345</span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ŞOK EN UCUZ</span>
-              </div>
-              <div class="text-lg font-bold">Çaykur Rize Turist Çay 1000g</div>
-              <div class="flex justify-between items-baseline pt-2 border-t border-[#27272a]">
-                <span class="text-2xl font-bold font-mono-jb">₺185,00</span>
-                <span class="text-xs text-neutral-400">A101: ₺215,00 (+%16,2)</span>
+              <div class="p-3 bg-[#0b0d10] border border-[#202530] rounded-lg flex justify-between items-center hover:border-emerald-500/40 transition-colors">
+                <div>
+                  <div class="font-bold text-white text-sm">Fairy Platinum Tablet 72'li</div>
+                  <div class="text-[10px] text-[#70798a]">CRR: ₺612,00 vs ŞOK: ₺479,00</div>
+                </div>
+                <span class="text-emerald-400 font-bold bg-emerald-950/60 px-2.5 py-1 rounded text-xs border border-emerald-500/30">+%27,7 SPREAD</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 4: WARM NORDIC PANTRY (LIFESTYLE & RECIPE PLANNER)         -->
-    <!-- ================================================================= -->
-    <div id="concept-4" class="concept-view hidden space-y-6 font-serif-fraunces">
+    <div id="c-2-market" class="stage-pane hidden space-y-6 font-mono-jb">
+      <div class="bg-[#0b0d10] text-[#d6d9e0] rounded-2xl border border-[#202530] p-6 shadow-2xl space-y-6 text-xs">
+        <div class="flex justify-between items-center border-b border-[#202530] pb-4">
+          <div class="flex items-center gap-3 font-bold text-white text-sm">
+            <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i> MATRİS // ÇOKLU_MARKET_SPREAD_TABLOSU
+          </div>
+          <div class="flex gap-2">
+            <span class="px-3 py-1 bg-[#161a22] rounded-lg border border-[#2e3545] text-[11px] text-neutral-300">SIRALA: EN_YÜKSEK_KAZANÇ</span>
+          </div>
+        </div>
+
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#202530] text-[#70798a] uppercase text-[11px]">
+              <th class="py-3 px-3">ÜRÜN / VARLIK</th>
+              <th class="py-3 px-3 text-right">MİGROS</th>
+              <th class="py-3 px-3 text-right">CARREFOUR</th>
+              <th class="py-3 px-3 text-right">ŞOK</th>
+              <th class="py-3 px-3 text-right">A101</th>
+              <th class="py-3 px-3 text-center">EN İYİ İCRA</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#202530]">
+            <tr class="hover:bg-[#12151c] transition-colors">
+              <td class="py-3.5 px-3 font-bold text-white text-sm">Lavazza Qualita Oro 250g</td>
+              <td class="py-3.5 px-3 text-right text-rose-400">₺290,00</td>
+              <td class="py-3.5 px-3 text-right text-emerald-400 font-bold">₺219,00 ★</td>
+              <td class="py-3.5 px-3 text-right text-neutral-600">STOK_YOK</td>
+              <td class="py-3.5 px-3 text-right">₺275,00</td>
+              <td class="py-3.5 px-3 text-center font-bold text-emerald-400">[ AL: CARREFOURSA -%24,4 ]</td>
+            </tr>
+            <tr class="hover:bg-[#12151c] transition-colors">
+              <td class="py-3.5 px-3 font-bold text-white text-sm">Omo Active Fresh Sıvı 1690ml</td>
+              <td class="py-3.5 px-3 text-right">₺245,00</td>
+              <td class="py-3.5 px-3 text-right">₺239,90</td>
+              <td class="py-3.5 px-3 text-right text-emerald-400 font-bold">₺189,00 ★</td>
+              <td class="py-3.5 px-3 text-right">₺210,00</td>
+              <td class="py-3.5 px-3 text-center font-bold text-emerald-400">[ AL: ŞOK -%22,8 ]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CONCEPT 3: RADICAL TRANSPARENCY BENTO (VERCEL/LINEAR) -->
+    <div id="c-3-main" class="stage-pane hidden space-y-6 font-inter">
+      <div class="bg-[#09090b] text-[#fafafa] rounded-3xl border border-[#27272a] p-8 sm:p-12 shadow-2xl space-y-10">
+        <div class="max-w-3xl space-y-4">
+          <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
+            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span> Gerçek Zamanlı Fiyat İndeksi
+          </span>
+          <h2 class="text-4xl sm:text-6xl font-extrabold tracking-tight">Market Fiyatlarını Şeffaflaştıran Yeni Nesil Zeka.</h2>
+          <p class="text-base sm:text-lg text-neutral-400">
+            Sepet Dedektifi, Türkiye'nin önde gelen online süpermarketlerindeki milyonlarca fiyatı gerçek zamanlı indeksler ve sepetinizi anında optimize eder.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-2 bg-[#121215] border border-[#27272a] rounded-2xl p-7 space-y-4 hover:border-indigo-500/40 transition-all hover:shadow-2xl">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <i data-lucide="cpu" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-2xl font-bold">1-Tıkla Otomatik Sepet Eşleme</h3>
+            <p class="text-sm text-neutral-400 leading-relaxed">Migros'ta sepetinizi doldurun, tek tuşla aynı sepetin CarrefourSA, Şok ve A101'deki tutarını görün. Eksik veya muadil ürünleri anında eşleyin.</p>
+          </div>
+
+          <div class="bg-[#121215] border border-[#27272a] rounded-2xl p-7 space-y-4 hover:border-emerald-500/40 transition-all hover:shadow-2xl">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <i data-lucide="scale" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-2xl font-bold">Gizli Gramaj Dedektifi</h3>
+            <p class="text-sm text-neutral-400 leading-relaxed">Fiyatı sabit kalıp gramajı 500g'dan 400g'a düşen ürünleri yakalayın ve uyarılın.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="c-3-market" class="stage-pane hidden space-y-6 font-inter">
+      <div class="bg-[#09090b] text-[#fafafa] rounded-3xl border border-[#27272a] p-8 shadow-2xl space-y-6">
+        <div class="flex justify-between items-center pb-4 border-b border-[#27272a]">
+          <div>
+            <h3 class="text-2xl font-bold tracking-tight">Canlı Fiyat Akışı &amp; İzleme Masası</h3>
+            <p class="text-xs text-neutral-400">Market bazlı anlık birim fiyat filtreleme</p>
+          </div>
+          <button class="px-4 py-2 bg-white text-black text-xs font-bold rounded-xl hover:bg-neutral-200 transition-colors">
+            + Özel Fiyat Takibi Ekle
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="p-6 rounded-2xl bg-[#121215] border border-[#27272a] space-y-4 hover:border-neutral-600 transition-colors">
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-neutral-400 font-mono-jb">BARKOD: 8690504123456</span>
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">CARREFOUR EN UCUZ</span>
+            </div>
+            <div class="text-xl font-bold">Pınar Süt 1L Tam Yağlı</div>
+            <div class="flex justify-between items-baseline pt-3 border-t border-[#27272a]">
+              <span class="text-3xl font-extrabold font-mono-jb">₺37,50</span>
+              <span class="text-xs text-rose-400">Migros: ₺44,90 (+%19,7)</span>
+            </div>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-[#121215] border border-[#27272a] space-y-4 hover:border-neutral-600 transition-colors">
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-neutral-400 font-mono-jb">BARKOD: 8690637012345</span>
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ŞOK EN UCUZ</span>
+            </div>
+            <div class="text-xl font-bold">Çaykur Rize Turist Çay 1000g</div>
+            <div class="flex justify-between items-baseline pt-3 border-t border-[#27272a]">
+              <span class="text-3xl font-extrabold font-mono-jb">₺185,00</span>
+              <span class="text-xs text-rose-400">A101: ₺215,00 (+%16,2)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPT 4: WARM NORDIC PANTRY -->
+    <div id="c-4-main" class="stage-pane hidden space-y-6 font-serif-fraunces">
       <div class="bg-[#f7f4ed] text-[#2b2d42] rounded-3xl p-8 sm:p-12 border border-[#e8e2d5] shadow-2xl space-y-8">
         <div class="flex justify-between items-center border-b border-[#e4dcd0] pb-4">
           <div>
-            <h3 class="text-4xl italic font-bold text-[#1e2029]">Akıllı Mutfak &amp; Kiler Asistanı</h3>
+            <h2 class="text-4xl italic font-bold text-[#1e2029]">Akıllı Mutfak &amp; Kiler Asistanı</h2>
             <p class="font-dmsans text-xs text-[#8d99ae] uppercase tracking-widest mt-1">Haftalık Mutfak Masrafını Akıllıca Düşürün</p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 font-dmsans">
-          <div class="bg-white p-6 rounded-2xl border border-[#e8e2d5] shadow-sm space-y-4">
-            <h4 class="text-xl font-bold font-serif-fraunces italic text-[#1e2029]">Haftalık 4 Kişilik Aile Menüsü</h4>
+          <div class="bg-white p-7 rounded-2xl border border-[#e8e2d5] shadow-sm space-y-4">
+            <h3 class="text-2xl font-bold font-serif-fraunces italic text-[#1e2029]">Haftalık 4 Kişilik Aile Kileri</h3>
             <p class="text-xs text-[#6b7280]">Kahvaltılık, akşam yemeği ve temizlik ihtiyaçlarından oluşan 28 temel ürünlük kiler paketi.</p>
             
-            <div class="space-y-2 pt-2 text-xs">
-              <div class="flex justify-between p-3 bg-[#f7f4ed] rounded-xl font-semibold">
+            <div class="space-y-3 pt-2 text-xs">
+              <div class="flex justify-between p-3.5 bg-[#f7f4ed] rounded-xl font-semibold">
                 <span>Tek Marketten Alınırsa (Migros):</span>
-                <span class="text-[#c62828]">₺2.480,00</span>
+                <span class="text-[#c62828] font-bold text-sm">₺2.480,00</span>
               </div>
-              <div class="flex justify-between p-3 bg-[#e8f5e9] rounded-xl font-bold text-[#2e7d32]">
+              <div class="flex justify-between p-3.5 bg-[#e8f5e9] rounded-xl font-bold text-[#2e7d32]">
                 <span>Dedektif Akıllı Kombinasyonu ile:</span>
-                <span>₺1.840,00 (₺640 Tasarruf)</span>
+                <span class="text-sm">₺1.840,00 (₺640 Tasarruf)</span>
               </div>
             </div>
           </div>
 
-          <div class="bg-white p-6 rounded-2xl border border-[#e8e2d5] shadow-sm space-y-4 flex flex-col justify-between">
+          <div class="bg-white p-7 rounded-2xl border border-[#e8e2d5] shadow-sm space-y-4 flex flex-col justify-between">
             <div>
-              <h4 class="text-xl font-bold font-serif-fraunces italic text-[#1e2029]">Nasıl Çalışır?</h4>
+              <h3 class="text-2xl font-bold font-serif-fraunces italic text-[#1e2029]">Nasıl Çalışır?</h3>
               <p class="text-xs text-[#6b7280] mt-2 leading-relaxed">Eklentimiz internetten market alışverişi yaparken arka planda çalışır. Siz sepete ürün ekledikçe en karlı market dağılımını önerir.</p>
             </div>
-            <button class="w-full py-3.5 bg-[#2b2d42] text-white rounded-xl text-xs font-semibold hover:bg-[#1e2029] transition-colors">
+            <button class="w-full py-4 bg-[#2b2d42] text-white rounded-xl text-xs font-bold hover:bg-[#1e2029] transition-colors shadow-lg">
               Ücretsiz Tarayıcı Eklentisini İndir
             </button>
           </div>
@@ -503,34 +431,56 @@
       </div>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 5: SWISS BRUTALIST WATCHDOG (HIGH CONTRAST)                -->
-    <!-- ================================================================= -->
-    <div id="concept-5" class="concept-view hidden space-y-6 font-space">
-      <div class="bg-[#fef9ef] text-black border-4 border-black p-8 sm:p-12 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] space-y-8">
+    <div id="c-4-market" class="stage-pane hidden space-y-6 font-dmsans">
+      <div class="bg-[#f7f4ed] text-[#2b2d42] rounded-3xl p-8 border border-[#e8e2d5] shadow-2xl space-y-6">
+        <h3 class="text-2xl font-bold font-serif-fraunces italic">Kiler &amp; Tarif Bazlı Fiyatlama</h3>
+        <p class="text-xs text-[#6b7280]">Kahvaltılık, Akşam Yemeği ve Temizlik sepetlerini market market karşılaştırın.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="bg-white p-5 rounded-2xl border border-[#e8e2d5] space-y-3">
+            <div class="text-xs font-bold text-amber-700 uppercase">Kahvaltılık Sepeti</div>
+            <div class="text-2xl font-bold font-serif-fraunces">₺420,00</div>
+            <div class="text-xs text-emerald-700 font-semibold">En Avantajlı: ŞOK (₺95 Daha Ucuz)</div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-[#e8e2d5] space-y-3">
+            <div class="text-xs font-bold text-amber-700 uppercase">Temizlik Paketi</div>
+            <div class="text-2xl font-bold font-serif-fraunces">₺680,00</div>
+            <div class="text-xs text-emerald-700 font-semibold">En Avantajlı: A101 (₺140 Daha Ucuz)</div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-[#e8e2d5] space-y-3">
+            <div class="text-xs font-bold text-amber-700 uppercase">Et &amp; Tavuk Paketi</div>
+            <div class="text-2xl font-bold font-serif-fraunces">₺890,00</div>
+            <div class="text-xs text-emerald-700 font-semibold">En Avantajlı: CarrefourSA (₺180 Daha Ucuz)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPT 5: SWISS BRUTALIST WATCHDOG -->
+    <div id="c-5-main" class="stage-pane hidden space-y-6 font-space">
+      <div class="bg-[#fef9ef] text-black border-4 border-black p-8 sm:p-12 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] space-y-8">
         <div class="flex justify-between items-center border-b-4 border-black pb-4">
-          <h3 class="text-3xl sm:text-5xl font-extrabold uppercase tracking-tight">KASADA FAZLA ODEMEYIN.</h3>
-          <span class="bg-[#ffe600] text-black border-2 border-black px-4 py-1 font-bold text-xs uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-            TUKETICI RADARI
+          <h2 class="text-3xl sm:text-6xl font-black uppercase tracking-tight">KASADA FAZLA ÖDEMEYİN.</h2>
+          <span class="bg-[#ffe600] text-black border-2 border-black px-4 py-1.5 font-bold text-xs uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            TÜKETİCİ RADARI
           </span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-3">
-            <div class="bg-[#ff5757] text-white font-extrabold text-xs px-2 py-1 inline-block border-2 border-black">
-              FIYAT SOKU
+          <div class="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-4">
+            <div class="bg-[#ff5757] text-white font-black text-xs px-2.5 py-1 inline-block border-2 border-black">
+              FİYAT ŞOKU
             </div>
-            <h4 class="text-2xl font-black">Tuvalet Kağıdı 32'li</h4>
-            <div class="text-4xl font-extrabold font-mono-jb">₺289,90 <span class="text-sm font-normal text-[#d90429]">(Baska Markette: ₺199,00)</span></div>
-            <p class="text-xs font-bold border-t-2 border-black pt-2">Ayni urun baska markette ₺90 daha ucuz. Bosuna fazla odemeyin.</p>
+            <h3 class="text-2xl font-black">Tuvalet Kağıdı 32'li</h3>
+            <div class="text-4xl font-extrabold font-mono-jb">₺289,90 <span class="text-sm font-bold text-[#d90429]">(Başka Markette: ₺199,00)</span></div>
+            <p class="text-xs font-bold border-t-2 border-black pt-3">Aynı ürün başka markette ₺90 daha ucuz. Boşuna fazla ödemeyin.</p>
           </div>
 
           <div class="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-4 flex flex-col justify-between">
             <div>
-              <h4 class="text-2xl font-black">TEK TIKLA EKLENTIYI KUR</h4>
-              <p class="text-xs font-bold mt-2">Chrome, Edge ve Firefox destekli. Tamamen ucretsiz ve acik kaynak.</p>
+              <h3 class="text-2xl font-black">TEK TIKLA EKLENTİYİ KUR</h3>
+              <p class="text-xs font-bold mt-2">Chrome, Edge ve Firefox destekli. Tamamen ücretsiz ve açık kaynak.</p>
             </div>
-            <button class="w-full py-4 bg-[#7ed957] text-black border-4 border-black font-extrabold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-[#6ec947]">
+            <button class="w-full py-4 bg-[#7ed957] text-black border-4 border-black font-extrabold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-[#6ec947] transition-transform active:translate-x-1 active:translate-y-1">
               HEMEN EKLE &amp; TASARRUF ET
             </button>
           </div>
@@ -538,133 +488,218 @@
       </div>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 6: SPOTLIGHT COMMAND SEARCH                                -->
-    <!-- ================================================================= -->
-    <div id="concept-6" class="concept-view hidden space-y-6">
-      <div class="bg-[#0f1117] text-white rounded-2xl border border-white/10 p-8 sm:p-12 shadow-2xl space-y-8">
+    <div id="c-5-market" class="stage-pane hidden space-y-6 font-space">
+      <div class="bg-[#fef9ef] text-black border-4 border-black p-8 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] space-y-6">
+        <div class="flex justify-between items-center border-b-4 border-black pb-4">
+          <h3 class="text-2xl font-black uppercase">PAHALI vs UCUZ DENETİM MASASI</h3>
+          <span class="bg-black text-white px-3 py-1 text-xs font-bold">CANLI KONTROL</span>
+        </div>
+        <div class="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center">
+          <div>
+            <div class="font-black text-lg">Nutella 750g</div>
+            <div class="text-xs font-bold text-neutral-600">Migros: ₺164,50 / CarrefourSA: ₺139,90</div>
+          </div>
+          <span class="bg-[#7ed957] border-2 border-black font-black px-4 py-2 text-xs uppercase">₺24,60 TASARRUF ET</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPT 6: SPOTLIGHT COMMAND SEARCH -->
+    <div id="c-6-main" class="stage-pane hidden space-y-6 font-inter">
+      <div class="bg-[#0f1117] text-white rounded-3xl border border-white/10 p-8 sm:p-14 shadow-2xl space-y-8">
         <div class="text-center max-w-2xl mx-auto space-y-4">
-          <span class="text-xs font-mono-jb text-cyan-400 uppercase tracking-widest">Raycast-Style Spotlight Search</span>
-          <h3 class="text-3xl sm:text-5xl font-bold tracking-tight">Market Fiyatlarını Saniyeler İçinde Sorgulayın.</h3>
+          <span class="text-xs font-mono-jb text-cyan-400 uppercase tracking-widest bg-cyan-950/60 px-3 py-1 rounded-full border border-cyan-500/30">Raycast-Style Spotlight Search</span>
+          <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Market Fiyatlarını Saniyeler İçinde Sorgulayın.</h2>
           <div class="relative pt-4">
-            <input type="text" placeholder="Ürün adı, barkod yazın veya Migros/Carrefour linki yapıştırın..." class="w-full bg-white/5 border-2 border-cyan-500/40 rounded-xl px-5 py-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-400 shadow-xl">
-            <span class="absolute right-4 top-8 text-xs font-mono-jb bg-white/10 px-2 py-1 rounded text-neutral-400">⌘K</span>
+            <input type="text" placeholder="Ürün adı, barkod yazın veya Migros linki yapıştırın..." class="w-full bg-white/5 border-2 border-cyan-500/40 rounded-2xl px-6 py-5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-400 shadow-2xl">
+            <span class="absolute right-5 top-9 text-xs font-mono-jb bg-white/10 px-2.5 py-1 rounded-lg text-neutral-400">⌘K</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 7: OPEN COMMUNITY VAULT                                    -->
-    <!-- ================================================================= -->
-    <div id="concept-7" class="concept-view hidden space-y-6">
-      <div class="bg-[#0e1117] text-[#e6edf3] rounded-xl border border-[#30363d] p-8 space-y-6">
+    <div id="c-6-market" class="stage-pane hidden space-y-6 font-inter">
+      <div class="bg-[#0f1117] text-white rounded-3xl border border-white/10 p-8 shadow-2xl space-y-6">
+        <h3 class="text-xl font-bold">Komut Paleti Canlı Sonuçları</h3>
+        <div class="space-y-3">
+          <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center hover:border-cyan-400 transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+              <span class="font-bold text-sm">Sütaş Kaşar Peyniri 700g</span>
+            </div>
+            <span class="text-xs font-mono-jb text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-500/30">En Ucuz: CarrefourSA (₺219,90)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPT 7: OPEN COMMUNITY VAULT -->
+    <div id="c-7-main" class="stage-pane hidden space-y-6 font-inter">
+      <div class="bg-[#0e1117] text-[#e6edf3] rounded-3xl border border-[#30363d] p-8 sm:p-12 space-y-8">
         <div class="flex justify-between items-center border-b border-[#30363d] pb-4">
-          <div class="font-bold text-lg flex items-center gap-2">
-            <i data-lucide="database" class="w-5 h-5 text-emerald-400"></i> Açık Kaynak Fiyat Doğrulama Kasası (The Vault)
+          <div class="font-bold text-xl flex items-center gap-3">
+            <i data-lucide="database" class="w-6 h-6 text-emerald-400"></i> Açık Kaynak Fiyat Doğrulama Kasası (The Vault)
           </div>
-          <span class="text-xs font-mono-jb text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded border border-emerald-500/30">Topluluk Verisi: 45.890 Katkı</span>
+          <span class="text-xs font-mono-jb text-emerald-400 bg-emerald-950/60 px-3.5 py-1.5 rounded-full border border-emerald-500/30 font-bold">Topluluk Verisi: 45.890 Katkı</span>
         </div>
-        <p class="text-xs text-neutral-400">Gönüllü tüketicilerin tarayıcı eklentisiyle anonim olarak paylaştığı anlık market raf fiyatları havuzu.</p>
+        <p class="text-sm text-neutral-400 leading-relaxed">Gönüllü tüketicilerin tarayıcı eklentisiyle anonim olarak paylaştığı anlık market raf fiyatları havuzu. Şeffaf, bağımsız ve açık veri.</p>
       </div>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 8: VISUAL AISLE SHELF                                      -->
-    <!-- ================================================================= -->
-    <div id="concept-8" class="concept-view hidden space-y-6">
-      <div class="bg-[#14151a] text-white rounded-2xl border border-white/10 p-8 space-y-6">
-        <h3 class="text-2xl font-bold tracking-tight">Sanal Market Reyonları (Visual Shelf Aisle)</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="bg-[#1c1e24] p-5 rounded-xl border border-white/10 space-y-3">
-            <div class="text-xs text-amber-400 font-bold uppercase">Süt &amp; Kahvaltılık</div>
-            <div class="text-sm font-semibold">Günün En Avantajlı Marketi: <span class="text-emerald-400 font-bold">ŞOK</span></div>
+    <div id="c-7-market" class="stage-pane hidden space-y-6 font-inter">
+      <div class="bg-[#0e1117] text-[#e6edf3] rounded-3xl border border-[#30363d] p-8 space-y-6">
+        <h3 class="text-xl font-bold">Açık Veri Doğrulama Kayıt Defteri</h3>
+        <div class="p-4 rounded-xl bg-[#161b22] border border-[#30363d] space-y-2 text-xs font-mono-jb">
+          <div class="text-emerald-400 font-bold">[DOĞRULANDI] CarrefourSA Fiyat Güncellemesi • 8000500179963 Nutella 750g -&gt; ₺139,90</div>
+          <div class="text-neutral-400">Katkıcı: UUID-78a9 • Doğrulayan: 14 Kullanıcı</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPT 8: VISUAL AISLE SHELF -->
+    <div id="c-8-main" class="stage-pane hidden space-y-6 font-jakarta">
+      <div class="bg-[#14151a] text-white rounded-3xl border border-white/10 p-8 sm:p-12 space-y-8">
+        <h2 class="text-3xl font-extrabold tracking-tight">Sanal Market Reyonları (Visual Shelf Aisle)</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div class="bg-[#1c1e24] p-6 rounded-2xl border border-white/10 space-y-3 hover:border-amber-400/40 transition-all hover:shadow-xl">
+            <div class="text-xs text-amber-400 font-bold uppercase tracking-wider">Süt &amp; Kahvaltılık</div>
+            <div class="text-base font-bold">Günün En Avantajlı Marketi: <span class="text-emerald-400">ŞOK</span></div>
             <div class="text-xs text-neutral-400">Ortalama Sepet Tasarrufu: ₺84,50</div>
           </div>
-          <div class="bg-[#1c1e24] p-5 rounded-xl border border-white/10 space-y-3">
-            <div class="text-xs text-cyan-400 font-bold uppercase">Deterjan &amp; Temizlik</div>
-            <div class="text-sm font-semibold">Günün En Avantajlı Marketi: <span class="text-emerald-400 font-bold">A101</span></div>
+          <div class="bg-[#1c1e24] p-6 rounded-2xl border border-white/10 space-y-3 hover:border-cyan-400/40 transition-all hover:shadow-xl">
+            <div class="text-xs text-cyan-400 font-bold uppercase tracking-wider">Deterjan &amp; Temizlik</div>
+            <div class="text-base font-bold">Günün En Avantajlı Marketi: <span class="text-emerald-400">A101</span></div>
             <div class="text-xs text-neutral-400">Ortalama Sepet Tasarrufu: ₺142,00</div>
           </div>
-          <div class="bg-[#1c1e24] p-5 rounded-xl border border-white/10 space-y-3">
-            <div class="text-xs text-rose-400 font-bold uppercase">Et, Tavuk &amp; Balık</div>
-            <div class="text-sm font-semibold">Günün En Avantajlı Marketi: <span class="text-emerald-400 font-bold">CarrefourSA</span></div>
+          <div class="bg-[#1c1e24] p-6 rounded-2xl border border-white/10 space-y-3 hover:border-rose-400/40 transition-all hover:shadow-xl">
+            <div class="text-xs text-rose-400 font-bold uppercase tracking-wider">Et, Tavuk &amp; Balık</div>
+            <div class="text-base font-bold">Günün En Avantajlı Marketi: <span class="text-emerald-400">CarrefourSA</span></div>
             <div class="text-xs text-neutral-400">Ortalama Sepet Tasarrufu: ₺115,00</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 9: CYBER RECON & SHRINKFLATION                            -->
-    <!-- ================================================================= -->
-    <div id="concept-9" class="concept-view hidden space-y-6 font-mono-jb">
-      <div class="bg-[#05070a] text-cyan-400 rounded-xl border border-cyan-500/30 p-8 space-y-6">
-        <div class="flex justify-between items-center border-b border-cyan-500/30 pb-4">
-          <div class="font-bold text-sm tracking-wider flex items-center gap-2">
-            <i data-lucide="shield-alert" class="w-4 h-4 text-cyan-400"></i> GİZLİ GRAMAJ &amp; SHRINKFLATION RADARI
+    <div id="c-8-market" class="stage-pane hidden space-y-6 font-jakarta">
+      <div class="bg-[#14151a] text-white rounded-3xl border border-white/10 p-8 space-y-6">
+        <h3 class="text-2xl font-bold">Reyon Bazlı Raf Karşılaştırması</h3>
+        <div class="p-6 rounded-2xl bg-[#1c1e24] border border-white/10 flex justify-between items-center">
+          <div>
+            <div class="text-xs text-neutral-400">Temel Gıda Reyonu</div>
+            <div class="text-lg font-bold">Yudum Ayçiçek Yağı 5L</div>
           </div>
-          <span class="text-xs bg-cyan-950/80 px-2 py-1 rounded border border-cyan-500/40">OTOMATİK_DENETİM</span>
-        </div>
-        <div class="p-4 bg-[#0a0e14] border border-cyan-500/20 rounded-lg text-xs space-y-2">
-          <div class="text-white font-bold">Örnek Tespit: Kaşar Peyniri 500g -&gt; 400g (%20 Gizli Zam)</div>
-          <div class="text-neutral-400">Fiyat ₺150 sabit tutulurken birim fiyat ₺300/kg'dan ₺375/kg'a yükseltildi.</div>
+          <span class="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold">A101'de ₺249,00 (En Ucuz)</span>
         </div>
       </div>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- CONCEPT 10: DUAL CART SHOWDOWN                                     -->
-    <!-- ================================================================= -->
-    <div id="concept-10" class="concept-view hidden space-y-6">
-      <div class="bg-[#111215] text-white rounded-2xl border border-white/10 p-8 space-y-6">
-        <div class="flex justify-between items-center border-b border-white/10 pb-4">
-          <h3 class="text-2xl font-bold tracking-tight">İkili Sepet Arenası (Head-to-Head Battle)</h3>
-          <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-3 py-1 rounded-full font-bold">CANLI ARENA</span>
+    <!-- CONCEPT 9: CYBER RECON & SHRINKFLATION -->
+    <div id="c-9-main" class="stage-pane hidden space-y-6 font-mono-jb">
+      <div class="bg-[#05070a] text-cyan-400 rounded-3xl border border-cyan-500/30 p-8 sm:p-12 space-y-8">
+        <div class="flex justify-between items-center border-b border-cyan-500/30 pb-4">
+          <div class="font-bold text-sm tracking-wider flex items-center gap-2">
+            <i data-lucide="shield-alert" class="w-5 h-5 text-cyan-400 animate-pulse"></i> GİZLİ GRAMAJ &amp; SHRINKFLATION RADARI
+          </div>
+          <span class="text-xs bg-cyan-950/80 px-3 py-1 rounded-full border border-cyan-500/40">OTOMATİK_DENETİM</span>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-[#181920] p-6 rounded-xl border border-amber-500/30 space-y-4">
+        <div class="p-6 bg-[#0a0e14] border border-cyan-500/20 rounded-2xl text-xs space-y-3">
+          <div class="text-white font-bold text-base">Örnek Tespit: Kaşar Peyniri 500g -&gt; 400g (%20 Gizli Zam)</div>
+          <div class="text-neutral-400 leading-relaxed">Fiyat ₺150 sabit tutulurken birim fiyat ₺300/kg'dan ₺375/kg'a yükseltildi. Tüketici fark etmeden %20 daha fazla ödüyor.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="c-9-market" class="stage-pane hidden space-y-6 font-mono-jb">
+      <div class="bg-[#05070a] text-cyan-400 rounded-3xl border border-cyan-500/30 p-8 space-y-6">
+        <h3 class="text-lg font-bold text-white">Gramaj Düşüşü İhbar Listesi</h3>
+        <div class="p-4 bg-[#0a0e14] border border-rose-500/30 text-rose-400 rounded-xl text-xs space-y-1">
+          <div class="font-bold">[İHBAR #891] Bisküvi 100g -&gt; 85g düşürüldü. Fiyat: ₺12,50 sabit.</div>
+          <div class="text-neutral-500">Etki: +%17,6 Gizli Birim Fiyat Zammı</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPT 10: DUAL CART SHOWDOWN -->
+    <div id="c-10-main" class="stage-pane hidden space-y-6 font-inter">
+      <div class="bg-[#111215] text-white rounded-3xl border border-white/10 p-8 sm:p-12 space-y-8">
+        <div class="flex justify-between items-center border-b border-white/10 pb-4">
+          <h2 class="text-3xl font-extrabold tracking-tight">İkili Sepet Arenası (Head-to-Head Battle)</h2>
+          <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-3.5 py-1 rounded-full font-bold">CANLI ARENA</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono-jb">
+          <div class="bg-[#181920] p-7 rounded-2xl border border-amber-500/30 space-y-4">
             <div class="font-bold text-lg text-amber-400">KÖŞE A: Migros Sepetiniz</div>
-            <div class="text-3xl font-extrabold font-mono-jb">₺1.450,20</div>
+            <div class="text-4xl font-extrabold text-white">₺1.450,20</div>
             <div class="text-xs text-neutral-400">8 Kalem Ürün</div>
           </div>
-          <div class="bg-[#181920] p-6 rounded-xl border border-emerald-500/30 space-y-4">
+          <div class="bg-[#181920] p-7 rounded-2xl border border-emerald-500/30 space-y-4">
             <div class="font-bold text-lg text-emerald-400">KÖŞE B: CarrefourSA Karşılığı</div>
-            <div class="text-3xl font-extrabold font-mono-jb">₺1.180,50</div>
+            <div class="text-4xl font-extrabold text-white">₺1.180,50</div>
             <div class="text-xs text-emerald-400 font-bold">₺269,70 Daha Ucuz!</div>
           </div>
         </div>
       </div>
     </div>
 
+    <div id="c-10-market" class="stage-pane hidden space-y-6 font-inter">
+      <div class="bg-[#111215] text-white rounded-3xl border border-white/10 p-8 space-y-6">
+        <h3 class="text-2xl font-bold">Canlı Sepet Eşleme Simülatörü</h3>
+        <div class="p-6 rounded-2xl bg-[#181920] border border-white/10 flex justify-between items-center">
+          <div>
+            <div class="font-bold text-lg">Toplam 14 Ürünlük Haftalık Sepet</div>
+            <div class="text-xs text-neutral-400">Migros Toplamı: ₺1.890 vs En Ucuz Dağılım: ₺1.410</div>
+          </div>
+          <span class="px-5 py-3 rounded-xl bg-emerald-500 text-black font-bold text-sm">₺480 KAZANÇ</span>
+        </div>
+      </div>
+    </div>
+
   </main>
 
+  <!-- ================= STATE CONTROLLER JAVASCRIPT ================= -->
   <script>
     lucide.createIcons();
 
-    function switchPageTarget(target) {
-      document.getElementById('target-main').classList.toggle('active', target === 'main');
-      document.getElementById('target-market').classList.toggle('active', target === 'market');
-      
-      document.querySelectorAll('.target-pane-main').forEach(el => el.classList.toggle('hidden', target !== 'main'));
-      document.querySelectorAll('.target-pane-market').forEach(el => el.classList.toggle('hidden', target !== 'market'));
-      lucide.createIcons();
-    }
+    // Central state machine
+    let currentTarget = 'main'; // 'main' or 'market'
+    let currentConcept = 1;      // 1 to 10
 
-    function switchConcept(idx) {
-      document.querySelectorAll('.concept-view').forEach(el => el.classList.add('hidden'));
-      const activeView = document.getElementById('concept-' + idx);
-      if (activeView) activeView.classList.remove('hidden');
+    function updateStage() {
+      // Hide all panes
+      document.querySelectorAll('.stage-pane').forEach(el => el.classList.add('hidden'));
 
+      // Show the selected pane
+      const targetId = 'c-' + currentConcept + '-' + currentTarget;
+      const activeElement = document.getElementById(targetId);
+      if (activeElement) {
+        activeElement.classList.remove('hidden');
+      }
+
+      // Update target buttons UI
+      document.getElementById('btn-target-main').classList.toggle('active', currentTarget === 'main');
+      document.getElementById('btn-target-market').classList.toggle('active', currentTarget === 'market');
+
+      // Update concept tabs UI
       document.querySelectorAll('.concept-tab').forEach(btn => {
-        if (btn.dataset.idx === String(idx)) {
-          btn.className = 'concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-amber-500 bg-amber-500/10 text-amber-300 shadow-sm';
-        } else {
-          btn.className = 'concept-tab px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white';
-        }
+        const idx = Number(btn.dataset.idx);
+        btn.classList.toggle('active', idx === currentConcept);
       });
+
       lucide.createIcons();
     }
+
+    function setTarget(target) {
+      currentTarget = target;
+      updateStage();
+    }
+
+    function setConcept(idx) {
+      currentConcept = idx;
+      updateStage();
+    }
+
+    // Initialize
+    updateStage();
   </script>
 </body>
 </html>
