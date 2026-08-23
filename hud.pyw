@@ -1097,6 +1097,8 @@ class MetricsEngine:
         self.weekly_start_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
         self.tp_five_h_start_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=5)
         self.tp_weekly_start_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+        self.gemini_5h_reset_dt = None
+        self.tp_5h_reset_dt = None
 
         self.cached_metrics = {
             # Gemini Models
@@ -1256,6 +1258,7 @@ class MetricsEngine:
                             self.cached_metrics["gemini_5h_pct"] = pct
                             self.cached_metrics["gemini_5h_desc"] = short_desc
                             self.five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
+                            self.gemini_5h_reset_dt = reset_dt
                     elif "Claude" in group or "GPT" in group:
                         if "Weekly" in metric:
                             tp_weekly_pct = pct
@@ -1267,6 +1270,7 @@ class MetricsEngine:
                             self.cached_metrics["tp_5h_pct"] = pct
                             self.cached_metrics["tp_5h_desc"] = short_desc
                             self.tp_five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
+                            self.tp_5h_reset_dt = reset_dt
 
             learned_5h_cap = self.compute_learned_cap(self.history.get("samples_5h", []), default=862000)
             learned_weekly_cap = self.compute_learned_cap(self.history.get("samples_weekly", []), default=8083900)
@@ -1512,18 +1516,26 @@ class AutoPrimerWorker(threading.Thread):
         while self.running:
             try:
                 if self.config.get("auto_prime", True):
+                    now_utc = datetime.datetime.now(datetime.timezone.utc)
                     now_ts = time.time()
+
                     # 1. Gemini Models Pool
-                    cur_gemini_5h = self.engine.cached_metrics.get("gemini_5h_pct", 100)
-                    if cur_gemini_5h >= 100 and (now_ts - self.last_gemini_prime) > 180:
-                        self.last_gemini_prime = now_ts
-                        self.trigger_gemini_prime()
+                    # Check 5h reset timer:
+                    # If reset_dt is in the future (remaining seconds > 0), the 5h slot is actively counting down.
+                    # Skip priming while the timer is running (< 5h).
+                    # Only prime when the timer has expired (gemini_rem_secs <= 0) and cooldown has passed.
+                    if self.engine.gemini_5h_reset_dt is not None:
+                        gemini_rem_secs = (self.engine.gemini_5h_reset_dt - now_utc).total_seconds()
+                        if gemini_rem_secs <= 0 and (now_ts - self.last_gemini_prime) > 180:
+                            self.last_gemini_prime = now_ts
+                            self.trigger_gemini_prime()
 
                     # 2. Third-Party (Claude & GPT) Pool
-                    cur_tp_5h = self.engine.cached_metrics.get("tp_5h_pct", 100)
-                    if cur_tp_5h >= 100 and (now_ts - self.last_tp_prime) > 180:
-                        self.last_tp_prime = now_ts
-                        self.trigger_tp_prime()
+                    if self.engine.tp_5h_reset_dt is not None:
+                        tp_rem_secs = (self.engine.tp_5h_reset_dt - now_utc).total_seconds()
+                        if tp_rem_secs <= 0 and (now_ts - self.last_tp_prime) > 180:
+                            self.last_tp_prime = now_ts
+                            self.trigger_tp_prime()
             except Exception:
                 pass
             time.sleep(30.0)
@@ -1532,8 +1544,15 @@ class AutoPrimerWorker(threading.Thread):
         try:
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            si.wShowWindow = 0
-            cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "Reply with: 1", "--model", "Gemini 3.5 Flash (Low)", "--disable-slash-commands"]
+            si.wShowWindow = subprocess.SW_HIDE
+            cmd = [
+                AGY_EXE if os.path.exists(AGY_EXE) else "agy",
+                "-p", "Reply with: 1",
+                "--model", "Gemini 3.5 Flash (Low)",
+                "--effort", "low",
+                "--disable-slash-commands",
+                "--dangerously-skip-permissions"
+            ]
             subprocess.Popen(
                 cmd,
                 stdin=subprocess.DEVNULL,
@@ -1551,8 +1570,15 @@ class AutoPrimerWorker(threading.Thread):
         try:
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            si.wShowWindow = 0
-            cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "Reply with: 1", "--model", "GPT-OSS 120B (Medium)", "--disable-slash-commands"]
+            si.wShowWindow = subprocess.SW_HIDE
+            cmd = [
+                AGY_EXE if os.path.exists(AGY_EXE) else "agy",
+                "-p", "Reply with: 1",
+                "--model", "GPT-OSS 120B (Medium)",
+                "--effort", "low",
+                "--disable-slash-commands",
+                "--dangerously-skip-permissions"
+            ]
             subprocess.Popen(
                 cmd,
                 stdin=subprocess.DEVNULL,

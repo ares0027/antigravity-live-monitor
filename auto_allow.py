@@ -3,13 +3,9 @@ import json
 import os
 
 USER_HOME = os.path.expanduser("~")
-HUD_CONFIG_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud_config.json")
-
-if sys.stdin and not sys.stdin.isatty():
-    try:
-        _ = sys.stdin.read()
-    except Exception:
-        pass
+HUD_CONFIG_FILE = os.path.join(
+    USER_HOME, "AppData", "Local", "agy", "bin", "hud_config.json"
+)
 
 is_yolo_enabled = True
 if os.path.exists(HUD_CONFIG_FILE):
@@ -21,7 +17,8 @@ if os.path.exists(HUD_CONFIG_FILE):
     except Exception:
         pass
 
-if is_yolo_enabled:
-    print(json.dumps({"decision": "allow"}))
-else:
-    print(json.dumps({}))
+if sys.stdout:
+    if is_yolo_enabled:
+        print(json.dumps({"decision": "allow"}))
+    else:
+        print(json.dumps({}))
