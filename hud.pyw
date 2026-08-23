@@ -51,6 +51,7 @@ def load_hud_config():
         "auto_prime": True,
         "global_yolo": True,
         "tp_expanded": False,
+        "theme": "oled",
         "active_tab": "5h"
     }
     if os.path.exists(HUD_CONFIG_FILE):
@@ -99,10 +100,95 @@ HTML_CONTENT = """<!DOCTYPE html>
   <title>Antigravity Live Monitor</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    :root {
+      --bg-main: #0D0E12;
+      --bg-titlebar: #12141A;
+      --bg-card: #16181D;
+      --bg-subcard: #1C1F26;
+      --border-card: #2A2E39;
+      --border-outer: #333846;
+      --text-main: #FFFFFF;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      --accent-gemini: #10B981;
+      --accent-tp: #A855F7;
+      --accent-warn: #F59E0B;
+      --accent-yolo: #EF4444;
+      --ring-bg: #23272F;
+    }
+
+    [data-theme="oled"] {
+      --bg-main: #000000;
+      --bg-titlebar: #080808;
+      --bg-card: #0D0D0D;
+      --bg-subcard: #161616;
+      --border-card: #383838;
+      --border-outer: #525252;
+      --text-main: #FFFFFF;
+      --text-muted: #E2E8F0;
+      --text-dim: #94A3B8;
+      --accent-gemini: #00FF88;
+      --accent-tp: #D946EF;
+      --accent-warn: #FFCC00;
+      --accent-yolo: #FF3B30;
+      --ring-bg: #262626;
+    }
+
+    [data-theme="amber"] {
+      --bg-main: #120E08;
+      --bg-titlebar: #1A130B;
+      --bg-card: #20180E;
+      --bg-subcard: #2A2013;
+      --border-card: #42321D;
+      --border-outer: #5E4627;
+      --text-main: #FFF7ED;
+      --text-muted: #FDBA74;
+      --text-dim: #D97706;
+      --accent-gemini: #34D399;
+      --accent-tp: #F472B6;
+      --accent-warn: #FBBF24;
+      --accent-yolo: #F87171;
+      --ring-bg: #332414;
+    }
+
+    [data-theme="nordic"] {
+      --bg-main: #0B1120;
+      --bg-titlebar: #0F172A;
+      --bg-card: #151F38;
+      --bg-subcard: #1E293B;
+      --border-card: #334155;
+      --border-outer: #475569;
+      --text-main: #F8FAFC;
+      --text-muted: #CBD5E1;
+      --text-dim: #94A3B8;
+      --accent-gemini: #38BDF8;
+      --accent-tp: #A5B4FC;
+      --accent-warn: #FCD34D;
+      --accent-yolo: #FB7185;
+      --ring-bg: #1E293B;
+    }
+
+    [data-theme="light"] {
+      --bg-main: #F8FAFC;
+      --bg-titlebar: #F1F5F9;
+      --bg-card: #FFFFFF;
+      --bg-subcard: #F1F5F9;
+      --border-card: #CBD5E1;
+      --border-outer: #94A3B8;
+      --text-main: #0F172A;
+      --text-muted: #334155;
+      --text-dim: #64748B;
+      --accent-gemini: #059669;
+      --accent-tp: #7C3AED;
+      --accent-warn: #D97706;
+      --accent-yolo: #DC2626;
+      --ring-bg: #E2E8F0;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #0D0E12;
-      color: #E2E8F0;
+      background-color: var(--bg-main);
+      color: var(--text-main);
       margin: 0;
       padding: 0;
       user-select: none;
@@ -112,24 +198,28 @@ HTML_CONTENT = """<!DOCTYPE html>
       font-family: ui-monospace, SFMono-Regular, "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
     }
     .card {
-      background: #16181D;
-      border: 1px solid #23262F;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
     }
     .card-row {
-      border-bottom: 1px solid #23262F;
+      border-bottom: 1px solid var(--border-card);
     }
     .card-row:last-child {
       border-bottom: none;
     }
-    .ring-bg { stroke: #23272F; }
+    .subcard {
+      background: var(--bg-subcard);
+      border: 1px solid var(--border-card);
+    }
+    .ring-bg { stroke: var(--ring-bg); }
     .ring-progress-emerald {
-      stroke: #4ADE80;
+      stroke: var(--accent-gemini);
       transition: stroke-dashoffset 0.4s ease;
       transform: rotate(-90deg);
       transform-origin: 50% 50%;
     }
     .ring-progress-purple {
-      stroke: #C084FC;
+      stroke: var(--accent-tp);
       transition: stroke-dashoffset 0.4s ease;
       transform: rotate(-90deg);
       transform-origin: 50% 50%;
@@ -142,47 +232,47 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
   </style>
 </head>
-<body class="flex flex-col h-screen box-border antialiased rounded-2xl border border-zinc-800/90 shadow-2xl overflow-hidden bg-[#0D0E12]">
+<body id="bodyRoot" data-theme="oled" class="flex flex-col h-screen box-border antialiased rounded-2xl shadow-2xl overflow-hidden" style="border: 1.5px solid var(--border-outer);">
 
   <!-- 0. SLEEK CUSTOM TITLEBAR (DRAGGABLE) -->
-  <div id="titlebar" class="drag-handle flex items-center justify-between px-3.5 py-2.5 bg-[#12141A] border-b border-[#23262F] select-none flex-shrink-0">
+  <div id="titlebar" class="drag-handle flex items-center justify-between px-3.5 py-2.5 border-b select-none flex-shrink-0" style="background: var(--bg-titlebar); border-color: var(--border-card);">
     <div class="flex items-center gap-2 pointer-events-none">
-      <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
-      <span class="text-sm font-bold text-zinc-100 tracking-wide mono">Antigravity Live Monitor</span>
+      <div class="w-3 h-3 rounded-full animate-pulse" style="background: var(--accent-gemini);"></div>
+      <span class="text-sm font-bold tracking-wide mono" style="color: var(--text-main);">Antigravity Live Monitor</span>
     </div>
 
     <!-- Controls -->
     <div class="flex items-center gap-2" onclick="event.stopPropagation()">
       <!-- Global YOLO Mode Toggle -->
-      <button onclick="toggleYolo()" id="yoloBtn" class="px-2.5 py-1 rounded-md bg-red-950/80 border border-red-800/60 text-red-400 hover:text-red-300 transition flex items-center gap-1.5 text-xs mono cursor-pointer font-semibold" title="Global YOLO Mode (Auto-Approve All Permissions)">
-        <span id="yoloDot" class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span>
+      <button onclick="toggleYolo()" id="yoloBtn" class="px-2.5 py-1 rounded-md border flex items-center gap-1.5 text-xs mono cursor-pointer font-bold" style="background: rgba(239, 68, 68, 0.2); border-color: var(--accent-yolo); color: var(--accent-yolo);" title="Global YOLO Mode (Auto-Approve All Permissions)">
+        <span id="yoloDot" class="w-2 h-2 rounded-full animate-pulse" style="background: var(--accent-yolo);"></span>
         <span id="yoloText">YOLO: ON</span>
       </button>
 
       <!-- Auto-Prime Toggle -->
-      <button onclick="togglePrime()" id="primeBtn" class="px-2.5 py-1 rounded-md bg-amber-950/80 border border-amber-800/60 text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5 text-xs mono cursor-pointer font-semibold" title="Auto-Prime Dual Cooldowns (Gemini + Claude/GPT)">
-        <span id="primeDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+      <button onclick="togglePrime()" id="primeBtn" class="px-2.5 py-1 rounded-md border flex items-center gap-1.5 text-xs mono cursor-pointer font-bold" style="background: rgba(245, 158, 11, 0.2); border-color: var(--accent-warn); color: var(--accent-warn);" title="Auto-Prime Dual Cooldowns (Gemini + Claude/GPT)">
+        <span id="primeDot" class="w-2 h-2 rounded-full animate-pulse" style="background: var(--accent-warn);"></span>
         <span id="primeText">PRIME: ON</span>
       </button>
 
       <!-- Always on Top Toggle -->
-      <button onclick="togglePin()" id="pinBtn" class="px-2.5 py-1 rounded-md bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1.5 text-xs mono cursor-pointer font-semibold" title="Always on Top">
-        <span id="pinDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      <button onclick="togglePin()" id="pinBtn" class="px-2.5 py-1 rounded-md border flex items-center gap-1.5 text-xs mono cursor-pointer font-bold" style="background: rgba(16, 185, 129, 0.2); border-color: var(--accent-gemini); color: var(--accent-gemini);" title="Always on Top">
+        <span id="pinDot" class="w-2 h-2 rounded-full" style="background: var(--accent-gemini);"></span>
         <span id="pinText">PINNED</span>
       </button>
 
       <!-- Refresh Sync -->
-      <button onclick="triggerSync()" id="syncBtn" class="p-1 px-2 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-white transition text-sm mono cursor-pointer" title="Force Refresh Quota">
+      <button onclick="triggerSync()" id="syncBtn" class="p-1 px-2 rounded-md transition text-sm mono cursor-pointer font-bold" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Force Refresh Quota">
         ↻
       </button>
 
       <!-- Minimize -->
-      <button onclick="minimizeWindow()" class="p-1 px-2 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-white transition text-sm mono cursor-pointer" title="Minimize">
+      <button onclick="minimizeWindow()" class="p-1 px-2 rounded-md transition text-sm mono cursor-pointer font-bold" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Minimize">
         −
       </button>
 
       <!-- Close -->
-      <button onclick="closeWindow()" class="p-1 px-2 rounded-md hover:bg-red-950/70 text-zinc-400 hover:text-red-400 transition text-sm mono cursor-pointer" title="Close">
+      <button onclick="closeWindow()" class="p-1 px-2 rounded-md transition text-sm mono cursor-pointer font-bold" style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--accent-yolo); color: var(--accent-yolo);" title="Close">
         ✕
       </button>
     </div>
@@ -194,11 +284,11 @@ HTML_CONTENT = """<!DOCTYPE html>
     <!-- 1. GEMINI MODELS SECTION -->
     <div>
       <div class="flex items-center justify-between mb-1.5 px-1">
-        <h2 class="text-xs font-bold text-emerald-400 tracking-tight uppercase flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+        <h2 class="text-xs font-bold tracking-tight uppercase flex items-center gap-1.5" style="color: var(--accent-gemini);">
+          <span class="w-2.5 h-2.5 rounded-full inline-block" style="background: var(--accent-gemini);"></span>
           Gemini Models (Primary Engine)
         </h2>
-        <span class="text-xs text-zinc-400 mono">$0.75 in · $3.75 out</span>
+        <span class="text-xs mono font-semibold" style="color: var(--text-muted);">$0.75 in · $3.75 out</span>
       </div>
 
       <div class="card rounded-2xl overflow-hidden shadow-lg">
@@ -208,13 +298,13 @@ HTML_CONTENT = """<!DOCTYPE html>
           <div class="flex items-center justify-between">
             <div>
               <div class="flex items-baseline gap-2">
-                <span class="text-sm font-semibold text-white">Weekly Limit Remaining</span>
-                <span class="text-sm font-bold text-emerald-400 mono" id="geminiWeeklyRemain">~--M left</span>
+                <span class="text-sm font-bold" style="color: var(--text-main);">Weekly Limit Remaining</span>
+                <span class="text-sm font-bold mono" style="color: var(--accent-gemini);" id="geminiWeeklyRemain">~--M left</span>
               </div>
-              <div class="text-xs text-zinc-400 mt-0.5 mono" id="geminiWeeklyDesc">Resets in --</div>
+              <div class="text-xs mt-0.5 mono font-medium" style="color: var(--text-muted);" id="geminiWeeklyDesc">Resets in --</div>
             </div>
             <div class="flex items-center gap-2.5 flex-shrink-0">
-              <span class="mono text-sm font-bold text-white" id="geminiWeeklyPct">--%</span>
+              <span class="mono text-sm font-bold" style="color: var(--text-main);" id="geminiWeeklyPct">--%</span>
               <svg class="w-7 h-7" viewBox="0 0 36 36">
                 <path class="ring-bg" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 <path id="geminiWeeklyRing" class="ring-progress-emerald" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -224,21 +314,21 @@ HTML_CONTENT = """<!DOCTYPE html>
 
           <!-- 4-Value Matrix -->
           <div class="grid grid-cols-4 gap-1.5 mt-2 text-[10px] mono">
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">1. Weighted</span>
-              <span class="text-emerald-400 font-bold text-xs" id="gwValWeighted">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">1. Weighted</span>
+              <span class="font-bold text-xs" style="color: var(--accent-gemini);" id="gwValWeighted">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">2. Input</span>
-              <span class="text-zinc-200 font-bold text-xs" id="gwValInput">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">2. Input</span>
+              <span class="font-bold text-xs" style="color: var(--text-main);" id="gwValInput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">3. Output</span>
-              <span class="text-purple-400 font-bold text-xs" id="gwValOutput">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">3. Output</span>
+              <span class="font-bold text-xs" style="color: var(--accent-tp);" id="gwValOutput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">4. Cache</span>
-              <span class="text-amber-400 font-bold text-xs" id="gwValCache">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">4. Cache</span>
+              <span class="font-bold text-xs" style="color: var(--accent-warn);" id="gwValCache">$0.00</span>
             </div>
           </div>
         </div>
@@ -248,13 +338,13 @@ HTML_CONTENT = """<!DOCTYPE html>
           <div class="flex items-center justify-between">
             <div>
               <div class="flex items-baseline gap-2">
-                <span class="text-sm font-semibold text-white">Five Hour Limit Remaining</span>
-                <span class="text-sm font-bold text-amber-400 mono" id="gemini5hRemain">~--k left</span>
+                <span class="text-sm font-bold" style="color: var(--text-main);">Five Hour Limit Remaining</span>
+                <span class="text-sm font-bold mono" style="color: var(--accent-warn);" id="gemini5hRemain">~--k left</span>
               </div>
-              <div class="text-xs text-zinc-400 mt-0.5 mono" id="gemini5hDesc">Resets in --</div>
+              <div class="text-xs mt-0.5 mono font-medium" style="color: var(--text-muted);" id="gemini5hDesc">Resets in --</div>
             </div>
             <div class="flex items-center gap-2.5 flex-shrink-0">
-              <span class="mono text-sm font-bold text-white" id="gemini5hPct">--%</span>
+              <span class="mono text-sm font-bold" style="color: var(--text-main);" id="gemini5hPct">--%</span>
               <svg class="w-7 h-7" viewBox="0 0 36 36">
                 <path class="ring-bg" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 <path id="gemini5hRing" class="ring-progress-emerald" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -264,21 +354,21 @@ HTML_CONTENT = """<!DOCTYPE html>
 
           <!-- 4-Value Matrix -->
           <div class="grid grid-cols-4 gap-1.5 mt-2 text-[10px] mono">
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">1. Weighted</span>
-              <span class="text-emerald-400 font-bold text-xs" id="gfValWeighted">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">1. Weighted</span>
+              <span class="font-bold text-xs" style="color: var(--accent-gemini);" id="gfValWeighted">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">2. Input</span>
-              <span class="text-zinc-200 font-bold text-xs" id="gfValInput">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">2. Input</span>
+              <span class="font-bold text-xs" style="color: var(--text-main);" id="gfValInput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">3. Output</span>
-              <span class="text-purple-400 font-bold text-xs" id="gfValOutput">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">3. Output</span>
+              <span class="font-bold text-xs" style="color: var(--accent-tp);" id="gfValOutput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">4. Cache</span>
-              <span class="text-amber-400 font-bold text-xs" id="gfValCache">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">4. Cache</span>
+              <span class="font-bold text-xs" style="color: var(--accent-warn);" id="gfValCache">$0.00</span>
             </div>
           </div>
         </div>
@@ -289,32 +379,32 @@ HTML_CONTENT = """<!DOCTYPE html>
     <!-- 2. CLAUDE & GPT THIRD-PARTY SECTION (COLLAPSIBLE) -->
     <div>
       <!-- Clickable Header / Summary Pill -->
-      <div onclick="toggleTpDetails()" class="card rounded-xl p-2.5 shadow-md flex items-center justify-between text-xs mono cursor-pointer hover:border-purple-800/60 transition">
+      <div onclick="toggleTpDetails()" class="card rounded-xl p-2.5 shadow-md flex items-center justify-between text-xs mono cursor-pointer transition">
         <div class="flex items-center gap-2">
-          <span class="inline-block w-2.5 h-2.5 rounded-full bg-purple-400" id="tpDot"></span>
-          <span class="font-bold text-white text-xs" id="tpSummary">Claude & GPT: 99% Weekly · 98% 5h</span>
+          <span class="inline-block w-2.5 h-2.5 rounded-full" style="background: var(--accent-tp);" id="tpDot"></span>
+          <span class="font-bold text-xs" style="color: var(--text-main);" id="tpSummary">Claude & GPT: 99% Weekly · 98% 5h</span>
         </div>
-        <div class="flex items-center gap-2 text-xs text-zinc-400">
+        <div class="flex items-center gap-2 text-xs font-semibold" style="color: var(--text-muted);">
           <span id="tpDetail">Details</span>
-          <span id="tpArrow" class="text-zinc-400 text-xs transition-transform duration-200">▼</span>
+          <span id="tpArrow" class="text-xs transition-transform duration-200">▼</span>
         </div>
       </div>
 
       <!-- Collapsible Detailed Matrix Container -->
-      <div id="tpDetailsContainer" class="hidden mt-2 card rounded-2xl overflow-hidden shadow-lg border-purple-900/30">
+      <div id="tpDetailsContainer" class="hidden mt-2 card rounded-2xl overflow-hidden shadow-lg">
 
         <!-- Claude Weekly Limit -->
         <div class="p-3 card-row">
           <div class="flex items-center justify-between">
             <div>
               <div class="flex items-baseline gap-2">
-                <span class="text-sm font-semibold text-white">Weekly Limit Remaining</span>
-                <span class="text-sm font-bold text-purple-400 mono" id="tpWeeklyRemain">~--M left</span>
+                <span class="text-sm font-bold" style="color: var(--text-main);">Weekly Limit Remaining</span>
+                <span class="text-sm font-bold mono" style="color: var(--accent-tp);" id="tpWeeklyRemain">~--M left</span>
               </div>
-              <div class="text-xs text-zinc-400 mt-0.5 mono" id="tpWeeklyDesc">Resets in --</div>
+              <div class="text-xs mt-0.5 mono font-medium" style="color: var(--text-muted);" id="tpWeeklyDesc">Resets in --</div>
             </div>
             <div class="flex items-center gap-2.5 flex-shrink-0">
-              <span class="mono text-sm font-bold text-white" id="tpWeeklyPct">--%</span>
+              <span class="mono text-sm font-bold" style="color: var(--text-main);" id="tpWeeklyPct">--%</span>
               <svg class="w-7 h-7" viewBox="0 0 36 36">
                 <path class="ring-bg" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 <path id="tpWeeklyRing" class="ring-progress-purple" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -324,21 +414,21 @@ HTML_CONTENT = """<!DOCTYPE html>
 
           <!-- 4-Value Matrix -->
           <div class="grid grid-cols-4 gap-1.5 mt-2 text-[10px] mono">
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">1. Weighted</span>
-              <span class="text-purple-400 font-bold text-xs" id="tpwValWeighted">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">1. Weighted</span>
+              <span class="font-bold text-xs" style="color: var(--accent-tp);" id="tpwValWeighted">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">2. Input</span>
-              <span class="text-zinc-200 font-bold text-xs" id="tpwValInput">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">2. Input</span>
+              <span class="font-bold text-xs" style="color: var(--text-main);" id="tpwValInput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">3. Output</span>
-              <span class="text-purple-300 font-bold text-xs" id="tpwValOutput">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">3. Output</span>
+              <span class="font-bold text-xs" style="color: var(--accent-tp);" id="tpwValOutput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">4. Cache</span>
-              <span class="text-amber-400 font-bold text-xs" id="tpwValCache">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">4. Cache</span>
+              <span class="font-bold text-xs" style="color: var(--accent-warn);" id="tpwValCache">$0.00</span>
             </div>
           </div>
         </div>
@@ -348,13 +438,13 @@ HTML_CONTENT = """<!DOCTYPE html>
           <div class="flex items-center justify-between">
             <div>
               <div class="flex items-baseline gap-2">
-                <span class="text-sm font-semibold text-white">Five Hour Limit Remaining</span>
-                <span class="text-sm font-bold text-amber-400 mono" id="tp5hRemain">~--k left</span>
+                <span class="text-sm font-bold" style="color: var(--text-main);">Five Hour Limit Remaining</span>
+                <span class="text-sm font-bold mono" style="color: var(--accent-warn);" id="tp5hRemain">~--k left</span>
               </div>
-              <div class="text-xs text-zinc-400 mt-0.5 mono" id="tp5hDesc">Resets in --</div>
+              <div class="text-xs mt-0.5 mono font-medium" style="color: var(--text-muted);" id="tp5hDesc">Resets in --</div>
             </div>
             <div class="flex items-center gap-2.5 flex-shrink-0">
-              <span class="mono text-sm font-bold text-white" id="tp5hPct">--%</span>
+              <span class="mono text-sm font-bold" style="color: var(--text-main);" id="tp5hPct">--%</span>
               <svg class="w-7 h-7" viewBox="0 0 36 36">
                 <path class="ring-bg" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 <path id="tp5hRing" class="ring-progress-purple" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -364,21 +454,21 @@ HTML_CONTENT = """<!DOCTYPE html>
 
           <!-- 4-Value Matrix -->
           <div class="grid grid-cols-4 gap-1.5 mt-2 text-[10px] mono">
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">1. Weighted</span>
-              <span class="text-purple-400 font-bold text-xs" id="tpfValWeighted">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">1. Weighted</span>
+              <span class="font-bold text-xs" style="color: var(--accent-tp);" id="tpfValWeighted">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">2. Input</span>
-              <span class="text-zinc-200 font-bold text-xs" id="tpfValInput">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">2. Input</span>
+              <span class="font-bold text-xs" style="color: var(--text-main);" id="tpfValInput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">3. Output</span>
-              <span class="text-purple-300 font-bold text-xs" id="tpfValOutput">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">3. Output</span>
+              <span class="font-bold text-xs" style="color: var(--accent-tp);" id="tpfValOutput">$0.00</span>
             </div>
-            <div class="bg-zinc-900/90 border border-zinc-800/90 p-1.5 rounded-lg text-center">
-              <span class="text-zinc-500 block text-[9px]">4. Cache</span>
-              <span class="text-amber-400 font-bold text-xs" id="tpfValCache">$0.00</span>
+            <div class="subcard p-1.5 rounded-lg text-center">
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">4. Cache</span>
+              <span class="font-bold text-xs" style="color: var(--accent-warn);" id="tpfValCache">$0.00</span>
             </div>
           </div>
         </div>
@@ -391,52 +481,52 @@ HTML_CONTENT = """<!DOCTYPE html>
       
       <!-- Slot Selector Tabs -->
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-1.5 bg-zinc-900 p-0.5 rounded-lg border border-zinc-800 text-xs mono">
-          <button id="tab5h" onclick="switchTab('5h')" class="px-3 py-1 rounded-md font-semibold transition bg-zinc-700 text-white cursor-pointer">Current 5h Slot</button>
-          <button id="tabWeekly" onclick="switchTab('weekly')" class="px-3 py-1 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer">Current Weekly Slot</button>
+        <div class="flex items-center gap-1.5 p-0.5 rounded-lg border text-xs mono" style="background: var(--bg-subcard); border-color: var(--border-card);">
+          <button id="tab5h" onclick="switchTab('5h')" class="px-3 py-1 rounded-md font-bold transition cursor-pointer" style="background: var(--border-card); color: var(--text-main);">Current 5h Slot</button>
+          <button id="tabWeekly" onclick="switchTab('weekly')" class="px-3 py-1 rounded-md font-bold transition cursor-pointer" style="color: var(--text-muted);">Current Weekly Slot</button>
         </div>
-        <span class="mono text-sm font-bold text-emerald-400" id="curSlotCost">Total Spent: $0.0000</span>
+        <span class="mono text-sm font-bold" style="color: var(--accent-gemini);" id="curSlotCost">Total Spent: $0.0000</span>
       </div>
 
       <!-- Model Category Breakdown Sub-bars -->
       <div class="grid grid-cols-2 gap-2 text-xs mono">
-        <div class="bg-zinc-900/90 border border-emerald-950 p-2 rounded-lg">
-          <div class="flex justify-between text-zinc-300">
+        <div class="subcard p-2 rounded-lg">
+          <div class="flex justify-between font-bold" style="color: var(--text-main);">
             <span>Gemini Spent:</span>
-            <span class="text-emerald-400 font-bold" id="geminiSlotCost">$0.0000</span>
+            <span style="color: var(--accent-gemini);" id="geminiSlotCost">$0.0000</span>
           </div>
-          <div class="text-[11px] text-zinc-400 mt-0.5" id="geminiSlotTokens">0 tokens</div>
+          <div class="text-[11px] mt-0.5 font-medium" style="color: var(--text-muted);" id="geminiSlotTokens">0 tokens</div>
         </div>
-        <div class="bg-zinc-900/90 border border-purple-950 p-2 rounded-lg">
-          <div class="flex justify-between text-zinc-300">
+        <div class="subcard p-2 rounded-lg">
+          <div class="flex justify-between font-bold" style="color: var(--text-main);">
             <span>Claude/GPT Spent:</span>
-            <span class="text-purple-400 font-bold" id="tpSlotCost">$0.0000</span>
+            <span style="color: var(--accent-tp);" id="tpSlotCost">$0.0000</span>
           </div>
-          <div class="text-[11px] text-zinc-400 mt-0.5" id="tpSlotTokens">0 tokens</div>
+          <div class="text-[11px] mt-0.5 font-medium" style="color: var(--text-muted);" id="tpSlotTokens">0 tokens</div>
         </div>
       </div>
 
       <!-- Live Token & Cost Breakdown Grid -->
-      <div class="grid grid-cols-3 gap-2 text-zinc-300">
-        <div class="bg-zinc-900/90 border border-zinc-800 p-2 rounded-xl text-center">
-          <div class="text-zinc-400 text-[10px] uppercase font-bold tracking-wider">Total In</div>
-          <div class="mono text-sm font-bold text-zinc-100 mt-0.5" id="statIn">0k</div>
-          <div class="mono text-[11px] text-emerald-400 font-semibold" id="statInCost">($0.0000)</div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="subcard p-2 rounded-xl text-center">
+          <div class="text-[10px] uppercase font-bold tracking-wider" style="color: var(--text-dim);">Total In</div>
+          <div class="mono text-sm font-bold mt-0.5" style="color: var(--text-main);" id="statIn">0k</div>
+          <div class="mono text-[11px] font-bold" style="color: var(--accent-gemini);" id="statInCost">($0.0000)</div>
         </div>
-        <div class="bg-zinc-900/90 border border-zinc-800 p-2 rounded-xl text-center">
-          <div class="text-zinc-400 text-[10px] uppercase font-bold tracking-wider">Total Out</div>
-          <div class="mono text-sm font-bold text-zinc-100 mt-0.5" id="statOut">0k</div>
-          <div class="mono text-[11px] text-purple-400 font-semibold" id="statOutCost">($0.0000)</div>
+        <div class="subcard p-2 rounded-xl text-center">
+          <div class="text-[10px] uppercase font-bold tracking-wider" style="color: var(--text-dim);">Total Out</div>
+          <div class="mono text-sm font-bold mt-0.5" style="color: var(--text-main);" id="statOut">0k</div>
+          <div class="mono text-[11px] font-bold" style="color: var(--accent-tp);" id="statOutCost">($0.0000)</div>
         </div>
-        <div class="bg-zinc-900/90 border border-zinc-800 p-2 rounded-xl text-center">
-          <div class="text-zinc-400 text-[10px] uppercase font-bold tracking-wider">Total Cache</div>
-          <div class="mono text-sm font-bold text-zinc-100 mt-0.5" id="statCache">0k</div>
-          <div class="mono text-[11px] text-amber-400 font-semibold" id="statCacheCost">($0.0000)</div>
+        <div class="subcard p-2 rounded-xl text-center">
+          <div class="text-[10px] uppercase font-bold tracking-wider" style="color: var(--text-dim);">Total Cache</div>
+          <div class="mono text-sm font-bold mt-0.5" style="color: var(--text-main);" id="statCache">0k</div>
+          <div class="mono text-[11px] font-bold" style="color: var(--accent-warn);" id="statCacheCost">($0.0000)</div>
         </div>
       </div>
       
       <!-- Current Session Context Sub-pill -->
-      <div class="pt-1.5 border-t border-zinc-800/80 flex justify-between items-center text-xs text-zinc-400 mono">
+      <div class="pt-1.5 border-t flex justify-between items-center text-xs mono font-medium" style="border-color: var(--border-card); color: var(--text-muted);">
         <span id="wsName">Active: Workspace</span>
         <span id="sessionTokens">Current Chat: 0 tokens (0 turns)</span>
       </div>
@@ -444,13 +534,28 @@ HTML_CONTENT = """<!DOCTYPE html>
 
   </div>
 
-  <!-- FOOTER STATUS -->
-  <div class="flex items-center justify-between px-3.5 py-2 border-t border-zinc-800/80 text-xs text-zinc-400 mono font-medium bg-[#12141A] flex-shrink-0">
-    <span class="flex items-center gap-1.5 text-zinc-300">
-      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-      <span id="syncPoints">Engine Synchronized (1s)</span>
-    </span>
-    <span id="timestamp">--:--:--</span>
+  <!-- FOOTER STATUS & THEME SELECTOR -->
+  <div class="flex items-center justify-between px-3.5 py-2 border-t text-xs mono font-semibold flex-shrink-0" style="background: var(--bg-titlebar); border-color: var(--border-card);">
+    <div class="flex items-center gap-3">
+      <span class="flex items-center gap-1.5" style="color: var(--text-muted);">
+        <span class="inline-block w-2 h-2 rounded-full" style="background: var(--accent-gemini);"></span>
+        <span id="syncPoints">Engine Synchronized (1s)</span>
+      </span>
+
+      <!-- Theme Selector Dropdown -->
+      <div class="flex items-center gap-1">
+        <span style="color: var(--text-dim);">🎨</span>
+        <select id="themeSelect" onchange="changeTheme(this.value)" class="border rounded px-1.5 py-0.5 text-xs mono cursor-pointer outline-none font-bold" style="background: var(--bg-subcard); border-color: var(--border-card); color: var(--text-main);">
+          <option value="oled">High-Contrast OLED</option>
+          <option value="dark">Onyx Dark</option>
+          <option value="amber">Warm Amber (Eye-Care)</option>
+          <option value="nordic">Nordic Frost</option>
+          <option value="light">Paper Light</option>
+        </select>
+      </div>
+    </div>
+
+    <span id="timestamp" style="color: var(--text-dim);">--:--:--</span>
   </div>
 
   <script>
@@ -459,6 +564,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     let isAutoPrime = true;
     let isGlobalYolo = true;
     let isTpExpanded = false;
+    let currentTheme = 'oled';
     let isDragging = false;
     let startX = 0, startY = 0;
 
@@ -466,7 +572,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       const tb = document.getElementById('titlebar');
       if (tb) {
         tb.addEventListener('mousedown', (e) => {
-          if (e.target.closest('button') || e.target.closest('input')) return;
+          if (e.target.closest('button') || e.target.closest('select') || e.target.closest('input')) return;
           if (e.button === 0) {
             isDragging = true;
             startX = e.screenX;
@@ -491,6 +597,20 @@ HTML_CONTENT = """<!DOCTYPE html>
         window.addEventListener('mouseup', () => {
           isDragging = false;
         });
+      }
+    }
+
+    function applyThemeVisual(themeName) {
+      currentTheme = themeName || 'oled';
+      document.body.setAttribute('data-theme', currentTheme);
+      const sel = document.getElementById('themeSelect');
+      if (sel) sel.value = currentTheme;
+    }
+
+    async function changeTheme(themeName) {
+      applyThemeVisual(themeName);
+      if (window.pywebview && window.pywebview.api) {
+        await window.pywebview.api.set_theme(themeName);
       }
     }
 
@@ -523,13 +643,19 @@ HTML_CONTENT = """<!DOCTYPE html>
       const text = document.getElementById('yoloText');
       const btn = document.getElementById('yoloBtn');
       if (isGlobalYolo) {
-        dot.className = 'w-2 h-2 rounded-full bg-red-400 animate-pulse';
-        btn.className = 'px-2.5 py-1 rounded-md bg-red-950/80 border border-red-800/60 text-red-400 hover:text-red-300 transition flex items-center gap-1.5 text-xs mono cursor-pointer font-semibold';
+        dot.className = 'w-2 h-2 rounded-full animate-pulse';
+        dot.style.background = 'var(--accent-yolo)';
+        btn.style.background = 'rgba(239, 68, 68, 0.2)';
+        btn.style.borderColor = 'var(--accent-yolo)';
+        btn.style.color = 'var(--accent-yolo)';
         text.textContent = 'YOLO: ON';
         btn.title = 'Global YOLO Mode (Enabled - Auto-Approve All Permissions)';
       } else {
-        dot.className = 'w-2 h-2 rounded-full bg-zinc-500';
-        btn.className = 'px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5 text-xs mono cursor-pointer font-semibold';
+        dot.className = 'w-2 h-2 rounded-full';
+        dot.style.background = 'var(--text-dim)';
+        btn.style.background = 'var(--bg-subcard)';
+        btn.style.borderColor = 'var(--border-card)';
+        btn.style.color = 'var(--text-muted)';
         text.textContent = 'YOLO: OFF';
         btn.title = 'Global YOLO Mode (Disabled - Standard Permission Prompts)';
       }
@@ -541,13 +667,19 @@ HTML_CONTENT = """<!DOCTYPE html>
       const text = document.getElementById('primeText');
       const btn = document.getElementById('primeBtn');
       if (isAutoPrime) {
-        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
-        btn.className = 'px-2.5 py-1 rounded-md bg-amber-950/80 border border-amber-800/60 text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5 text-xs mono cursor-pointer font-semibold';
+        dot.className = 'w-2 h-2 rounded-full animate-pulse';
+        dot.style.background = 'var(--accent-warn)';
+        btn.style.background = 'rgba(245, 158, 11, 0.2)';
+        btn.style.borderColor = 'var(--accent-warn)';
+        btn.style.color = 'var(--accent-warn)';
         text.textContent = 'PRIME: ON';
         btn.title = 'Auto-Prime Dual Cooldowns (Enabled)';
       } else {
-        dot.className = 'w-2 h-2 rounded-full bg-zinc-500';
-        btn.className = 'px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5 text-xs mono cursor-pointer font-semibold';
+        dot.className = 'w-2 h-2 rounded-full';
+        dot.style.background = 'var(--text-dim)';
+        btn.style.background = 'var(--bg-subcard)';
+        btn.style.borderColor = 'var(--border-card)';
+        btn.style.color = 'var(--text-muted)';
         text.textContent = 'PRIME: OFF';
         btn.title = 'Auto-Prime Dual Cooldowns (Disabled)';
       }
@@ -559,13 +691,19 @@ HTML_CONTENT = """<!DOCTYPE html>
       const text = document.getElementById('pinText');
       const btn = document.getElementById('pinBtn');
       if (isPinned) {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-        btn.className = 'px-2.5 py-1 rounded-md bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1.5 text-xs mono cursor-pointer font-semibold';
+        dot.className = 'w-2 h-2 rounded-full';
+        dot.style.background = 'var(--accent-gemini)';
+        btn.style.background = 'rgba(16, 185, 129, 0.2)';
+        btn.style.borderColor = 'var(--accent-gemini)';
+        btn.style.color = 'var(--accent-gemini)';
         text.textContent = 'PINNED';
         btn.title = 'Always on Top (Enabled)';
       } else {
-        dot.className = 'w-2 h-2 rounded-full bg-zinc-500';
-        btn.className = 'px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5 text-xs mono cursor-pointer font-semibold';
+        dot.className = 'w-2 h-2 rounded-full';
+        dot.style.background = 'var(--text-dim)';
+        btn.style.background = 'var(--bg-subcard)';
+        btn.style.borderColor = 'var(--border-card)';
+        btn.style.color = 'var(--text-muted)';
         text.textContent = 'UNPIN';
         btn.title = 'Always on Top (Disabled)';
       }
@@ -576,11 +714,15 @@ HTML_CONTENT = """<!DOCTYPE html>
       const t5 = document.getElementById('tab5h');
       const tw = document.getElementById('tabWeekly');
       if (tab === '5h') {
-        t5.className = 'px-3 py-1 rounded-md font-semibold transition bg-zinc-700 text-white cursor-pointer';
-        tw.className = 'px-3 py-1 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer';
+        t5.style.background = 'var(--border-card)';
+        t5.style.color = 'var(--text-main)';
+        tw.style.background = 'transparent';
+        tw.style.color = 'var(--text-muted)';
       } else {
-        tw.className = 'px-3 py-1 rounded-md font-semibold transition bg-zinc-700 text-white cursor-pointer';
-        t5.className = 'px-3 py-1 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer';
+        tw.style.background = 'var(--border-card)';
+        tw.style.color = 'var(--text-main)';
+        t5.style.background = 'transparent';
+        t5.style.color = 'var(--text-muted)';
       }
       refreshData();
     }
@@ -747,6 +889,7 @@ HTML_CONTENT = """<!DOCTYPE html>
         try {
           const cfg = await window.pywebview.api.get_config();
           if (cfg) {
+            if (cfg.theme) applyThemeVisual(cfg.theme);
             if (typeof cfg.pinned === 'boolean') applyPinVisual(cfg.pinned);
             if (typeof cfg.auto_prime === 'boolean') applyPrimeVisual(cfg.auto_prime);
             if (typeof cfg.global_yolo === 'boolean') applyYoloVisual(cfg.global_yolo);
@@ -1250,6 +1393,7 @@ class Api:
         self.is_auto_prime = config.get("auto_prime", True)
         self.is_global_yolo = config.get("global_yolo", True)
         self.is_tp_expanded = config.get("tp_expanded", False)
+        self.current_theme = config.get("theme", "oled")
 
     def set_window(self, window):
         self.window = window
@@ -1277,6 +1421,12 @@ class Api:
                 self.window.move(self.window.x + dx, self.window.y + dy)
             except Exception:
                 pass
+
+    def set_theme(self, theme_name):
+        self.current_theme = theme_name
+        self.config["theme"] = theme_name
+        save_hud_config(self.config)
+        return self.current_theme
 
     def set_tp_expanded(self, expanded):
         self.is_tp_expanded = expanded
@@ -1334,12 +1484,12 @@ def main():
         title="Antigravity Live Monitor",
         html=HTML_CONTENT,
         js_api=api,
-        width=520,
-        height=740,
+        width=530,
+        height=760,
         frameless=True,
         on_top=config.get("pinned", True),
         resizable=True,
-        background_color="#0D0E12"
+        background_color="#000000"
     )
     api.set_window(window)
     webview.start()
