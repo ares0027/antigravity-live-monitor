@@ -51,7 +51,6 @@ def load_hud_config():
         "auto_prime": True,
         "global_yolo": True,
         "tp_expanded": False,
-        "is_compact": False,
         "theme": "oled",
         "active_tab": "5h"
     }
@@ -63,13 +62,18 @@ def load_hud_config():
                     default_config.update(d)
         except Exception:
             pass
+    # Compact mode is strictly in-session on-demand and NEVER persistent on restart
+    default_config["is_compact"] = False
     return default_config
 
 def save_hud_config(config_dict):
     try:
         os.makedirs(os.path.dirname(HUD_CONFIG_FILE), exist_ok=True)
+        # Strip is_compact before saving so restarts always open in full mode
+        to_save = dict(config_dict)
+        to_save.pop("is_compact", None)
         with open(HUD_CONFIG_FILE, "w", encoding="utf-8") as f:
-            json.dump(config_dict, f, indent=2)
+            json.dump(to_save, f, indent=2)
     except Exception:
         pass
 
@@ -282,31 +286,27 @@ HTML_CONTENT = """<!DOCTYPE html>
       </button>
     </div>
 
-    <!-- PURE MINIMALIST COMPACT STRIP (Shown ONLY when collapsed to 1 single line) -->
-    <div id="compactBar" class="hidden w-full h-full flex items-center justify-between px-2">
-      <!-- Mini Dot & Label -->
-      <div class="flex items-center gap-1.5">
-        <div class="w-2.5 h-2.5 rounded-full animate-pulse flex-shrink-0" style="background: var(--accent-gemini);"></div>
-        <span class="mono text-xs font-bold tracking-tight" style="color: var(--text-muted);">AGY</span>
-      </div>
-
+    <!-- PURE MINIMALIST COMPACT STRIP (Zero wasted space, edge-to-edge readable) -->
+    <div id="compactBar" class="hidden w-full h-full flex items-center justify-around px-2">
       <!-- Gemini Weekly Mini Ring + % -->
       <div class="flex items-center gap-1.5" title="Gemini Weekly Limit Remaining">
         <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 36 36">
-          <path class="ring-bg" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-          <path id="miniGWRing" class="ring-progress-emerald" stroke-width="4" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path id="miniGWRing" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
         </svg>
-        <span class="mono text-xs font-bold" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
+        <span class="mono text-xs font-black tracking-tight" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
         <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">W</span>
       </div>
+
+      <div class="w-px h-3.5" style="background: var(--border-card);"></div>
 
       <!-- Gemini 5-Hour Mini Ring + % -->
       <div class="flex items-center gap-1.5" title="Gemini 5-Hour Limit Remaining">
         <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 36 36">
-          <path class="ring-bg" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-          <path id="miniG5Ring" class="ring-progress-emerald" stroke-width="4" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path id="miniG5Ring" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
         </svg>
-        <span class="mono text-xs font-bold" style="color: var(--accent-warn);" id="miniG5Pct">--%</span>
+        <span class="mono text-xs font-black tracking-tight" style="color: var(--accent-warn);" id="miniG5Pct">--%</span>
         <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">5h</span>
       </div>
     </div>
@@ -656,9 +656,6 @@ HTML_CONTENT = """<!DOCTYPE html>
           titlebar.style.borderBottom = 'none';
           titlebar.style.height = '100%';
         }
-        if (bodyRoot) {
-          bodyRoot.style.borderRadius = '16px';
-        }
       } else {
         if (fullHeaderLeft) fullHeaderLeft.classList.remove('hidden');
         if (fullControls) fullControls.classList.remove('hidden');
@@ -668,9 +665,6 @@ HTML_CONTENT = """<!DOCTYPE html>
         if (titlebar) {
           titlebar.style.borderBottom = '1px solid var(--border-card)';
           titlebar.style.height = '42px';
-        }
-        if (bodyRoot) {
-          bodyRoot.style.borderRadius = '16px';
         }
       }
     }
@@ -981,7 +975,6 @@ HTML_CONTENT = """<!DOCTYPE html>
           const cfg = await window.pywebview.api.get_config();
           if (cfg) {
             if (cfg.theme) applyThemeVisual(cfg.theme);
-            if (typeof cfg.is_compact === 'boolean') applyCompactVisual(cfg.is_compact);
             if (typeof cfg.pinned === 'boolean') applyPinVisual(cfg.pinned);
             if (typeof cfg.auto_prime === 'boolean') applyPrimeVisual(cfg.auto_prime);
             if (typeof cfg.global_yolo === 'boolean') applyYoloVisual(cfg.global_yolo);
@@ -1485,7 +1478,7 @@ class Api:
         self.is_auto_prime = config.get("auto_prime", True)
         self.is_global_yolo = config.get("global_yolo", True)
         self.is_tp_expanded = config.get("tp_expanded", False)
-        self.is_compact = config.get("is_compact", False)
+        self.is_compact = False # Strictly non-persistent on restart
         self.current_theme = config.get("theme", "oled")
 
     def set_window(self, window):
@@ -1517,8 +1510,7 @@ class Api:
 
     def set_compact_mode(self, is_compact):
         self.is_compact = is_compact
-        self.config["is_compact"] = is_compact
-        save_hud_config(self.config)
+        # Note: Do not persist is_compact to hud_config.json
 
         hwnd = get_hud_hwnd()
         if hwnd:
@@ -1526,30 +1518,48 @@ class Api:
             user32.GetWindowRect(hwnd, rect)
             cur_x = rect[0]
             cur_y = rect[1]
-            w = 260 if is_compact else 530
-            h = 36 if is_compact else 760
+            if is_compact:
+                w, h = 205, 34
+            else:
+                w = 520
+                h = 740 if self.is_tp_expanded else 545
             user32.SetWindowPos(hwnd, 0, cur_x, cur_y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
         elif self.window:
             try:
                 if is_compact:
-                    self.window.resize(260, 36)
+                    self.window.resize(205, 34)
                 else:
-                    self.window.resize(530, 760)
+                    self.window.resize(520, 740 if self.is_tp_expanded else 545)
             except Exception:
                 pass
         return self.is_compact
+
+    def set_tp_expanded(self, expanded):
+        self.is_tp_expanded = expanded
+        self.config["tp_expanded"] = self.is_tp_expanded
+        save_hud_config(self.config)
+
+        if not self.is_compact:
+            hwnd = get_hud_hwnd()
+            if hwnd:
+                rect = (ctypes.c_long * 4)()
+                user32.GetWindowRect(hwnd, rect)
+                cur_x = rect[0]
+                cur_y = rect[1]
+                h = 740 if self.is_tp_expanded else 545
+                user32.SetWindowPos(hwnd, 0, cur_x, cur_y, 520, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
+            elif self.window:
+                try:
+                    self.window.resize(520, 740 if self.is_tp_expanded else 545)
+                except Exception:
+                    pass
+        return self.is_tp_expanded
 
     def set_theme(self, theme_name):
         self.current_theme = theme_name
         self.config["theme"] = theme_name
         save_hud_config(self.config)
         return self.current_theme
-
-    def set_tp_expanded(self, expanded):
-        self.is_tp_expanded = expanded
-        self.config["tp_expanded"] = self.is_tp_expanded
-        save_hud_config(self.config)
-        return self.is_tp_expanded
 
     def toggle_global_yolo(self):
         self.is_global_yolo = not self.is_global_yolo
@@ -1597,9 +1607,10 @@ def main():
 
     api = Api(engine, config)
 
-    is_compact_init = config.get("is_compact", False)
-    init_w = 260 if is_compact_init else 530
-    init_h = 36 if is_compact_init else 760
+    # Boot size: fit expanded vs collapsed state perfectly
+    is_tp = config.get("tp_expanded", False)
+    init_w = 520
+    init_h = 740 if is_tp else 545
 
     window = webview.create_window(
         title="Antigravity Live Monitor",
