@@ -1140,15 +1140,16 @@ class AutoPrimerWorker(threading.Thread):
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
+            # Cheapest Gemini Flash model with Lowest effort, disabled slash expansions & single token output
             subprocess.Popen(
-                ["agy", "-p", "1"],
+                ["agy", "-p", "Reply with: 1", "--model", "Gemini 3.5 Flash (Low)", "--disable-slash-commands"],
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 startupinfo=si,
                 creationflags=CREATE_NO_WINDOW
             )
-            time.sleep(6.0)
+            time.sleep(5.0)
             self.engine.query_official_usage()
         except Exception:
             pass
@@ -1158,15 +1159,16 @@ class AutoPrimerWorker(threading.Thread):
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
+            # Cheapest third-party model with disabled slash expansions & single token output
             subprocess.Popen(
-                ["agy", "-p", "1", "--model", "Claude Sonnet 4.6 (Thinking)"],
+                ["agy", "-p", "Reply with: 1", "--model", "GPT-OSS 120B (Medium)", "--disable-slash-commands"],
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 startupinfo=si,
                 creationflags=CREATE_NO_WINDOW
             )
-            time.sleep(6.0)
+            time.sleep(5.0)
             self.engine.query_official_usage()
         except Exception:
             pass
