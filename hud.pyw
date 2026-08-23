@@ -69,7 +69,6 @@ def load_hud_config():
 def save_hud_config(config_dict):
     try:
         os.makedirs(os.path.dirname(HUD_CONFIG_FILE), exist_ok=True)
-        # Strip is_compact before saving so restarts always open in full mode
         to_save = dict(config_dict)
         to_save.pop("is_compact", None)
         with open(HUD_CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -200,6 +199,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       overflow: hidden;
       height: 100vh;
       width: 100vw;
+      position: relative;
     }
     .mono {
       font-family: ui-monospace, SFMono-Regular, "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
@@ -237,12 +237,58 @@ HTML_CONTENT = """<!DOCTYPE html>
     .drag-handle:active {
       cursor: grabbing;
     }
+
+    /* Resizer handles */
+    .resizer-r {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      cursor: ew-resize;
+      z-index: 999;
+    }
+    .resizer-b {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 6px;
+      cursor: ns-resize;
+      z-index: 999;
+    }
+    .resizer-corner {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 12px;
+      height: 12px;
+      cursor: nwse-resize;
+      z-index: 1000;
+    }
+    .corner-grip {
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      font-size: 9px;
+      line-height: 1;
+      opacity: 0.4;
+      pointer-events: none;
+      color: var(--text-dim);
+    }
   </style>
 </head>
 <body id="bodyRoot" data-theme="oled" class="flex flex-col h-screen w-screen box-border antialiased rounded-2xl shadow-2xl overflow-hidden" style="border: 1px solid var(--border-outer);">
 
+  <!-- RESIZE HANDLES ON BORDERS & CORNER (WORKS IN BOTH FULL & MINI MODE) -->
+  <div id="resizeRight" class="resizer-r"></div>
+  <div id="resizeBottom" class="resizer-b"></div>
+  <div id="resizeCorner" class="resizer-corner" title="Drag to Resize Window">
+    <span class="corner-grip">◿</span>
+  </div>
+
   <!-- 0. SLEEK CUSTOM TITLEBAR (DRAGGABLE & DOUBLE-CLICK TO TOGGLE COMPACT) -->
-  <div id="titlebar" ondblclick="toggleCompactMode()" class="drag-handle flex items-center justify-between px-3 select-none flex-shrink-0 transition-all duration-150" style="background: var(--bg-titlebar); border-bottom: 1px solid var(--border-card); height: 42px;" title="Double-click anywhere to toggle ultra-minimal 1-line bar">
+  <div id="titlebar" ondblclick="toggleCompactMode()" class="drag-handle flex items-center justify-between px-3 select-none flex-shrink-0 transition-all duration-150 relative" style="background: var(--bg-titlebar); border-bottom: 1px solid var(--border-card); height: 42px;" title="Double-click anywhere to toggle ultra-minimal 1-line bar">
     
     <!-- Full Mode Header Left (Hidden in compact mode) -->
     <div id="fullHeaderLeft" class="flex items-center gap-2">
@@ -286,7 +332,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       </button>
     </div>
 
-    <!-- PURE MINIMALIST COMPACT STRIP (Zero wasted space, edge-to-edge readable) -->
+    <!-- PURE MINIMALIST COMPACT STRIP (Zero wasted space, freely resizable) -->
     <div id="compactBar" class="hidden w-full h-full flex items-center justify-around px-2">
       <!-- Gemini Weekly Mini Ring + % -->
       <div class="flex items-center gap-1.5" title="Gemini Weekly Limit Remaining">
@@ -604,36 +650,74 @@ HTML_CONTENT = """<!DOCTYPE html>
     let isDragging = false;
     let startX = 0, startY = 0;
 
-    function setupDrag() {
+    let isResizing = false;
+    let resizeDir = '';
+    let resizeStartX = 0, resizeStartY = 0;
+    let initialW = 0, initialH = 0;
+
+    function setupDragAndResize() {
       const tb = document.getElementById('titlebar');
       if (tb) {
         tb.addEventListener('mousedown', (e) => {
-          if (e.target.closest('button') || e.target.closest('select') || e.target.closest('input')) return;
+          if (e.target.closest('button') || e.target.closest('select') || e.target.closest('input') || e.target.classList.contains('resizer-corner') || e.target.classList.contains('resizer-r') || e.target.classList.contains('resizer-b')) return;
           if (e.button === 0) {
             isDragging = true;
             startX = e.screenX;
             startY = e.screenY;
           }
         });
+      }
 
-        window.addEventListener('mousemove', (e) => {
-          if (isDragging) {
-            const dx = e.screenX - startX;
-            const dy = e.screenY - startY;
-            if (dx !== 0 || dy !== 0) {
-              startX = e.screenX;
-              startY = e.screenY;
-              if (window.pywebview && window.pywebview.api) {
-                window.pywebview.api.move_by(dx, dy);
-              }
+      // Resize listeners
+      const rRight = document.getElementById('resizeRight');
+      const rBottom = document.getElementById('resizeBottom');
+      const rCorner = document.getElementById('resizeCorner');
+
+      function startResize(e, dir) {
+        e.stopPropagation();
+        e.preventDefault();
+        isResizing = true;
+        resizeDir = dir;
+        resizeStartX = e.screenX;
+        resizeStartY = e.screenY;
+        initialW = window.outerWidth || window.innerWidth;
+        initialH = window.outerHeight || window.innerHeight;
+      }
+
+      if (rRight) rRight.addEventListener('mousedown', (e) => startResize(e, 'e'));
+      if (rBottom) rBottom.addEventListener('mousedown', (e) => startResize(e, 's'));
+      if (rCorner) rCorner.addEventListener('mousedown', (e) => startResize(e, 'se'));
+
+      window.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          const dx = e.screenX - startX;
+          const dy = e.screenY - startY;
+          if (dx !== 0 || dy !== 0) {
+            startX = e.screenX;
+            startY = e.screenY;
+            if (window.pywebview && window.pywebview.api) {
+              window.pywebview.api.move_by(dx, dy);
             }
           }
-        });
+        } else if (isResizing) {
+          const dx = e.screenX - resizeStartX;
+          const dy = e.screenY - resizeStartY;
+          let nw = initialW;
+          let nh = initialH;
 
-        window.addEventListener('mouseup', () => {
-          isDragging = false;
-        });
-      }
+          if (resizeDir.includes('e')) nw = initialW + dx;
+          if (resizeDir.includes('s')) nh = initialH + dy;
+
+          if (window.pywebview && window.pywebview.api) {
+            window.pywebview.api.resize_window(nw, nh);
+          }
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+        isResizing = false;
+      });
     }
 
     function applyCompactVisual(compact) {
@@ -969,7 +1053,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     async function init() {
-      setupDrag();
+      setupDragAndResize();
       if (window.pywebview && window.pywebview.api) {
         try {
           const cfg = await window.pywebview.api.get_config();
@@ -1478,7 +1562,7 @@ class Api:
         self.is_auto_prime = config.get("auto_prime", True)
         self.is_global_yolo = config.get("global_yolo", True)
         self.is_tp_expanded = config.get("tp_expanded", False)
-        self.is_compact = False # Strictly non-persistent on restart
+        self.is_compact = False
         self.current_theme = config.get("theme", "oled")
 
     def set_window(self, window):
@@ -1508,9 +1592,28 @@ class Api:
             except Exception:
                 pass
 
+    def resize_window(self, new_w, new_h):
+        min_w = 140 if self.is_compact else 320
+        min_h = 28 if self.is_compact else 250
+        target_w = max(min_w, int(new_w))
+        target_h = max(min_h, int(new_h))
+
+        hwnd = get_hud_hwnd()
+        if hwnd:
+            rect = (ctypes.c_long * 4)()
+            user32.GetWindowRect(hwnd, rect)
+            cur_x = rect[0]
+            cur_y = rect[1]
+            user32.SetWindowPos(hwnd, 0, cur_x, cur_y, target_w, target_h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
+        elif self.window:
+            try:
+                self.window.resize(target_w, target_h)
+            except Exception:
+                pass
+        return True
+
     def set_compact_mode(self, is_compact):
         self.is_compact = is_compact
-        # Note: Do not persist is_compact to hud_config.json
 
         hwnd = get_hud_hwnd()
         if hwnd:
@@ -1607,7 +1710,6 @@ def main():
 
     api = Api(engine, config)
 
-    # Boot size: fit expanded vs collapsed state perfectly
     is_tp = config.get("tp_expanded", False)
     init_w = 520
     init_h = 740 if is_tp else 545
