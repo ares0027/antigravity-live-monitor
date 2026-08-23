@@ -44,10 +44,14 @@ SWP_NOZORDER = 0x0004
 SWP_NOACTIVATE = 0x0010
 SWP_SHOWWINDOW = 0x0040
 
-HUD_LOCK_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud.lock")
-
 def load_hud_config():
-    default_config = {"pinned": True, "auto_prime": True, "global_yolo": True, "active_tab": "5h"}
+    default_config = {
+        "pinned": True,
+        "auto_prime": True,
+        "global_yolo": True,
+        "tp_expanded": False,
+        "active_tab": "5h"
+    }
     if os.path.exists(HUD_CONFIG_FILE):
         try:
             with open(HUD_CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -93,12 +97,9 @@ HTML_CONTENT = """<!DOCTYPE html>
   <meta charset="UTF-8">
   <title>Antigravity Live Monitor</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: #0D0E12;
       color: #E2E8F0;
       margin: 0;
@@ -106,7 +107,9 @@ HTML_CONTENT = """<!DOCTYPE html>
       user-select: none;
       overflow: hidden;
     }
-    .mono { font-family: 'JetBrains Mono', monospace; }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    }
     .card {
       background: #16181D;
       border: 1px solid #23262F;
@@ -185,12 +188,12 @@ HTML_CONTENT = """<!DOCTYPE html>
   </div>
 
   <!-- MAIN SCROLLABLE CONTENT -->
-  <div class="p-3.5 space-y-3 flex-1 overflow-y-auto">
+  <div class="p-3 space-y-2.5 flex-1 overflow-y-auto">
 
     <!-- 1. GEMINI MODELS SECTION -->
     <div>
-      <div class="flex items-center justify-between mb-1.5 px-1">
-        <h2 class="text-xs font-bold text-emerald-400 tracking-tight uppercase flex items-center gap-1.5">
+      <div class="flex items-center justify-between mb-1 px-1">
+        <h2 class="text-[11px] font-bold text-emerald-400 tracking-tight uppercase flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
           Gemini Models (Primary Engine)
         </h2>
@@ -282,17 +285,22 @@ HTML_CONTENT = """<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- 2. CLAUDE & GPT THIRD-PARTY SECTION -->
+    <!-- 2. CLAUDE & GPT THIRD-PARTY SECTION (COLLAPSIBLE) -->
     <div>
-      <div class="flex items-center justify-between mb-1.5 px-1">
-        <h2 class="text-xs font-bold text-purple-400 tracking-tight uppercase flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span>
-          Claude & GPT Models (Third-Party)
-        </h2>
-        <span class="text-[10px] text-zinc-500 mono">$3.00 in · $15.00 out</span>
+      <!-- Clickable Header / Summary Pill -->
+      <div onclick="toggleTpDetails()" class="card rounded-xl p-2 shadow-md flex items-center justify-between text-xs mono cursor-pointer hover:border-purple-800/60 transition">
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-purple-400" id="tpDot"></span>
+          <span class="font-semibold text-white text-[11px]" id="tpSummary">Claude & GPT: 99% Weekly · 98% 5h</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[10px] text-zinc-400">
+          <span id="tpDetail">Details</span>
+          <span id="tpArrow" class="text-zinc-500 text-[9px] transition-transform duration-200">▼</span>
+        </div>
       </div>
 
-      <div class="card rounded-2xl overflow-hidden shadow-lg border-purple-900/30">
+      <!-- Collapsible Detailed Matrix Container -->
+      <div id="tpDetailsContainer" class="hidden mt-1.5 card rounded-2xl overflow-hidden shadow-lg border-purple-900/30">
 
         <!-- Claude Weekly Limit -->
         <div class="p-2.5 card-row">
@@ -378,7 +386,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     </div>
 
     <!-- 3. CURRENT ACTIVE QUOTA SLOT USAGE -->
-    <div class="card rounded-2xl p-3 shadow-lg space-y-2.5">
+    <div class="card rounded-2xl p-2.5 shadow-lg space-y-2">
       
       <!-- Slot Selector Tabs -->
       <div class="flex items-center justify-between">
@@ -409,25 +417,25 @@ HTML_CONTENT = """<!DOCTYPE html>
 
       <!-- Live Token & Cost Breakdown Grid -->
       <div class="grid grid-cols-3 gap-1.5 text-zinc-300">
-        <div class="bg-zinc-900/90 border border-zinc-800 p-2 rounded-xl text-center">
-          <div class="text-zinc-500 text-[9px] uppercase font-semibold">Total In</div>
-          <div class="mono text-xs font-bold text-zinc-100 mt-0.5" id="statIn">0k</div>
-          <div class="mono text-[10px] text-emerald-400 font-semibold" id="statInCost">($0.0000)</div>
+        <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-xl text-center">
+          <div class="text-zinc-500 text-[8px] uppercase font-semibold">Total In</div>
+          <div class="mono text-[11px] font-bold text-zinc-100 mt-0.5" id="statIn">0k</div>
+          <div class="mono text-[9px] text-emerald-400 font-semibold" id="statInCost">($0.0000)</div>
         </div>
-        <div class="bg-zinc-900/90 border border-zinc-800 p-2 rounded-xl text-center">
-          <div class="text-zinc-500 text-[9px] uppercase font-semibold">Total Out</div>
-          <div class="mono text-xs font-bold text-zinc-100 mt-0.5" id="statOut">0k</div>
-          <div class="mono text-[10px] text-purple-400 font-semibold" id="statOutCost">($0.0000)</div>
+        <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-xl text-center">
+          <div class="text-zinc-500 text-[8px] uppercase font-semibold">Total Out</div>
+          <div class="mono text-[11px] font-bold text-zinc-100 mt-0.5" id="statOut">0k</div>
+          <div class="mono text-[9px] text-purple-400 font-semibold" id="statOutCost">($0.0000)</div>
         </div>
-        <div class="bg-zinc-900/90 border border-zinc-800 p-2 rounded-xl text-center">
-          <div class="text-zinc-500 text-[9px] uppercase font-semibold">Total Cache</div>
-          <div class="mono text-xs font-bold text-zinc-100 mt-0.5" id="statCache">0k</div>
-          <div class="mono text-[10px] text-amber-400 font-semibold" id="statCacheCost">($0.0000)</div>
+        <div class="bg-zinc-900/90 border border-zinc-800 p-1.5 rounded-xl text-center">
+          <div class="text-zinc-500 text-[8px] uppercase font-semibold">Total Cache</div>
+          <div class="mono text-[11px] font-bold text-zinc-100 mt-0.5" id="statCache">0k</div>
+          <div class="mono text-[9px] text-amber-400 font-semibold" id="statCacheCost">($0.0000)</div>
         </div>
       </div>
       
       <!-- Current Session Context Sub-pill -->
-      <div class="pt-1.5 border-t border-zinc-800/80 flex justify-between items-center text-[10px] text-zinc-500 mono">
+      <div class="pt-1 border-t border-zinc-800/80 flex justify-between items-center text-[10px] text-zinc-500 mono">
         <span id="wsName">Active: Workspace</span>
         <span id="sessionTokens">Current Chat: 0 tokens (0 turns)</span>
       </div>
@@ -436,10 +444,10 @@ HTML_CONTENT = """<!DOCTYPE html>
   </div>
 
   <!-- FOOTER STATUS -->
-  <div class="flex items-center justify-between px-3.5 py-1.5 border-t border-zinc-800/80 text-[11px] text-zinc-500 mono font-medium bg-[#12141A] flex-shrink-0">
+  <div class="flex items-center justify-between px-3 py-1.5 border-t border-zinc-800/80 text-[11px] text-zinc-500 mono font-medium bg-[#12141A] flex-shrink-0">
     <span class="flex items-center gap-1.5 text-zinc-400">
       <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-      <span id="syncPoints">Slot Engine Synchronized (1s)</span>
+      <span id="syncPoints">Engine Synchronized (1s)</span>
     </span>
     <span id="timestamp">--:--:--</span>
   </div>
@@ -449,6 +457,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     let isPinned = true;
     let isAutoPrime = true;
     let isGlobalYolo = true;
+    let isTpExpanded = false;
     let isDragging = false;
     let startX = 0, startY = 0;
 
@@ -481,6 +490,29 @@ HTML_CONTENT = """<!DOCTYPE html>
         window.addEventListener('mouseup', () => {
           isDragging = false;
         });
+      }
+    }
+
+    function toggleTpDetails() {
+      isTpExpanded = !isTpExpanded;
+      applyTpExpanded(isTpExpanded);
+      if (window.pywebview && window.pywebview.api) {
+        window.pywebview.api.set_tp_expanded(isTpExpanded);
+      }
+    }
+
+    function applyTpExpanded(expanded) {
+      isTpExpanded = expanded;
+      const container = document.getElementById('tpDetailsContainer');
+      const arrow = document.getElementById('tpArrow');
+      if (container && arrow) {
+        if (isTpExpanded) {
+          container.classList.remove('hidden');
+          arrow.style.transform = 'rotate(180deg)';
+        } else {
+          container.classList.add('hidden');
+          arrow.style.transform = 'rotate(0deg)';
+        }
       }
     }
 
@@ -643,7 +675,9 @@ HTML_CONTENT = """<!DOCTYPE html>
           document.getElementById('gfValOutput').textContent = '$' + d.gf_cost_out.toFixed(2);
           document.getElementById('gfValCache').textContent = '$' + d.gf_cost_cache.toFixed(2);
 
-          // 3. Claude & GPT Weekly
+          // 3. Claude & GPT Summary & Details
+          document.getElementById('tpSummary').textContent = 'Claude & GPT: ' + d.tp_weekly_pct + '% Weekly · ' + d.tp_5h_pct + '% 5h';
+          
           document.getElementById('tpWeeklyPct').textContent = d.tp_weekly_pct + '%';
           document.getElementById('tpWeeklyDesc').textContent = d.tp_weekly_desc;
           document.getElementById('tpWeeklyRemain').textContent = '~' + d.tp_est_weekly_remain_str + ' left';
@@ -696,7 +730,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 
           document.getElementById('wsName').textContent = 'Active: ' + d.workspace;
           document.getElementById('sessionTokens').textContent = 'Current Chat: ' + d.session_total_tokens.toLocaleString() + ' tokens (' + d.turns + ' turns)';
-          document.getElementById('syncPoints').textContent = 'Dual Engine Calibrated (' + d.sample_count + ' samples)';
+          document.getElementById('syncPoints').textContent = 'Engine Synchronized (1s)';
 
           const now = new Date();
           document.getElementById('timestamp').textContent = now.toTimeString().split(' ')[0];
@@ -715,6 +749,7 @@ HTML_CONTENT = """<!DOCTYPE html>
             if (typeof cfg.pinned === 'boolean') applyPinVisual(cfg.pinned);
             if (typeof cfg.auto_prime === 'boolean') applyPrimeVisual(cfg.auto_prime);
             if (typeof cfg.global_yolo === 'boolean') applyYoloVisual(cfg.global_yolo);
+            if (typeof cfg.tp_expanded === 'boolean') applyTpExpanded(cfg.tp_expanded);
           }
         } catch(e) {}
       }
@@ -905,7 +940,6 @@ class MetricsEngine:
                             self.cached_metrics["tp_5h_desc"] = short_desc
                             self.tp_five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
 
-            # Calculate learned capacities
             learned_5h_cap = self.compute_learned_cap(self.history.get("samples_5h", []), default=862000)
             learned_weekly_cap = self.compute_learned_cap(self.history.get("samples_weekly", []), default=8083900)
             learned_tp_5h_cap = self.compute_learned_cap(self.history.get("samples_tp_5h", []), default=250000)
@@ -922,7 +956,7 @@ class MetricsEngine:
 
             cur_g_weekly = self.cached_metrics["gemini_weekly_pct"]
             est_g_w_rem = int(learned_weekly_cap * (cur_g_weekly / 100.0))
-            self.cached_metrics["gemini_est_weekly_remain_str"] = f"{est_g_w_rem / 1000000.0:.2f}M" if est_g_w_rem >= 1000000 else f"{est_g_w_rem / 1000.0:.0f}k"
+            self.cached_metrics["gemini_est_weekly_remain_str"] = f"{est_g_w_rem / 1000000.0:.2f}M" if est_g_w_rem >= 1000000 else f"{est_g_w_rem / 100.0:.0f}k"
             self.cached_metrics["gw_cost_weighted"] = (est_g_w_rem / 1000000.0) * GEMINI_PRICE_WEIGHTED
             self.cached_metrics["gw_cost_in"] = (est_g_w_rem / 1000000.0) * GEMINI_PRICE_IN
             self.cached_metrics["gw_cost_out"] = (est_g_w_rem / 1000000.0) * GEMINI_PRICE_OUT
@@ -939,7 +973,7 @@ class MetricsEngine:
 
             cur_tp_weekly = self.cached_metrics["tp_weekly_pct"]
             est_tp_w_rem = int(learned_tp_weekly_cap * (cur_tp_weekly / 100.0))
-            self.cached_metrics["tp_est_weekly_remain_str"] = f"{est_tp_w_rem / 1000000.0:.2f}M" if est_tp_w_rem >= 1000000 else f"{est_tp_w_rem / 1000.0:.0f}k"
+            self.cached_metrics["tp_est_weekly_remain_str"] = f"{est_tp_w_rem / 1000000.0:.2f}M" if est_tp_w_rem >= 1000000 else f"{est_tp_w_rem / 100.0:.0f}k"
             self.cached_metrics["tpw_cost_weighted"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_WEIGHTED
             self.cached_metrics["tpw_cost_in"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_IN
             self.cached_metrics["tpw_cost_out"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_OUT
@@ -1171,7 +1205,6 @@ class AutoPrimerWorker(threading.Thread):
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
-            # Cheapest Gemini Flash model with Lowest effort, disabled slash expansions & single token output
             subprocess.Popen(
                 ["agy", "-p", "Reply with: 1", "--model", "Gemini 3.5 Flash (Low)", "--disable-slash-commands"],
                 stdin=subprocess.DEVNULL,
@@ -1190,7 +1223,6 @@ class AutoPrimerWorker(threading.Thread):
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
-            # Cheapest third-party model with disabled slash expansions & single token output
             subprocess.Popen(
                 ["agy", "-p", "Reply with: 1", "--model", "GPT-OSS 120B (Medium)", "--disable-slash-commands"],
                 stdin=subprocess.DEVNULL,
@@ -1212,6 +1244,7 @@ class Api:
         self.is_on_top = config.get("pinned", True)
         self.is_auto_prime = config.get("auto_prime", True)
         self.is_global_yolo = config.get("global_yolo", True)
+        self.is_tp_expanded = config.get("tp_expanded", False)
 
     def set_window(self, window):
         self.window = window
@@ -1239,6 +1272,12 @@ class Api:
                 self.window.move(self.window.x + dx, self.window.y + dy)
             except Exception:
                 pass
+
+    def set_tp_expanded(self, expanded):
+        self.is_tp_expanded = expanded
+        self.config["tp_expanded"] = self.is_tp_expanded
+        save_hud_config(self.config)
+        return self.is_tp_expanded
 
     def toggle_global_yolo(self):
         self.is_global_yolo = not self.is_global_yolo
@@ -1290,8 +1329,8 @@ def main():
         title="Antigravity Live Monitor",
         html=HTML_CONTENT,
         js_api=api,
-        width=500,
-        height=820,
+        width=480,
+        height=660,
         frameless=True,
         on_top=config.get("pinned", True),
         resizable=True,
