@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOROLOGIX — Astronomical Tourbillon &amp; Mechanical Calibres</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    .font-cabinet { font-family: 'Cabinet Grotesk', sans-serif; }
+    .font-serif-fraunces { font-family: 'Fraunces', Georgia, serif; }
+    .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-mono-jb { font-family: 'JetBrains Mono', monospace; }
+
+    /* Custom 3D Card Hover Physics */
+    .card-luxury {
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-luxury:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.1);
+      border-color: rgba(212, 175, 55, 0.35);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #07080b; }
+    ::-webkit-scrollbar-thumb { background: #1c1f2b; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2f3447; }
+  </style>
+</head>
+<body class="bg-[#07080b] text-[#edeef2] font-jakarta antialiased selection:bg-[#d4af37] selection:text-black min-h-screen flex flex-col overflow-x-hidden">
+
+  <!-- ================= MASTER HEADER ================= -->
+  <header class="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.07] bg-[#07080b]/85 backdrop-blur-2xl">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10 h-20 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#161822] to-[#252a3a] border border-white/10 flex items-center justify-center text-[#d4af37] group-hover:border-[#d4af37]/50 transition-all duration-300 shadow-xl">
+          <i data-lucide="watch" class="w-5 h-5 group-hover:rotate-45 transition-transform duration-500"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-cabinet text-lg font-black tracking-widest text-white">HOROLOGIX</span>
+          <span class="text-[9px] font-mono-jb text-[#8e95a5] uppercase tracking-widest -mt-1">Manufacture Genevoise</span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8 text-xs font-semibold text-[#8e95a5]">
+        <a href="#calibres" class="hover:text-white transition-colors">Calibres</a>
+        <a href="#configurator" class="hover:text-white transition-colors">Atelier Studio</a>
+        <a href="#tourbillon" class="hover:text-white transition-colors">Escapement Physics</a>
+        <a href="#heritage" class="hover:text-white transition-colors">Heritage</a>
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <span class="hidden sm:inline-block text-[11px] font-mono-jb text-[#8e95a5] border-r border-white/10 pr-4">
+          GENÈVE • VALLÉE DE JOUX
+        </span>
+        <button class="px-5 py-2.5 rounded-xl bg-[#d4af37] text-[#07080b] text-xs font-bold font-cabinet hover:bg-[#e4c45e] transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#d4af37]/20 flex items-center gap-2">
+          <span>Private Viewing</span>
+          <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= HERO SECTION WITH 60FPS ESCAPEMENT CANVAS ================= -->
+  <section class="relative min-h-screen pt-28 pb-20 flex flex-col justify-center items-center overflow-hidden">
+    <!-- Interactive Canvas Background -->
+    <canvas id="tourbillonCanvas" class="absolute inset-0 w-full h-full pointer-events-auto opacity-70"></canvas>
+    
+    <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-gradient-to-tr from-[#d4af37]/10 to-[#3b82f6]/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+    <div class="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 pointer-events-none">
+      
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl text-xs font-mono-jb text-[#d4af37] shadow-2xl pointer-events-auto">
+        <i data-lucide="compass" class="w-4 h-4 text-[#d4af37]"></i>
+        <span>TRIPLE-AXIS CELESTIAL TOURBILLON • CALIBRE HX-09</span>
+      </div>
+
+      <h1 class="text-5xl sm:text-7xl lg:text-8xl font-serif-fraunces italic font-normal tracking-tight text-white leading-[1.05]">
+        Gravity defied through <br>
+        <span class="font-cabinet not-italic font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#f3e7d3] to-[#d4af37]">
+          Pure Mechanics.
+        </span>
+      </h1>
+
+      <p class="max-w-2xl mx-auto text-base sm:text-lg text-[#9da4b4] leading-relaxed font-normal pointer-events-auto">
+        Hand-assembled in the Vallée de Joux. 486 hand-beveled components operating in 3-dimensional gyroscopic equilibrium.
+      </p>
+
+      <div class="pt-4 flex flex-wrap justify-center items-center gap-4 pointer-events-auto">
+        <a href="#configurator" class="px-8 py-4 rounded-2xl bg-[#d4af37] text-[#07080b] text-sm font-bold font-cabinet hover:bg-[#e4c45e] transition-all transform hover:scale-105 shadow-2xl shadow-[#d4af37]/25 flex items-center gap-3">
+          <i data-lucide="sliders" class="w-4 h-4"></i>
+          <span>Configure Your Timepiece</span>
+        </a>
+        <a href="#tourbillon" class="px-8 py-4 rounded-2xl bg-white/[0.05] border border-white/10 hover:border-white/25 text-white text-sm font-bold transition-all flex items-center gap-2.5 backdrop-blur-xl">
+          <i data-lucide="play" class="w-4 h-4 text-[#d4af37]"></i>
+          <span>Technical Monograph</span>
+        </a>
+      </div>
+
+      <div class="pt-6 text-[11px] font-mono-jb text-[#616877] flex justify-center items-center gap-2 pointer-events-none">
+        <i data-lucide="mouse-pointer" class="w-3.5 h-3.5 text-[#d4af37] animate-bounce"></i>
+        <span>Move cursor to adjust mechanical inertia and kinetic gear alignment</span>
+      </div>
+    </div>
+
+    <!-- Technical Metrics Strip -->
+    <div class="relative z-10 mt-16 max-w-5xl w-full mx-auto px-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-3xl bg-[#0e1017]/90 border border-white/[0.08] backdrop-blur-2xl shadow-2xl text-left">
+        <div class="space-y-1">
+          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Oscillation Frequency</div>
+          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">36,000 <span class="text-xs font-mono-jb text-[#d4af37]">VPH</span></div>
+          <div class="text-[11px] text-[#10b981] flex items-center gap-1 font-semibold font-mono-jb">
+            <i data-lucide="check" class="w-3 h-3"></i> 5 Hz Hi-Beat Accuracy
+          </div>
+        </div>
+
+        <div class="space-y-1 border-l border-white/[0.06] pl-4">
+          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Power Reserve</div>
+          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">120 <span class="text-xs font-mono-jb text-[#d4af37]">HRS</span></div>
+          <div class="text-[11px] text-[#8e95a5]">Twin coaxial barrels</div>
+        </div>
+
+        <div class="space-y-1 border-l border-white/[0.06] pl-4">
+          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Cage Weight</div>
+          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">0.24 <span class="text-xs font-mono-jb text-[#d4af37]">GRAMS</span></div>
+          <div class="text-[11px] text-[#10b981] flex items-center gap-1 font-semibold font-mono-jb">
+            <i data-lucide="shield" class="w-3 h-3"></i> Grade-5 Titanium
+          </div>
+        </div>
+
+        <div class="space-y-1 border-l border-white/[0.06] pl-4">
+          <div class="text-[10px] font-mono-jb uppercase text-[#8e95a5]">Chronometric Tolerance</div>
+          <div class="text-2xl font-bold font-cabinet text-white tracking-tight">-1 / +1 <span class="text-xs font-mono-jb text-[#d4af37]">SEC/DAY</span></div>
+          <div class="text-[11px] text-[#8e95a5]">Poinçon de Genève</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ATELIER CONFIGURATOR ================= -->
+  <section id="configurator" class="py-24 border-t border-white/[0.07] bg-[#0a0c12] relative">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10 space-y-16">
+      
+      <div class="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-white/[0.08] pb-8">
+        <div class="space-y-3 max-w-xl">
+          <span class="text-xs font-mono-jb text-[#d4af37] uppercase tracking-widest font-bold">BESPOKE HOROLOGY ATELIER</span>
+          <h2 class="text-4xl sm:text-5xl font-cabinet font-black text-white tracking-tight">
+            Commission Your Calibre.
+          </h2>
+          <p class="text-sm text-[#8e95a5] leading-relaxed">
+            Select metallurgical case alloys, dial skeletonization depths, and balance wheel inertia.
+          </p>
+        </div>
+        <div class="text-xs font-mono-jb text-[#8e95a5] bg-white/[0.02] border border-white/10 px-4 py-2 rounded-2xl">
+          SERIALIZED PIECE UNIQUE PRODUCTION
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <!-- Showcase Card -->
+        <div class="lg:col-span-7 relative group">
+          <div class="relative bg-gradient-to-b from-[#131620] to-[#0d0f15] border border-white/10 rounded-[36px] p-8 sm:p-12 overflow-hidden shadow-2xl">
+            <div id="ambientAura" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#d4af37]/20 blur-3xl rounded-full transition-all duration-700 pointer-events-none"></div>
+
+            <div class="relative z-10 flex justify-center items-center py-6">
+              <img id="timepieceImage" src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80" alt="Horologix Timepiece" class="w-full max-w-md h-80 object-cover rounded-3xl shadow-2xl border border-white/10 transform group-hover:scale-105 transition-transform duration-700">
+            </div>
+
+            <div class="relative z-10 mt-6 flex justify-between items-center bg-[#07080b]/90 backdrop-blur-xl border border-white/10 p-4 rounded-2xl">
+              <div>
+                <div id="caseTitle" class="text-sm font-bold text-white font-cabinet">GRADE-5 TITANIUM SKELETON</div>
+                <div id="caseSubtitle" class="text-[11px] font-mono-jb text-[#8e95a5]">Hand-Anglage Bridges • Sapphire Dial</div>
+              </div>
+              <div id="priceIndicator" class="text-xl font-bold font-mono-jb text-[#d4af37]">38,500 CHF</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="lg:col-span-5 space-y-8 bg-[#0e1118] border border-white/[0.08] p-8 rounded-[36px] shadow-2xl">
+          
+          <div class="space-y-4">
+            <label class="text-xs font-mono-jb text-[#8e95a5] uppercase font-bold flex justify-between">
+              <span>1. Case Metallurgy</span>
+              <span id="alloyBadge" class="text-[#d4af37]">TITANIUM</span>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="setCase('titanium')" class="case-btn active p-4 rounded-2xl border border-[#d4af37] bg-[#d4af37]/10 text-left transition-all">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-[#a1a1aa]"></span>
+                  <span class="text-xs font-bold text-white font-cabinet">Grade-5 Titanium</span>
+                </div>
+                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+0 CHF</div>
+              </button>
+
+              <button onclick="setCase('rose_gold')" class="case-btn p-4 rounded-2xl border border-white/10 bg-white/[0.02] text-left hover:border-white/20 transition-all">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-[#e0a899]"></span>
+                  <span class="text-xs font-bold text-white font-cabinet">18K 5N Rose Gold</span>
+                </div>
+                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+8,200 CHF</div>
+              </button>
+
+              <button onclick="setCase('platinum')" class="case-btn p-4 rounded-2xl border border-white/10 bg-white/[0.02] text-left hover:border-white/20 transition-all">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-[#e2e8f0]"></span>
+                  <span class="text-xs font-bold text-white font-cabinet">950 Platinum</span>
+                </div>
+                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+14,500 CHF</div>
+              </button>
+
+              <button onclick="setCase('carbon')" class="case-btn p-4 rounded-2xl border border-white/10 bg-white/[0.02] text-left hover:border-white/20 transition-all">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-[#18181b]"></span>
+                  <span class="text-xs font-bold text-white font-cabinet">Forged Carbon</span>
+                </div>
+                <div class="text-[10px] text-[#8e95a5] font-mono-jb mt-1">+4,100 CHF</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Escapement Speed Slider -->
+          <div class="space-y-3">
+            <div class="flex justify-between text-xs font-mono-jb">
+              <span class="text-[#8e95a5] font-bold">2. Escapement Frequency</span>
+              <span id="freqValue" class="text-[#d4af37] font-bold">36,000 vph (5 Hz)</span>
+            </div>
+            <input type="range" id="freqSlider" min="18000" max="36000" step="3600" value="36000" oninput="updateFrequency(this.value)" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#d4af37]">
+            <div class="flex justify-between text-[10px] text-[#616877] font-mono-jb">
+              <span>18,000 (Vintage)</span>
+              <span>28,800 (Standard)</span>
+              <span>36,000 (Hi-Beat)</span>
+            </div>
+          </div>
+
+          <button class="w-full py-4 rounded-2xl bg-[#d4af37] hover:bg-[#e4c45e] text-[#07080b] font-black font-cabinet text-sm transition-all transform hover:-translate-y-0.5 shadow-xl shadow-[#d4af37]/25 flex items-center justify-center gap-2">
+            <i data-lucide="file-badge" class="w-4 h-4"></i>
+            <span>Generate Horological Certificate &amp; Reserve</span>
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ASYMMETRIC BENTO SUITE ================= -->
+  <section id="calibres" class="py-24 bg-[#07080b] relative">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10 space-y-16">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-4">
+        <span class="text-xs font-mono-jb text-[#d4af37] uppercase tracking-widest font-bold">CHRONOMETRIC EXCELLENCE</span>
+        <h2 class="text-4xl sm:text-6xl font-serif-fraunces italic font-normal text-white">
+          Crafted to outlast centuries.
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <!-- Bento 1: Escapement Geometry (8 cols) -->
+        <div class="md:col-span-8 card-luxury bg-[#0d0f17] border border-white/[0.08] rounded-[36px] p-8 sm:p-12 flex flex-col justify-between space-y-8 relative overflow-hidden group">
+          <div class="space-y-4 max-w-md relative z-10">
+            <div class="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#d4af37]">
+              <i data-lucide="layers" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-3xl font-cabinet font-black text-white">Silicon Hairspring with Breguet Overcoil.</h3>
+            <p class="text-sm text-[#8e95a5] leading-relaxed">
+              Completely immune to magnetic fields up to 15,000 Gauss. Thermo-compensated geometry ensures identical oscillation across arctic cold and tropical heat.
+            </p>
+          </div>
+
+          <div class="relative z-10 overflow-hidden rounded-2xl border border-white/10">
+            <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80" alt="Watchmaker macro" class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-700">
+          </div>
+        </div>
+
+        <!-- Bento 2: Hand Anglage (4 cols) -->
+        <div class="md:col-span-4 card-luxury bg-[#0d0f17] border border-white/[0.08] rounded-[36px] p-8 flex flex-col justify-between space-y-6">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#d4af37]">
+              <i data-lucide="sparkles" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-2xl font-cabinet font-bold text-white">Mirror Black Polish Finishing.</h3>
+            <p class="text-xs text-[#8e95a5] leading-relaxed">
+              Every interior bridge angle is hand-chamfered using gentian wood pegs and diamond paste for 40 hours per movement.
+            </p>
+          </div>
+          
+          <div class="p-4 bg-[#07080b] rounded-2xl border border-white/[0.06] space-y-2 text-xs font-mono-jb">
+            <div class="flex justify-between text-neutral-400">
+              <span>FINISH STANDARD</span>
+              <span class="text-[#d4af37]">Poinçon de Genève</span>
+            </div>
+            <div class="flex justify-between text-neutral-400">
+              <span>INTERNAL ANGLES</span>
+              <span class="text-white">34 Sharp Inward Angles</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="border-t border-white/[0.07] bg-[#050609] py-12 text-xs text-[#616877]">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10 flex flex-col sm:flex-row justify-between items-center gap-6 font-mono-jb">
+      <div class="flex items-center gap-2 text-white font-bold">
+        <i data-lucide="watch" class="w-4 h-4 text-[#d4af37]"></i>
+        <span>HOROLOGIX MANUFACTURE S.A.</span>
+      </div>
+      <div>© 2026 HOROLOGIX Genève. All rights reserved. Zero AI Slop Standard.</div>
+      <div class="flex gap-6">
+        <a href="#" class="hover:text-white transition-colors">Poinçon Registry</a>
+        <a href="#" class="hover:text-white transition-colors">Atelier Geneve</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= WORKING JS ENGINE ================= -->
+  <script>
+    lucide.createIcons();
+
+    // 1. Interactive 60FPS Escapement Gear Canvas
+    const canvas = document.getElementById('tourbillonCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let angle = 0;
+    let gearSpeed = 0.015;
+    let mouse = { x: null, y: null };
+
+    function initCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', initCanvas);
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    function drawGear(cx, cy, radius, teeth, rotation, color) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(rotation);
+      ctx.beginPath();
+      for (let i = 0; i < teeth; i++) {
+        let a = (i / teeth) * Math.PI * 2;
+        let r1 = radius;
+        let r2 = radius + 12;
+        ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
+        ctx.lineTo(Math.cos(a + 0.05) * r2, Math.sin(a + 0.05) * r2);
+        ctx.lineTo(Math.cos(a + 0.1) * r2, Math.sin(a + 0.1) * r2);
+        ctx.lineTo(Math.cos(a + 0.15) * r1, Math.sin(a + 0.15) * r1);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function animateEscapement() {
+      ctx.clearRect(0, 0, width, height);
+
+      let cx = width / 2;
+      let cy = height / 2;
+
+      if (mouse.x !== null && mouse.y !== null) {
+        cx += (mouse.x - width / 2) * 0.05;
+        cy += (mouse.y - height / 2) * 0.05;
+      }
+
+      angle += gearSpeed;
+
+      // Central balance wheel
+      drawGear(cx, cy, 140, 24, angle, 'rgba(212, 175, 55, 0.35)');
+      // Coaxial planetary gear
+      drawGear(cx - 180, cy - 80, 90, 16, -angle * 1.5, 'rgba(255, 255, 255, 0.15)');
+      drawGear(cx + 180, cy + 80, 110, 20, -angle * 1.2, 'rgba(212, 175, 55, 0.25)');
+
+      requestAnimationFrame(animateEscapement);
+    }
+    initCanvas();
+    animateEscapement();
+
+    // 2. Configurator Logic
+    const caseData = {
+      titanium: {
+        title: "GRADE-5 TITANIUM SKELETON",
+        subtitle: "Hand-Anglage Bridges • Sapphire Dial",
+        badge: "TITANIUM",
+        price: "38,500 CHF",
+        img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80",
+        aura: "rgba(212, 175, 55, 0.2)"
+      },
+      rose_gold: {
+        title: "18K 5N ROSE GOLD MONOGRAPH",
+        subtitle: "Warm Gold Calibre • Guilloché Sub-Dials",
+        badge: "ROSE GOLD",
+        price: "46,700 CHF",
+        img: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80",
+        aura: "rgba(224, 168, 153, 0.3)"
+      },
+      platinum: {
+        title: "950 PLATINUM CELESTIAL",
+        subtitle: "Ice Blue Enamel • Meteorite Dial Inlay",
+        badge: "950 PLATINUM",
+        price: "53,000 CHF",
+        img: "https://images.unsplash.com/photo-1547996160-71dfabbce5fa?auto=format&fit=crop&w=800&q=80",
+        aura: "rgba(226, 232, 240, 0.3)"
+      },
+      carbon: {
+        title: "FORGED NTPT CARBON HYBRID",
+        subtitle: "Ultralight Monocoque • DLC Coated Bridges",
+        badge: "FORGED CARBON",
+        price: "42,600 CHF",
+        img: "https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=800&q=80",
+        aura: "rgba(100, 116, 139, 0.2)"
+      }
+    };
+
+    function setCase(key) {
+      const d = caseData[key];
+      if (!d) return;
+
+      document.querySelectorAll('.case-btn').forEach(b => {
+        b.classList.remove('active', 'border-[#d4af37]', 'bg-[#d4af37]/10');
+        b.classList.add('border-white/10', 'bg-white/[0.02]');
+      });
+      event.currentTarget.classList.add('active', 'border-[#d4af37]', 'bg-[#d4af37]/10');
+      event.currentTarget.classList.remove('border-white/10', 'bg-white/[0.02]');
+
+      document.getElementById('caseTitle').innerText = d.title;
+      document.getElementById('caseSubtitle').innerText = d.subtitle;
+      document.getElementById('priceIndicator').innerText = d.price;
+      document.getElementById('alloyBadge').innerText = d.badge;
+      document.getElementById('timepieceImage').src = d.img;
+      document.getElementById('ambientAura').style.background = d.aura;
+    }
+
+    function updateFrequency(v) {
+      let hz = (v / 7200).toFixed(1);
+      document.getElementById('freqValue').innerText = Number(v).toLocaleString() + " vph (" + hz + " Hz)";
+      gearSpeed = 0.005 + (v / 36000) * 0.02;
+    }
+  </script>
+</body>
+</html>
