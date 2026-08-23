@@ -2,11 +2,11 @@ import os
 import sys
 import subprocess
 
-# Read stdin to conform to Antigravity hook contract
-try:
-    _ = sys.stdin.read()
-except Exception:
-    pass
+if sys.stdin and not sys.stdin.isatty():
+    try:
+        _ = sys.stdin.read()
+    except Exception:
+        pass
 
 hud_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hud.pyw")
 python_dir = os.path.dirname(sys.executable)

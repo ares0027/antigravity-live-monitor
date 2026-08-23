@@ -5,11 +5,11 @@ import os
 USER_HOME = os.path.expanduser("~")
 HUD_CONFIG_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud_config.json")
 
-# Read stdin to conform to Antigravity PreToolUse hook contract
-try:
-    _ = sys.stdin.read()
-except Exception:
-    pass
+if sys.stdin and not sys.stdin.isatty():
+    try:
+        _ = sys.stdin.read()
+    except Exception:
+        pass
 
 is_yolo_enabled = True
 if os.path.exists(HUD_CONFIG_FILE):
