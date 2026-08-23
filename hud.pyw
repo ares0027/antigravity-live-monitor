@@ -52,7 +52,9 @@ def load_hud_config():
         "global_yolo": True,
         "tp_expanded": False,
         "theme": "oled",
-        "active_tab": "5h"
+        "active_tab": "5h",
+        "last_w": 530,
+        "last_h": 615
     }
     if os.path.exists(HUD_CONFIG_FILE):
         try:
@@ -69,6 +71,7 @@ def load_hud_config():
 def save_hud_config(config_dict):
     try:
         os.makedirs(os.path.dirname(HUD_CONFIG_FILE), exist_ok=True)
+        # Strip is_compact before saving so restarts always open in full mode
         to_save = dict(config_dict)
         to_save.pop("is_compact", None)
         with open(HUD_CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -187,6 +190,17 @@ HTML_CONTENT = """<!DOCTYPE html>
       --accent-warn: #D97706;
       --accent-yolo: #DC2626;
       --ring-bg: #E2E8F0;
+    }
+
+    /* Seamless scrollbar hiding for clean UI */
+    ::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+    html, body, #mainContent {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
 
     body {
@@ -508,8 +522,7 @@ HTML_CONTENT = """<!DOCTYPE html>
               <span class="font-bold text-xs" style="color: var(--accent-tp);" id="tpwValOutput">$0.00</span>
             </div>
             <div class="subcard p-1.5 rounded-lg text-center">
-              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">4. Cache</span>
-              <span class="font-bold text-xs" style="color: var(--accent-warn);" id="tpwValCache">$0.00</span>
+              <span class="block text-[9px] font-semibold" style="color: var(--text-dim);" id="tpwValCache">$0.00</span>
             </div>
           </div>
         </div>
@@ -1288,7 +1301,7 @@ class MetricsEngine:
 
             cur_tp_weekly = self.cached_metrics["tp_weekly_pct"]
             est_tp_w_rem = int(learned_tp_weekly_cap * (cur_tp_weekly / 100.0))
-            self.cached_metrics["tp_est_weekly_remain_str"] = f"{est_tp_w_rem / 1000000.0:.2f}M" if est_tp_w_rem >= 1000000 else f"{est_tp_w_rem / 100.0:.0f}k"
+            self.cached_metrics["tp_est_weekly_remain_str"] = f"{est_tp_w_rem / 1000.0:.2f}M" if est_tp_w_rem >= 1000000 else f"{est_tp_w_rem / 100.0:.0f}k"
             self.cached_metrics["tpw_cost_weighted"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_WEIGHTED
             self.cached_metrics["tpw_cost_in"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_IN
             self.cached_metrics["tpw_cost_out"] = (est_tp_w_rem / 1000000.0) * TP_PRICE_OUT
@@ -1565,6 +1578,10 @@ class Api:
         self.is_compact = False
         self.current_theme = config.get("theme", "oled")
 
+        # Remember custom user expanded dimensions
+        self.last_expanded_w = config.get("last_w", 530)
+        self.last_expanded_h = config.get("last_h", 780 if self.is_tp_expanded else 615)
+
     def set_window(self, window):
         self.window = window
 
@@ -1593,10 +1610,17 @@ class Api:
                 pass
 
     def resize_window(self, new_w, new_h):
-        min_w = 140 if self.is_compact else 320
-        min_h = 28 if self.is_compact else 250
+        min_w = 160 if self.is_compact else 360
+        min_h = 30 if self.is_compact else 300
         target_w = max(min_w, int(new_w))
         target_h = max(min_h, int(new_h))
+
+        if not self.is_compact:
+            self.last_expanded_w = target_w
+            self.last_expanded_h = target_h
+            self.config["last_w"] = target_w
+            self.config["last_h"] = target_h
+            save_hud_config(self.config)
 
         hwnd = get_hud_hwnd()
         if hwnd:
@@ -1613,9 +1637,18 @@ class Api:
         return True
 
     def set_compact_mode(self, is_compact):
+        hwnd = get_hud_hwnd()
+        if hwnd and not self.is_compact:
+            rect = (ctypes.c_long * 4)()
+            user32.GetWindowRect(hwnd, rect)
+            cur_w = rect[2] - rect[0]
+            cur_h = rect[3] - rect[1]
+            if cur_w > 300 and cur_h > 200:
+                self.last_expanded_w = cur_w
+                self.last_expanded_h = cur_h
+
         self.is_compact = is_compact
 
-        hwnd = get_hud_hwnd()
         if hwnd:
             rect = (ctypes.c_long * 4)()
             user32.GetWindowRect(hwnd, rect)
@@ -1624,15 +1657,19 @@ class Api:
             if is_compact:
                 w, h = 205, 34
             else:
-                w = 520
-                h = 740 if self.is_tp_expanded else 545
+                w = max(520, self.last_expanded_w)
+                min_safe_h = 780 if self.is_tp_expanded else 615
+                h = max(min_safe_h, self.last_expanded_h)
             user32.SetWindowPos(hwnd, 0, cur_x, cur_y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
         elif self.window:
             try:
                 if is_compact:
                     self.window.resize(205, 34)
                 else:
-                    self.window.resize(520, 740 if self.is_tp_expanded else 545)
+                    w = max(520, self.last_expanded_w)
+                    min_safe_h = 780 if self.is_tp_expanded else 615
+                    h = max(min_safe_h, self.last_expanded_h)
+                    self.window.resize(w, h)
             except Exception:
                 pass
         return self.is_compact
@@ -1649,11 +1686,15 @@ class Api:
                 user32.GetWindowRect(hwnd, rect)
                 cur_x = rect[0]
                 cur_y = rect[1]
-                h = 740 if self.is_tp_expanded else 545
-                user32.SetWindowPos(hwnd, 0, cur_x, cur_y, 520, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
+                cur_w = rect[2] - rect[0]
+                h = 780 if self.is_tp_expanded else 615
+                self.last_expanded_h = h
+                user32.SetWindowPos(hwnd, 0, cur_x, cur_y, cur_w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
             elif self.window:
                 try:
-                    self.window.resize(520, 740 if self.is_tp_expanded else 545)
+                    h = 780 if self.is_tp_expanded else 615
+                    self.last_expanded_h = h
+                    self.window.resize(self.last_expanded_w, h)
                 except Exception:
                     pass
         return self.is_tp_expanded
@@ -1711,8 +1752,8 @@ def main():
     api = Api(engine, config)
 
     is_tp = config.get("tp_expanded", False)
-    init_w = 520
-    init_h = 740 if is_tp else 545
+    init_w = config.get("last_w", 530)
+    init_h = config.get("last_h", 780 if is_tp else 615)
 
     window = webview.create_window(
         title="Antigravity Live Monitor",
