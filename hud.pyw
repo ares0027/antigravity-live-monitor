@@ -6,12 +6,13 @@ import time
 import datetime
 import threading
 import subprocess
+import ctypes
 import webview
-import webview.platforms.winforms as winforms
 
-CLI_BRAIN = r"C:\Users\baran\.gemini\antigravity-cli\brain"
-DESKTOP_BRAIN = r"C:\Users\baran\.gemini\antigravity\brain"
-QUOTA_HISTORY_FILE = r"C:\Users\baran\AppData\Local\agy\bin\quota_history.json"
+USER_HOME = os.path.expanduser("~")
+CLI_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity-cli", "brain")
+DESKTOP_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity", "brain")
+QUOTA_HISTORY_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "quota_history.json")
 
 CREATE_NO_WINDOW = 0x08000000
 
@@ -20,6 +21,34 @@ PRICE_INPUT_PER_M = 0.75       # $0.75 / 1M tokens ($0.00075 / 1k)
 PRICE_CACHE_PER_M = 0.075      # $0.075 / 1M tokens ($0.000075 / 1k)
 PRICE_OUTPUT_PER_M = 3.75      # $3.75 / 1M tokens ($0.00375 / 1k)
 BLENDED_RATE_PER_M = 2.25      # Weighted valuation rate
+
+# Win32 Native Setup
+user32 = ctypes.windll.user32
+user32.SetWindowPos.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_uint]
+user32.SetWindowPos.restype = ctypes.c_bool
+
+HWND_TOPMOST = -1
+HWND_NOTOPMOST = -2
+SWP_NOSIZE = 0x0001
+SWP_NOMOVE = 0x0002
+SWP_NOACTIVATE = 0x0010
+SWP_SHOWWINDOW = 0x0040
+
+def get_hud_hwnd():
+    my_pid = os.getpid()
+    hwnds = []
+    WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+    def callback(hwnd, lparam):
+        pid = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if pid.value == my_pid and user32.IsWindowVisible(hwnd):
+            rect = (ctypes.c_long * 4)()
+            user32.GetWindowRect(hwnd, rect)
+            if rect[2] - rect[0] > 100 and rect[3] - rect[1] > 100:
+                hwnds.append(hwnd)
+        return True
+    user32.EnumWindows(WNDENUMPROC(callback), 0)
+    return hwnds[0] if hwnds else None
 
 def estimate_tokens(text):
     if not text:
@@ -81,25 +110,25 @@ HTML_CONTENT = """<!DOCTYPE html>
     </div>
 
     <!-- Controls -->
-    <div class="flex items-center gap-1 no-drag">
+    <div class="flex items-center gap-1.5 no-drag">
       <!-- Always on Top Toggle -->
-      <button onclick="togglePin()" id="pinBtn" class="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono" title="Always on Top (Enabled)">
+      <button onclick="togglePin()" id="pinBtn" class="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer" title="Always on Top (Enabled)">
         <span id="pinDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
         <span id="pinText">PINNED</span>
       </button>
 
       <!-- Sync Button -->
-      <button onclick="triggerSync()" id="syncBtn" class="p-1 px-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition text-xs mono" title="Force Refresh Quota">
+      <button onclick="triggerSync()" id="syncBtn" class="p-1 px-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition text-xs mono cursor-pointer" title="Force Refresh Quota">
         ↻
       </button>
 
       <!-- Minimize -->
-      <button onclick="minimizeWindow()" class="p-1 px-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition text-xs mono" title="Minimize">
+      <button onclick="minimizeWindow()" class="p-1 px-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition text-xs mono cursor-pointer" title="Minimize">
         −
       </button>
 
       <!-- Close -->
-      <button onclick="closeWindow()" class="p-1 px-1.5 rounded hover:bg-red-950/70 text-zinc-400 hover:text-red-400 transition text-xs mono" title="Close">
+      <button onclick="closeWindow()" class="p-1 px-1.5 rounded hover:bg-red-950/70 text-zinc-400 hover:text-red-400 transition text-xs mono cursor-pointer" title="Close">
         ✕
       </button>
     </div>
@@ -220,8 +249,8 @@ HTML_CONTENT = """<!DOCTYPE html>
       <!-- Slot Selector Tabs -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-1 bg-zinc-900 p-0.5 rounded-lg border border-zinc-800 text-[11px] mono">
-          <button id="tab5h" onclick="switchTab('5h')" class="px-2.5 py-0.5 rounded-md font-semibold transition bg-zinc-700 text-white">Current 5h Slot</button>
-          <button id="tabWeekly" onclick="switchTab('weekly')" class="px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white">Current Weekly Slot</button>
+          <button id="tab5h" onclick="switchTab('5h')" class="px-2.5 py-0.5 rounded-md font-semibold transition bg-zinc-700 text-white cursor-pointer">Current 5h Slot</button>
+          <button id="tabWeekly" onclick="switchTab('weekly')" class="px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer">Current Weekly Slot</button>
         </div>
         <span class="mono text-xs font-bold text-emerald-400" id="curSlotCost">Spent: $0.0000</span>
       </div>
@@ -277,12 +306,12 @@ HTML_CONTENT = """<!DOCTYPE html>
       const t5 = document.getElementById('tab5h');
       const tw = document.getElementById('tabWeekly');
       if (tab === '5h') {
-        t5.className = 'px-2.5 py-0.5 rounded-md font-semibold transition bg-zinc-700 text-white';
-        tw.className = 'px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white';
+        t5.className = 'px-2.5 py-0.5 rounded-md font-semibold transition bg-zinc-700 text-white cursor-pointer';
+        tw.className = 'px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer';
         document.getElementById('slotTokensLabel').textContent = 'Tokens in Current 5h Slot:';
       } else {
-        tw.className = 'px-2.5 py-0.5 rounded-md font-semibold transition bg-zinc-700 text-white';
-        t5.className = 'px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white';
+        tw.className = 'px-2.5 py-0.5 rounded-md font-semibold transition bg-zinc-700 text-white cursor-pointer';
+        t5.className = 'px-2.5 py-0.5 rounded-md font-semibold transition text-zinc-400 hover:text-white cursor-pointer';
         document.getElementById('slotTokensLabel').textContent = 'Tokens in Current Weekly Slot:';
       }
       refreshData();
@@ -297,12 +326,12 @@ HTML_CONTENT = """<!DOCTYPE html>
           const btn = document.getElementById('pinBtn');
           if (isPinned) {
             dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
-            btn.className = 'px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono';
+            btn.className = 'px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
             text.textContent = 'PINNED';
             btn.title = 'Always on Top (Enabled)';
           } else {
             dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-500';
-            btn.className = 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1 text-[10px] mono';
+            btn.className = 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1 text-[10px] mono cursor-pointer';
             text.textContent = 'UNPIN';
             btn.title = 'Always on Top (Disabled)';
           }
@@ -612,7 +641,7 @@ class MetricsEngine:
 
             cur_weekly_pct = self.cached_metrics["gemini_weekly_pct"]
             est_weekly_rem = int(learned_weekly_cap * (cur_weekly_pct / 100.0))
-            self.cached_metrics["est_weekly_remain_str"] = f"{est_weekly_rem / 1000000.0:.2f}M" if est_weekly_rem >= 1000000 else f"{est_weekly_rem / 1000.0:.0f}k"
+            self.cached_metrics["est_weekly_remain_str"] = f"{est_weekly_rem / 1000000.0:.2f}M" if est_weekly_rem >= 1000000 else f"{est_weekly_rem / 100.0:.0f}k"
             self.cached_metrics["w_cost_weighted"] = (est_weekly_rem / 1000000.0) * BLENDED_RATE_PER_M
             self.cached_metrics["w_cost_in"] = (est_weekly_rem / 1000000.0) * PRICE_INPUT_PER_M
             self.cached_metrics["w_cost_out"] = (est_weekly_rem / 1000000.0) * PRICE_OUTPUT_PER_M
@@ -805,17 +834,18 @@ class Api:
         return True
 
     def toggle_on_top(self):
-        if self.window:
-            self.is_on_top = not self.is_on_top
-            try:
-                winforms.set_on_top(self.window.uid, self.is_on_top)
-            except Exception:
-                pass
-            return self.is_on_top
-        return True
+        self.is_on_top = not self.is_on_top
+        hwnd = get_hud_hwnd()
+        if hwnd:
+            flag = HWND_TOPMOST if self.is_on_top else HWND_NOTOPMOST
+            user32.SetWindowPos(hwnd, flag, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW)
+        return self.is_on_top
 
     def minimize(self):
-        if self.window:
+        hwnd = get_hud_hwnd()
+        if hwnd:
+            user32.ShowWindow(hwnd, 6) # SW_MINIMIZE = 6
+        elif self.window:
             try:
                 self.window.minimize()
             except Exception:
@@ -823,10 +853,7 @@ class Api:
 
     def close(self):
         if self.window:
-            try:
-                self.window.destroy()
-            except Exception:
-                pass
+            threading.Thread(target=self.window.destroy, daemon=True).start()
 
 def main():
     engine = MetricsEngine()

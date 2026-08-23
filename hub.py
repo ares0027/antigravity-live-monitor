@@ -13,13 +13,15 @@ import msvcrt
 os.system("")
 
 # Config & Storage Locations
-SETTINGS_FILE = r"C:\Users\baran\.gemini\antigravity-cli\settings.json"
+USER_HOME = os.path.expanduser("~")
+SETTINGS_FILE = os.path.join(USER_HOME, ".gemini", "antigravity-cli", "settings.json")
 PROJECTS_STORE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "projects.json")
-CLI_BRAIN = r"C:\Users\baran\.gemini\antigravity-cli\brain"
-DESKTOP_BRAIN = r"C:\Users\baran\.gemini\antigravity\brain"
+CLI_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity-cli", "brain")
+DESKTOP_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity", "brain")
+APPDATA_ROAMING = os.environ.get("APPDATA", os.path.join(USER_HOME, "AppData", "Roaming"))
 VSCDB_PATHS = [
-    r"C:\Users\baran\AppData\Roaming\Antigravity\User\globalStorage\state.vscdb",
-    r"C:\Users\baran\AppData\Roaming\Antigravity IDE\User\globalStorage\state.vscdb"
+    os.path.join(APPDATA_ROAMING, "Antigravity", "User", "globalStorage", "state.vscdb"),
+    os.path.join(APPDATA_ROAMING, "Antigravity IDE", "User", "globalStorage", "state.vscdb")
 ]
 
 # ANSI Styles
@@ -79,7 +81,6 @@ def get_vscdb_recent_workspaces():
     return paths
 
 def load_all_workspaces():
-    # 1. Custom saved projects
     saved = []
     if os.path.exists(PROJECTS_STORE):
         try:
@@ -88,10 +89,8 @@ def load_all_workspaces():
         except Exception:
             saved = []
 
-    # 2. Desktop state.vscdb recent workspaces
     vscdb_paths = get_vscdb_recent_workspaces()
 
-    # 3. Settings.json trustedWorkspaces
     trusted = []
     if os.path.exists(SETTINGS_FILE):
         try:
@@ -101,14 +100,10 @@ def load_all_workspaces():
         except Exception:
             pass
 
-    # 4. Deep scan key development root folders
     scan_roots = [
-        r"G:\ai generated stuff\oyunlar",
-        r"G:\ai generated stuff\tools",
-        r"G:\ai generated stuff\apps",
-        r"G:\ai generated stuff",
-        r"E:\Baran",
-        r"C:\Users\baran"
+        USER_HOME,
+        os.path.join(USER_HOME, "Projects"),
+        os.path.join(USER_HOME, "Documents")
     ]
 
     discovered = []
@@ -118,7 +113,6 @@ def load_all_workspaces():
             for item in os.listdir(root):
                 full = os.path.join(root, item)
                 if os.path.isdir(full):
-                    # Check for code markers or git
                     markers = [".git", ".agents", ".gemini", "package.json", "pyproject.toml", "Cargo.toml", "requirements.txt", "project.godot"]
                     if any(os.path.exists(os.path.join(full, m)) for m in markers):
                         discovered.append(os.path.normpath(full))
@@ -127,7 +121,6 @@ def load_all_workspaces():
 
     all_paths = list(dict.fromkeys(saved + vscdb_paths + trusted + discovered))
     
-    # Exclude internal / system folders
     ignored_patterns = [
         "appdata", ".venv", "node_modules", "build\\tmp", "agy\\bin", 
         "documents", "pictures", "videos", "music", "saved games", "searches", "downloads", "calibre library"
@@ -139,8 +132,7 @@ def load_all_workspaces():
         p_lower = p_norm.lower()
         if not os.path.isdir(p_norm):
             continue
-        # Avoid root user dir or generic subfolders
-        if p_lower in [r"c:\users\baran", r"e:\baran", r"g:\ai generated stuff"]:
+        if p_lower == USER_HOME.lower():
             continue
         if any(p_lower.endswith("\\" + ig) or p_lower.endswith(ig) for ig in ignored_patterns):
             continue
@@ -148,7 +140,6 @@ def load_all_workspaces():
 
     valid_workspaces = list(dict.fromkeys(valid_workspaces))
 
-    # 5. Scan sessions from both Desktop and CLI brains
     workspace_sessions = {p: [] for p in valid_workspaces}
 
     for brain_root in [DESKTOP_BRAIN, CLI_BRAIN]:
@@ -202,7 +193,6 @@ def load_all_workspaces():
             if matched_ws and matched_ws in workspace_sessions:
                 workspace_sessions[matched_ws].append(session_obj)
 
-    # 6. Build projects list
     projects = []
     for p in valid_workspaces:
         name = os.path.basename(p) or p
@@ -220,7 +210,6 @@ def load_all_workspaces():
             "sessions": sessions
         })
 
-    # Sort: projects with sessions first, then most recently active
     projects.sort(key=lambda x: (len(x["sessions"]) > 0, x["sessions"][0]["mtime"] if x["sessions"] else os.path.getmtime(x["path"])), reverse=True)
     return projects
 
@@ -339,7 +328,6 @@ def main():
         if not projects:
             print(f"{YELLOW}No workspaces found. Press [+] to add a project folder.{RESET}")
         else:
-            # Pagination view
             start_idx = page_offset
             end_idx = min(start_idx + PAGE_SIZE, len(projects))
 
@@ -377,14 +365,14 @@ def main():
 
         if key == "\x00" or key == "\xe0":
             arrow = msvcrt.getwch()
-            if arrow == "H":  # Up
+            if arrow == "H":
                 if projects:
                     selected_idx = (selected_idx - 1) % len(projects)
                     if selected_idx < page_offset:
                         page_offset = (selected_idx // PAGE_SIZE) * PAGE_SIZE
                     elif selected_idx == len(projects) - 1:
                         page_offset = (selected_idx // PAGE_SIZE) * PAGE_SIZE
-            elif arrow == "P":  # Down
+            elif arrow == "P":
                 if projects:
                     selected_idx = (selected_idx + 1) % len(projects)
                     if selected_idx >= page_offset + PAGE_SIZE:
@@ -413,7 +401,7 @@ def main():
         elif key == "+":
             clear_screen()
             print(f"\n{BLUE}{BOLD}📁 Add New Project Workspace{RESET}")
-            print(f"{GRAY}Enter full directory path (e.g. G:\\ai generated stuff\\my-game):{RESET}\n")
+            print(f"{GRAY}Enter full directory path:{RESET}\n")
             try:
                 new_path = input("Path: ").strip()
                 if new_path and save_custom_project(new_path):

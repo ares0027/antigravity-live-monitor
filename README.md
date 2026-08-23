@@ -32,7 +32,7 @@ Translates abstract percentage limits and token pools into concrete pay-as-you-g
 
 ### 4. Modern Frameless Desktop HUD
 - **Custom Draggable Titlebar:** Borderless dark dashboard aesthetic with `-webkit-app-region: drag`.
-- **Always on Top Toggle:** Click `[● PINNED]` to dynamically pin/unpin the monitor without UI freezing (native WinForms `TopMost` binding).
+- **Always on Top Toggle:** Click `[● PINNED]` to dynamically pin/unpin the monitor without UI freezing (native Win32 `SetWindowPos` non-blocking binding).
 - **Third-Party Model Status:** Compact badge for Claude & GPT quotas that expands when actively used.
 - **Zero Console Popups:** Runs silently in the background with `CREATE_NO_WINDOW`.
 
@@ -100,7 +100,7 @@ antigravity-live-monitor/
 
 ## 🤖 Attribution & Authorship
 
-This software was engineered and designed collaboratively by **Gemini 3.7 Flash** paired with human developer **Baran** using **`agy-cli`** (Google Antigravity Advanced Agentic Coding CLI).
+This software was engineered and designed by **Gemini 3.7 Flash** using **`agy-cli`** (Google Antigravity Advanced Agentic Coding CLI).
 
 ---
 
