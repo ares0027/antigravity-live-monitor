@@ -83,7 +83,7 @@ def get_hud_hwnd():
         if pid.value == my_pid and user32.IsWindowVisible(hwnd):
             rect = (ctypes.c_long * 4)()
             user32.GetWindowRect(hwnd, rect)
-            if rect[2] - rect[0] > 50 and rect[3] - rect[1] > 30:
+            if rect[2] - rect[0] > 30 and rect[3] - rect[1] > 20:
                 hwnds.append(hwnd)
         return True
     user32.EnumWindows(WNDENUMPROC(callback), 0)
@@ -194,6 +194,8 @@ HTML_CONTENT = """<!DOCTYPE html>
       padding: 0;
       user-select: none;
       overflow: hidden;
+      height: 100vh;
+      width: 100vw;
     }
     .mono {
       font-family: ui-monospace, SFMono-Regular, "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
@@ -233,53 +235,34 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
   </style>
 </head>
-<body id="bodyRoot" data-theme="oled" class="flex flex-col h-screen box-border antialiased rounded-2xl shadow-2xl overflow-hidden" style="border: 1.5px solid var(--border-outer);">
+<body id="bodyRoot" data-theme="oled" class="flex flex-col h-screen w-screen box-border antialiased rounded-2xl shadow-2xl overflow-hidden" style="border: 1px solid var(--border-outer);">
 
-  <!-- 0. SLEEK CUSTOM TITLEBAR (DRAGGABLE & DOUBLE-CLICK TO COLLAPSE/EXPAND) -->
-  <div id="titlebar" ondblclick="toggleCompactMode()" class="drag-handle flex items-center justify-between px-3 py-2 border-b select-none flex-shrink-0 h-[42px]" style="background: var(--bg-titlebar); border-color: var(--border-card);" title="Double-click to toggle 1-line mini bar mode">
+  <!-- 0. SLEEK CUSTOM TITLEBAR (DRAGGABLE & DOUBLE-CLICK TO TOGGLE COMPACT) -->
+  <div id="titlebar" ondblclick="toggleCompactMode()" class="drag-handle flex items-center justify-between px-3 select-none flex-shrink-0 transition-all duration-150" style="background: var(--bg-titlebar); border-bottom: 1px solid var(--border-card); height: 42px;" title="Double-click anywhere to toggle ultra-minimal 1-line bar">
     
-    <!-- Left: Title or Mini Strip -->
-    <div class="flex items-center gap-2">
+    <!-- Full Mode Header Left (Hidden in compact mode) -->
+    <div id="fullHeaderLeft" class="flex items-center gap-2">
       <div class="w-3 h-3 rounded-full animate-pulse flex-shrink-0" style="background: var(--accent-gemini);"></div>
-      
-      <!-- Full Mode Title -->
-      <span id="fullTitle" class="text-sm font-bold tracking-wide mono" style="color: var(--text-main);">Antigravity Live Monitor</span>
-
-      <!-- Mini Mode Badges (Visible only in Compact 1-line mode) -->
-      <div id="compactStrip" class="hidden flex items-center gap-3.5 pl-1">
-        <!-- Gemini Weekly Mini -->
-        <div class="flex items-center gap-1.5" title="Gemini Weekly Remaining">
-          <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 36 36">
-            <path class="ring-bg" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <path id="miniGWRing" class="ring-progress-emerald" stroke-width="4" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-          </svg>
-          <span class="mono text-xs font-bold" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
-          <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">W</span>
-        </div>
-
-        <!-- Gemini 5-Hour Mini -->
-        <div class="flex items-center gap-1.5" title="Gemini 5-Hour Remaining">
-          <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 36 36">
-            <path class="ring-bg" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <path id="miniG5Ring" class="ring-progress-emerald" stroke-width="4" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-          </svg>
-          <span class="mono text-xs font-bold" style="color: var(--accent-warn);" id="miniG5Pct">--%</span>
-          <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">5h</span>
-        </div>
-      </div>
+      <span class="text-sm font-bold tracking-wide mono" style="color: var(--text-main);">Antigravity Live Monitor</span>
     </div>
 
-    <!-- Controls -->
-    <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-      <!-- Expand/Collapse Toggle Button -->
-      <button onclick="toggleCompactMode()" id="compactBtn" class="p-1 px-1.5 rounded-md transition text-xs mono cursor-pointer font-bold" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Toggle 1-Line Mini Bar">
-        <span id="compactIcon">⛶</span>
+    <!-- Full Mode Header Controls (Hidden in compact mode) -->
+    <div id="fullControls" class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+      <!-- Collapse Button -->
+      <button onclick="toggleCompactMode()" class="p-1 px-1.5 rounded-md transition text-xs mono cursor-pointer font-bold" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Collapse to 1-Line Mini Bar">
+        ⛶
       </button>
 
       <!-- Global YOLO Mode Toggle -->
       <button onclick="toggleYolo()" id="yoloBtn" class="px-2 py-0.5 rounded-md border flex items-center gap-1 text-[11px] mono cursor-pointer font-bold" style="background: rgba(239, 68, 68, 0.2); border-color: var(--accent-yolo); color: var(--accent-yolo);" title="Global YOLO Mode (Auto-Approve All Permissions)">
         <span id="yoloDot" class="w-1.5 h-1.5 rounded-full animate-pulse" style="background: var(--accent-yolo);"></span>
         <span id="yoloText">YOLO</span>
+      </button>
+
+      <!-- Auto-Prime Toggle -->
+      <button onclick="togglePrime()" id="primeBtn" class="px-2 py-0.5 rounded-md border flex items-center gap-1 text-[11px] mono cursor-pointer font-bold" style="background: rgba(245, 158, 11, 0.2); border-color: var(--accent-warn); color: var(--accent-warn);" title="Auto-Prime Dual Cooldowns (Gemini + Claude/GPT)">
+        <span id="primeDot" class="w-1.5 h-1.5 rounded-full animate-pulse" style="background: var(--accent-warn);"></span>
+        <span id="primeText">PRIME</span>
       </button>
 
       <!-- Always on Top Toggle -->
@@ -298,6 +281,36 @@ HTML_CONTENT = """<!DOCTYPE html>
         ✕
       </button>
     </div>
+
+    <!-- PURE MINIMALIST COMPACT STRIP (Shown ONLY when collapsed to 1 single line) -->
+    <div id="compactBar" class="hidden w-full h-full flex items-center justify-between px-2">
+      <!-- Mini Dot & Label -->
+      <div class="flex items-center gap-1.5">
+        <div class="w-2.5 h-2.5 rounded-full animate-pulse flex-shrink-0" style="background: var(--accent-gemini);"></div>
+        <span class="mono text-xs font-bold tracking-tight" style="color: var(--text-muted);">AGY</span>
+      </div>
+
+      <!-- Gemini Weekly Mini Ring + % -->
+      <div class="flex items-center gap-1.5" title="Gemini Weekly Limit Remaining">
+        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 36 36">
+          <path class="ring-bg" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path id="miniGWRing" class="ring-progress-emerald" stroke-width="4" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <span class="mono text-xs font-bold" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
+        <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">W</span>
+      </div>
+
+      <!-- Gemini 5-Hour Mini Ring + % -->
+      <div class="flex items-center gap-1.5" title="Gemini 5-Hour Limit Remaining">
+        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 36 36">
+          <path class="ring-bg" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path id="miniG5Ring" class="ring-progress-emerald" stroke-width="4" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <span class="mono text-xs font-bold" style="color: var(--accent-warn);" id="miniG5Pct">--%</span>
+        <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">5h</span>
+      </div>
+    </div>
+
   </div>
 
   <!-- MAIN SCROLLABLE CONTENT (Hidden in 1-line Compact Mode) -->
@@ -625,24 +638,40 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     function applyCompactVisual(compact) {
       isCompact = compact;
-      const fullTitle = document.getElementById('fullTitle');
-      const compactStrip = document.getElementById('compactStrip');
+      const fullHeaderLeft = document.getElementById('fullHeaderLeft');
+      const fullControls = document.getElementById('fullControls');
+      const compactBar = document.getElementById('compactBar');
       const mainContent = document.getElementById('mainContent');
       const footerStatus = document.getElementById('footerStatus');
-      const compactIcon = document.getElementById('compactIcon');
+      const titlebar = document.getElementById('titlebar');
+      const bodyRoot = document.getElementById('bodyRoot');
 
       if (isCompact) {
-        if (fullTitle) fullTitle.classList.add('hidden');
-        if (compactStrip) compactStrip.classList.remove('hidden');
+        if (fullHeaderLeft) fullHeaderLeft.classList.add('hidden');
+        if (fullControls) fullControls.classList.add('hidden');
+        if (compactBar) compactBar.classList.remove('hidden');
         if (mainContent) mainContent.classList.add('hidden');
         if (footerStatus) footerStatus.classList.add('hidden');
-        if (compactIcon) compactIcon.textContent = '▼';
+        if (titlebar) {
+          titlebar.style.borderBottom = 'none';
+          titlebar.style.height = '100%';
+        }
+        if (bodyRoot) {
+          bodyRoot.style.borderRadius = '16px';
+        }
       } else {
-        if (fullTitle) fullTitle.classList.remove('hidden');
-        if (compactStrip) compactStrip.classList.add('hidden');
+        if (fullHeaderLeft) fullHeaderLeft.classList.remove('hidden');
+        if (fullControls) fullControls.classList.remove('hidden');
+        if (compactBar) compactBar.classList.add('hidden');
         if (mainContent) mainContent.classList.remove('hidden');
         if (footerStatus) footerStatus.classList.remove('hidden');
-        if (compactIcon) compactIcon.textContent = '⛶';
+        if (titlebar) {
+          titlebar.style.borderBottom = '1px solid var(--border-card)';
+          titlebar.style.height = '42px';
+        }
+        if (bodyRoot) {
+          bodyRoot.style.borderRadius = '16px';
+        }
       }
     }
 
@@ -1497,13 +1526,13 @@ class Api:
             user32.GetWindowRect(hwnd, rect)
             cur_x = rect[0]
             cur_y = rect[1]
-            w = 400 if is_compact else 530
-            h = 44 if is_compact else 760
+            w = 260 if is_compact else 530
+            h = 36 if is_compact else 760
             user32.SetWindowPos(hwnd, 0, cur_x, cur_y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
         elif self.window:
             try:
                 if is_compact:
-                    self.window.resize(400, 44)
+                    self.window.resize(260, 36)
                 else:
                     self.window.resize(530, 760)
             except Exception:
@@ -1569,8 +1598,8 @@ def main():
     api = Api(engine, config)
 
     is_compact_init = config.get("is_compact", False)
-    init_w = 400 if is_compact_init else 530
-    init_h = 44 if is_compact_init else 760
+    init_w = 260 if is_compact_init else 530
+    init_h = 36 if is_compact_init else 760
 
     window = webview.create_window(
         title="Antigravity Live Monitor",
