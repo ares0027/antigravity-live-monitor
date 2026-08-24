@@ -241,19 +241,6 @@ def load_all_workspaces():
                 if any(os.path.exists(os.path.join(root, m)) for m in markers):
                     discovered.append(os.path.normpath(root))
 
-    # Top-level scan for G:\ standalone projects
-    if os.path.exists("G:\\"):
-        try:
-            for item in os.listdir("G:\\"):
-                if item.lower() in ignored_names or item.startswith("$") or item.startswith("."):
-                    continue
-                full = os.path.join("G:\\", item)
-                if os.path.isdir(full) and item.lower() != "ai generated stuff":
-                    if any(os.path.exists(os.path.join(full, m)) for m in markers):
-                        discovered.append(os.path.normpath(full))
-        except Exception:
-            pass
-
     current_repo = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
     raw_all = saved + vscdb_paths + trusted + discovered + [current_repo]
 
@@ -291,10 +278,11 @@ def load_all_workspaces():
         p_lower = p_norm.lower()
         if not os.path.isdir(p_norm):
             continue
-        # Restrict projects strictly to G:\ drive or the current live-monitor workspace
-        if not p_lower.startswith("g:\\") and p_norm.lower() != current_repo.lower():
+        # Restrict projects strictly to G:\ai generated stuff or current live-monitor workspace
+        target_prefix = r"g:\ai generated stuff"
+        if not p_lower.startswith(target_prefix.lower() + "\\") and p_norm.lower() != current_repo.lower():
             continue
-        if p_lower in (r"g:", r"g:\\", r"g:\ai generated stuff"):
+        if p_lower == target_prefix.lower():
             continue
         base_n = os.path.basename(p_norm).lower()
         if base_n in ignored_names:
