@@ -159,35 +159,92 @@ def load_all_workspaces():
             pass
 
     scan_roots = [
-        USER_HOME,
-        os.path.join(USER_HOME, "Projects"),
-        os.path.join(USER_HOME, "Documents"),
+        r"G:\ai generated stuff",
+        r"G:\ai generated stuff\apps",
+        r"G:\ai generated stuff\oyunlar",
+        r"G:\ai generated stuff\chrome extensions",
+        r"G:\ai generated stuff\tools",
+        r"G:\ai generated stuff\misc",
+        r"G:\",
     ]
 
     discovered = []
-    for root in scan_roots:
-        if not os.path.exists(root):
-            continue
+    markers = [
+        ".git",
+        ".agents",
+        ".gemini",
+        ".godot",
+        "package.json",
+        "pyproject.toml",
+        "Cargo.toml",
+        "requirements.txt",
+        "project.godot",
+        "go.mod",
+        "index.html",
+        "manifest.json",
+        "main.py",
+        "app.py",
+        "bot.py",
+        "vite.config.ts",
+        "vite.config.js",
+    ]
+
+    ignored_names = {
+        "$recycle.bin",
+        "system volume information",
+        "$sysreset",
+        "$winreagent",
+        "node_modules",
+        ".venv",
+        "venv",
+        "__pycache__",
+        ".repowise",
+        "build",
+        "dist",
+        "tmp",
+        "temp",
+        "program files",
+        "program files (x86)",
+        "programdata",
+        "windowsapps",
+        "steamlibrary",
+        "gog games",
+        "riot games",
+        "xboxgames",
+        "appdata",
+        "onedrivetemp",
+        "system32",
+    }
+
+    # Bounded recursive scan for G:\ai generated stuff (up to depth 3)
+    base_g_stuff = r"G:\ai generated stuff"
+    if os.path.exists(base_g_stuff):
+        base_depth = len(os.path.normpath(base_g_stuff).split(os.sep))
+        for root, dirs, files in os.walk(base_g_stuff):
+            dirs[:] = [d for d in dirs if d.lower() not in ignored_names and not d.startswith(".")]
+            cur_depth = len(os.path.normpath(root).split(os.sep)) - base_depth
+            if cur_depth > 3:
+                dirs.clear()
+                continue
+            if root != base_g_stuff:
+                if any(os.path.exists(os.path.join(root, m)) for m in markers):
+                    discovered.append(os.path.normpath(root))
+
+    # Top-level scan for G:\ standalone projects
+    if os.path.exists(r"G:\"):
         try:
-            for item in os.listdir(root):
-                full = os.path.join(root, item)
-                if os.path.isdir(full):
-                    markers = [
-                        ".git",
-                        ".agents",
-                        ".gemini",
-                        "package.json",
-                        "pyproject.toml",
-                        "Cargo.toml",
-                        "requirements.txt",
-                        "project.godot",
-                    ]
+            for item in os.listdir(r"G:\"):
+                if item.lower() in ignored_names or item.startswith("$") or item.startswith("."):
+                    continue
+                full = os.path.join(r"G:\", item)
+                if os.path.isdir(full) and item.lower() != "ai generated stuff":
                     if any(os.path.exists(os.path.join(full, m)) for m in markers):
                         discovered.append(os.path.normpath(full))
         except Exception:
             pass
 
-    all_paths = list(dict.fromkeys(saved + vscdb_paths + trusted + discovered))
+    current_repo = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
+    all_paths = list(dict.fromkeys(saved + vscdb_paths + trusted + discovered + [current_repo]))
 
     ignored_patterns = [
         "appdata",
@@ -203,6 +260,8 @@ def load_all_workspaces():
         "searches",
         "downloads",
         "calibre library",
+        "system volume information",
+        "$recycle.bin",
     ]
 
     valid_workspaces = []
@@ -211,7 +270,10 @@ def load_all_workspaces():
         p_lower = p_norm.lower()
         if not os.path.isdir(p_norm):
             continue
-        if p_lower == USER_HOME.lower():
+        # Restrict projects strictly to G:\ drive or the current live-monitor workspace
+        if not p_lower.startswith("g:\\") and p_norm.lower() != current_repo.lower():
+            continue
+        if p_lower in (r"g:", r"g:\\", r"g:\ai generated stuff"):
             continue
         if any(
             p_lower.endswith("\\" + ig) or p_lower.endswith(ig)
@@ -221,6 +283,7 @@ def load_all_workspaces():
         valid_workspaces.append(p_norm)
 
     valid_workspaces = list(dict.fromkeys(valid_workspaces))
+    sorted_workspaces = sorted(valid_workspaces, key=lambda x: len(os.path.normpath(x)), reverse=True)
 
     workspace_sessions = {p: [] for p in valid_workspaces}
 
@@ -259,15 +322,19 @@ def load_all_workspaces():
                         if not matched_ws and data.get("tool_calls"):
                             for tc in data["tool_calls"]:
                                 args = tc.get("args") or tc.get("arguments") or {}
+                                if isinstance(args, str):
+                                    try:
+                                        args = json.loads(args)
+                                    except:
+                                        args = {}
                                 for k, v in args.items():
                                     if isinstance(v, str):
                                         v_norm = os.path.normpath(
                                             v.strip("\"'")
                                         ).lower()
-                                        for ws in valid_workspaces:
-                                            if v_norm.startswith(
-                                                os.path.normpath(ws).lower()
-                                            ):
+                                        for ws in sorted_workspaces:
+                                            ws_norm = os.path.normpath(ws).lower()
+                                            if v_norm == ws_norm or v_norm.startswith(ws_norm + os.sep):
                                                 matched_ws = ws
                                                 break
                                         if matched_ws:
