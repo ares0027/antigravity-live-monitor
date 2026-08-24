@@ -165,7 +165,7 @@ def load_all_workspaces():
         r"G:\ai generated stuff\chrome extensions",
         r"G:\ai generated stuff\tools",
         r"G:\ai generated stuff\misc",
-        r"G:\",
+        "G:\\",
     ]
 
     discovered = []
@@ -203,6 +203,14 @@ def load_all_workspaces():
         "dist",
         "tmp",
         "temp",
+        "src",
+        "src-tauri",
+        "public",
+        "templates",
+        "mockups",
+        "landing_page",
+        "_nocache",
+        "generator",
         "program files",
         "program files (x86)",
         "programdata",
@@ -227,16 +235,19 @@ def load_all_workspaces():
                 dirs.clear()
                 continue
             if root != base_g_stuff:
+                base_name = os.path.basename(root).lower()
+                if base_name in ignored_names:
+                    continue
                 if any(os.path.exists(os.path.join(root, m)) for m in markers):
                     discovered.append(os.path.normpath(root))
 
     # Top-level scan for G:\ standalone projects
-    if os.path.exists(r"G:\"):
+    if os.path.exists("G:\\"):
         try:
-            for item in os.listdir(r"G:\"):
+            for item in os.listdir("G:\\"):
                 if item.lower() in ignored_names or item.startswith("$") or item.startswith("."):
                     continue
-                full = os.path.join(r"G:\", item)
+                full = os.path.join("G:\\", item)
                 if os.path.isdir(full) and item.lower() != "ai generated stuff":
                     if any(os.path.exists(os.path.join(full, m)) for m in markers):
                         discovered.append(os.path.normpath(full))
@@ -244,7 +255,18 @@ def load_all_workspaces():
             pass
 
     current_repo = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
-    all_paths = list(dict.fromkeys(saved + vscdb_paths + trusted + discovered + [current_repo]))
+    raw_all = saved + vscdb_paths + trusted + discovered + [current_repo]
+
+    normalized_map = {}
+    for p in raw_all:
+        if not p or not isinstance(p, str):
+            continue
+        p_norm = os.path.normpath(p.strip())
+        if len(p_norm) >= 2 and p_norm[1] == ":":
+            p_norm = p_norm[0].upper() + p_norm[1:]
+        key = p_norm.lower()
+        if key not in normalized_map:
+            normalized_map[key] = p_norm
 
     ignored_patterns = [
         "appdata",
@@ -265,8 +287,7 @@ def load_all_workspaces():
     ]
 
     valid_workspaces = []
-    for p in all_paths:
-        p_norm = os.path.normpath(p)
+    for p_norm in normalized_map.values():
         p_lower = p_norm.lower()
         if not os.path.isdir(p_norm):
             continue
@@ -275,6 +296,9 @@ def load_all_workspaces():
             continue
         if p_lower in (r"g:", r"g:\\", r"g:\ai generated stuff"):
             continue
+        base_n = os.path.basename(p_norm).lower()
+        if base_n in ignored_names:
+            continue
         if any(
             p_lower.endswith("\\" + ig) or p_lower.endswith(ig)
             for ig in ignored_patterns
@@ -282,7 +306,6 @@ def load_all_workspaces():
             continue
         valid_workspaces.append(p_norm)
 
-    valid_workspaces = list(dict.fromkeys(valid_workspaces))
     sorted_workspaces = sorted(valid_workspaces, key=lambda x: len(os.path.normpath(x)), reverse=True)
 
     workspace_sessions = {p: [] for p in valid_workspaces}
