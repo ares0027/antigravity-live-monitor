@@ -17,7 +17,9 @@ def format_file(file_path: str):
             si.wShowWindow = subprocess.SW_HIDE
             subprocess.run(
                 [RUFF_PATH, "format", str(p)],
-                capture_output=True,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
                 timeout=5,
                 startupinfo=si,
                 creationflags=CREATE_NO_WINDOW,

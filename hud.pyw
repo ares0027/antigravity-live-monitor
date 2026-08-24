@@ -1201,9 +1201,9 @@ class MetricsEngine:
         try:
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            si.wShowWindow = 0
+            si.wShowWindow = subprocess.SW_HIDE
 
-            cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "/usage"]
+            cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "/usage", "--disable-slash-commands"]
             out = subprocess.check_output(
                 cmd,
                 stdin=subprocess.DEVNULL,
@@ -1521,9 +1521,8 @@ class AutoPrimerWorker(threading.Thread):
 
                     # 1. Gemini Models Pool
                     # Check 5h reset timer:
-                    # If reset_dt is in the future (remaining seconds > 0), the 5h slot is actively counting down.
-                    # Skip priming while the timer is running (< 5h).
-                    # Only prime when the timer has expired (gemini_rem_secs <= 0) and cooldown has passed.
+                    # If reset_dt is in the future (remaining seconds > 0), the 5h cooldown is active -> do nothing.
+                    # If no cooldown active (gemini_rem_secs <= 0), use the lowest effort model to trigger the cooldown.
                     if self.engine.gemini_5h_reset_dt is not None:
                         gemini_rem_secs = (self.engine.gemini_5h_reset_dt - now_utc).total_seconds()
                         if gemini_rem_secs <= 0 and (now_ts - self.last_gemini_prime) > 180:
@@ -1531,6 +1530,8 @@ class AutoPrimerWorker(threading.Thread):
                             self.trigger_gemini_prime()
 
                     # 2. Third-Party (Claude & GPT) Pool
+                    # If reset_dt is in the future (tp_rem_secs > 0), cooldown is active -> do nothing.
+                    # If no cooldown active (tp_rem_secs <= 0), trigger the cooldown using lowest effort model.
                     if self.engine.tp_5h_reset_dt is not None:
                         tp_rem_secs = (self.engine.tp_5h_reset_dt - now_utc).total_seconds()
                         if tp_rem_secs <= 0 and (now_ts - self.last_tp_prime) > 180:
@@ -1538,7 +1539,7 @@ class AutoPrimerWorker(threading.Thread):
                             self.trigger_tp_prime()
             except Exception:
                 pass
-            time.sleep(30.0)
+            time.sleep(15.0)
 
     def trigger_gemini_prime(self):
         try:
@@ -1547,21 +1548,21 @@ class AutoPrimerWorker(threading.Thread):
             si.wShowWindow = subprocess.SW_HIDE
             cmd = [
                 AGY_EXE if os.path.exists(AGY_EXE) else "agy",
-                "-p", "Reply with: 1",
+                "-p", "1",
                 "--model", "Gemini 3.5 Flash (Low)",
-                "--effort", "low",
                 "--disable-slash-commands",
                 "--dangerously-skip-permissions"
             ]
-            subprocess.Popen(
+            subprocess.run(
                 cmd,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 startupinfo=si,
-                creationflags=CREATE_NO_WINDOW
+                creationflags=CREATE_NO_WINDOW,
+                timeout=20
             )
-            time.sleep(5.0)
+            time.sleep(3.0)
             self.engine.query_official_usage()
         except Exception:
             pass
@@ -1573,21 +1574,21 @@ class AutoPrimerWorker(threading.Thread):
             si.wShowWindow = subprocess.SW_HIDE
             cmd = [
                 AGY_EXE if os.path.exists(AGY_EXE) else "agy",
-                "-p", "Reply with: 1",
+                "-p", "1",
                 "--model", "GPT-OSS 120B (Medium)",
-                "--effort", "low",
                 "--disable-slash-commands",
                 "--dangerously-skip-permissions"
             ]
-            subprocess.Popen(
+            subprocess.run(
                 cmd,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 startupinfo=si,
-                creationflags=CREATE_NO_WINDOW
+                creationflags=CREATE_NO_WINDOW,
+                timeout=20
             )
-            time.sleep(5.0)
+            time.sleep(3.0)
             self.engine.query_official_usage()
         except Exception:
             pass
@@ -1769,6 +1770,12 @@ class Api:
             threading.Thread(target=self.window.destroy, daemon=True).start()
 
 def main():
+    # Enforce Single-Instance via Win32 Named Mutex
+    mutex_name = "Global\\AntigravityHUD_SingleInstance_Mutex"
+    mutex = kernel32.CreateMutexW(None, False, mutex_name)
+    if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+        sys.exit(0)
+
     config = load_hud_config()
 
     engine = MetricsEngine()
