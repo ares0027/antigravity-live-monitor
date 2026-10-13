@@ -44,7 +44,11 @@ For both model tiers, the monitor calculates quota dollar values using four dist
 3. **Output Only:** Maximum ceiling value if consumed exclusively as generated output/thinking.
 4. **Cache Only:** Full quota value if consumed strictly as cached context reads.
 
-### 3. Cross-Project Slot Tracking
+### 3. Per-Model Usage & Remaining Quota Estimator
+- **Exact Server-Billed Token Telemetry:** Reads exact `input_tokens`, `cache_read_tokens`, and `output_tokens` directly from `PLANNER_RESPONSE` events across both CLI (`~/.gemini/antigravity-cli/brain`) and Desktop (`~/.gemini/antigravity/brain`) transcripts.
+- **Automatic Model & Subagent Attribution:** Tracks `<USER_SETTINGS_CHANGE>` model switches (`Gemini 4 Argon (High/Medium/Low)`, `Gemini 3.8 Flash (High/Medium/Low)`, `Claude Opus 5.5`, `Claude Sonnet 5.5/4.6`, `GPT-OSS 120B`) as well as `invoke_subagent` delegations (`flash`, `flash_lite`, `pro`, `inherit`).
+- **Model-Weighted Remaining Capacity & Step Estimator:** Applies each model's relative quota burn weight ($0.4\times \text{ to } 5.0\times$) against both 5-hour and 7-day remaining pool balances to estimate exact remaining tokens and remaining agent steps/turns per model (`min(5h_left, weekly_left)` bottleneck-aware).
+
 ### 4. Modern Frameless Desktop HUD & Autostart
 - **Custom Draggable Titlebar:** Borderless dark dashboard aesthetic with `-webkit-app-region: drag` and smooth cursor-tracking movement.
 - **Global YOLO Mode (Enabled by Default):** Integrated with Antigravity's `PreToolUse` lifecycle hook (`~/.gemini/config/hooks.json`). Automatically approves all tool execution permission prompts across every session and conversation (including when jumping between feature chats with `/switch`), with an instant toggle button in the HUD.

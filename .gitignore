@@ -5,3 +5,7 @@ __pycache__/
 quota_history.json
 .vscode/
 .idea/
+.repowise/
+.claude/
+.github/
+.mcp.json
