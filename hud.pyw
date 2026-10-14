@@ -11,8 +11,10 @@ import ctypes
 import webview
 
 USER_HOME = os.path.expanduser("~")
+AGY_CLI_BRAIN = os.path.join(USER_HOME, ".agy", "antigravity", "brain")
 CLI_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity-cli", "brain")
 DESKTOP_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity", "brain")
+BRAIN_DIRS = [AGY_CLI_BRAIN, CLI_BRAIN, DESKTOP_BRAIN]
 QUOTA_HISTORY_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "quota_history.json")
 HUD_CONFIG_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud_config.json")
 AGY_EXE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "agy.exe")
@@ -30,63 +32,63 @@ TP_PRICE_CACHE = 0.30        # $0.30 / 1M
 TP_PRICE_OUT = 15.00         # $15.00 / 1M
 TP_PRICE_WEIGHTED = 6.00     # Blended weighted rate
 
-# Comprehensive Antigravity Model Catalog (Quota Burn Multipliers & API Valuation Rates per 1M tokens)
-# weight: relative quota consumption multiplier against the pool's 1.0x baseline model
+# Comprehensive Antigravity Model Catalog (Empirically Calibrated Quota Burn Multipliers, Tok/s Speeds & API Valuation Rates)
+# weight: empirical relative quota consumption multiplier against the pool's 1.0x baseline model
 MODEL_CATALOG = {
-    # Gemini 4 Argon Family
+    # Gemini 4 Argon Family (Empirical: ~2.0x-2.6x relative burn, 127-138 tok/s median, 420-430 tok/s burst)
     "Gemini 4 Argon (High)": {
-        "pool": "gemini", "weight": 3.5, "in": 2.50, "cache": 0.25, "out": 12.00, "weighted": 6.00, "avg_step_base": 2400
+        "pool": "gemini", "weight": 2.6, "in": 2.50, "cache": 0.25, "out": 12.00, "weighted": 6.00, "avg_step_base": 2400, "speed_tok_s": 138.0
     },
     "Gemini 4 Argon (Medium)": {
-        "pool": "gemini", "weight": 2.5, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 2100
+        "pool": "gemini", "weight": 2.0, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 2100, "speed_tok_s": 127.0
     },
     "Gemini 4 Argon (Low)": {
-        "pool": "gemini", "weight": 1.8, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.20, "avg_step_base": 1800
+        "pool": "gemini", "weight": 1.4, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.20, "avg_step_base": 1800, "speed_tok_s": 145.0
     },
     # Gemini 3.1 Pro Family (Historical + Subagent Pro)
     "Gemini 3.1 Pro (High)": {
-        "pool": "gemini", "weight": 3.0, "in": 2.00, "cache": 0.20, "out": 10.00, "weighted": 5.00, "avg_step_base": 2200
+        "pool": "gemini", "weight": 2.5, "in": 2.00, "cache": 0.20, "out": 10.00, "weighted": 5.00, "avg_step_base": 2200, "speed_tok_s": 115.0
     },
     "Gemini 3.1 Pro (Low)": {
-        "pool": "gemini", "weight": 1.6, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.00, "avg_step_base": 1800
+        "pool": "gemini", "weight": 1.4, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.00, "avg_step_base": 1800, "speed_tok_s": 130.0
     },
-    # Gemini 3.8 Flash Family
+    # Gemini 3.8 Flash Family (Empirical: Low=0.45x @ 231 tok/s [27.96M 5h], Med=1.0x @ 222.8 tok/s [11.62M 5h])
     "Gemini 3.8 Flash (High)": {
-        "pool": "gemini", "weight": 1.0, "in": 0.75, "cache": 0.075, "out": 3.75, "weighted": 2.25, "avg_step_base": 1500
+        "pool": "gemini", "weight": 1.15, "in": 0.75, "cache": 0.075, "out": 3.75, "weighted": 2.25, "avg_step_base": 1500, "speed_tok_s": 218.0
     },
     "Gemini 3.8 Flash (Medium)": {
-        "pool": "gemini", "weight": 0.75, "in": 0.50, "cache": 0.05, "out": 2.50, "weighted": 1.50, "avg_step_base": 1350
+        "pool": "gemini", "weight": 1.0, "in": 0.50, "cache": 0.05, "out": 2.50, "weighted": 1.50, "avg_step_base": 1350, "speed_tok_s": 222.8
     },
     "Gemini 3.8 Flash (Low)": {
-        "pool": "gemini", "weight": 0.5, "in": 0.35, "cache": 0.035, "out": 1.50, "weighted": 0.95, "avg_step_base": 1100
+        "pool": "gemini", "weight": 0.45, "in": 0.35, "cache": 0.035, "out": 1.50, "weighted": 0.95, "avg_step_base": 1100, "speed_tok_s": 231.0
     },
     "Gemini 3.8 Flash (Subagent)": {
-        "pool": "gemini", "weight": 0.75, "in": 0.50, "cache": 0.05, "out": 2.50, "weighted": 1.50, "avg_step_base": 1200
+        "pool": "gemini", "weight": 0.85, "in": 0.50, "cache": 0.05, "out": 2.50, "weighted": 1.50, "avg_step_base": 1200, "speed_tok_s": 225.0
     },
-    # Third-Party Models (Claude 5.5 / 4.6 & GPT-OSS)
+    # Third-Party Shared Pool (Empirical: 5h pool = 4.18M Sonnet-Med eff tokens, Weekly pool = 2.0x 5h pool = 8.36M eff tokens)
     "Claude Opus 5.5 (High)": {
-        "pool": "tp", "weight": 5.0, "in": 15.00, "cache": 1.50, "out": 75.00, "weighted": 30.00, "avg_step_base": 2400
+        "pool": "tp", "weight": 2.5, "in": 15.00, "cache": 1.50, "out": 75.00, "weighted": 30.00, "avg_step_base": 2400, "speed_tok_s": 100.3
     },
     "Claude Opus 5.5 (Medium)": {
-        "pool": "tp", "weight": 4.0, "in": 15.00, "cache": 1.50, "out": 75.00, "weighted": 30.00, "avg_step_base": 2100
+        "pool": "tp", "weight": 2.5, "in": 15.00, "cache": 1.50, "out": 75.00, "weighted": 30.00, "avg_step_base": 2100, "speed_tok_s": 98.6
     },
     "Claude Opus 5.5 (Low)": {
-        "pool": "tp", "weight": 3.0, "in": 15.00, "cache": 1.50, "out": 75.00, "weighted": 30.00, "avg_step_base": 1800
+        "pool": "tp", "weight": 1.9, "in": 15.00, "cache": 1.50, "out": 75.00, "weighted": 30.00, "avg_step_base": 1800, "speed_tok_s": 93.6
     },
     "Claude Sonnet 5.5 (High)": {
-        "pool": "tp", "weight": 1.5, "in": 3.00, "cache": 0.30, "out": 15.00, "weighted": 6.00, "avg_step_base": 2000
+        "pool": "tp", "weight": 1.25, "in": 3.00, "cache": 0.30, "out": 15.00, "weighted": 6.00, "avg_step_base": 2000, "speed_tok_s": 109.5
     },
     "Claude Sonnet 5.5 (Medium)": {
-        "pool": "tp", "weight": 1.0, "in": 3.00, "cache": 0.30, "out": 15.00, "weighted": 6.00, "avg_step_base": 1750
+        "pool": "tp", "weight": 1.0, "in": 3.00, "cache": 0.30, "out": 15.00, "weighted": 6.00, "avg_step_base": 1750, "speed_tok_s": 103.7
     },
     "Claude Sonnet 5.5 (Low)": {
-        "pool": "tp", "weight": 0.8, "in": 3.00, "cache": 0.30, "out": 15.00, "weighted": 6.00, "avg_step_base": 1500
+        "pool": "tp", "weight": 1.0, "in": 3.00, "cache": 0.30, "out": 15.00, "weighted": 6.00, "avg_step_base": 1500, "speed_tok_s": 101.3
     },
     "Claude Sonnet 4.6 (Thinking)": {
-        "pool": "tp", "weight": 1.5, "in": 3.00, "cache": 0.30, "out": 15.00, "weighted": 6.00, "avg_step_base": 2000
+        "pool": "tp", "weight": 1.25, "in": 3.00, "cache": 0.30, "out": 15.00, "weighted": 6.00, "avg_step_base": 2000, "speed_tok_s": 105.0
     },
     "GPT-OSS 120B (Medium)": {
-        "pool": "tp", "weight": 0.4, "in": 0.80, "cache": 0.08, "out": 3.20, "weighted": 1.80, "avg_step_base": 1400
+        "pool": "tp", "weight": 0.2, "in": 0.80, "cache": 0.08, "out": 3.20, "weighted": 1.80, "avg_step_base": 1400, "speed_tok_s": 105.8
     },
 }
 
@@ -100,8 +102,10 @@ PRIMARY_SELECTABLE_MODELS = [
     "Gemini 3.8 Flash (Low)",
     "Claude Opus 5.5 (High)",
     "Claude Opus 5.5 (Medium)",
+    "Claude Opus 5.5 (Low)",
     "Claude Sonnet 5.5 (High)",
     "Claude Sonnet 5.5 (Medium)",
+    "Claude Sonnet 5.5 (Low)",
     "GPT-OSS 120B (Medium)",
 ]
 
@@ -112,20 +116,20 @@ def get_model_spec(model_name: str) -> dict:
     low = model_name.lower()
     if "claude" in low or "gpt" in low or "opus" in low or "sonnet" in low:
         if "opus" in low:
-            w = 5.0 if ("high" in low or "thinking" in low) else (3.0 if "low" in low else 4.0)
-            return {"pool": "tp", "weight": w, "in": 15.0, "cache": 1.5, "out": 75.0, "weighted": 30.0, "avg_step_base": 2200}
+            w = 2.5 if ("high" in low or "medium" in low or "thinking" in low) else 1.9
+            return {"pool": "tp", "weight": w, "in": 15.0, "cache": 1.5, "out": 75.0, "weighted": 30.0, "avg_step_base": 2200, "speed_tok_s": 98.6}
         if "gpt" in low:
-            return {"pool": "tp", "weight": 0.4, "in": 0.80, "cache": 0.08, "out": 3.20, "weighted": 1.80, "avg_step_base": 1400}
-        w = 1.5 if ("high" in low or "thinking" in low) else (0.8 if "low" in low else 1.0)
-        return {"pool": "tp", "weight": w, "in": 3.0, "cache": 0.30, "out": 15.0, "weighted": 6.0, "avg_step_base": 1800}
+            return {"pool": "tp", "weight": 0.2, "in": 0.80, "cache": 0.08, "out": 3.20, "weighted": 1.80, "avg_step_base": 1400, "speed_tok_s": 105.8}
+        w = 1.25 if ("high" in low or "thinking" in low) else 1.0
+        return {"pool": "tp", "weight": w, "in": 3.0, "cache": 0.30, "out": 15.0, "weighted": 6.0, "avg_step_base": 1800, "speed_tok_s": 103.7}
     if "argon" in low:
-        w = 3.5 if "high" in low else (1.8 if "low" in low else 2.5)
-        return {"pool": "gemini", "weight": w, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 2100}
+        w = 2.6 if "high" in low else (1.4 if "low" in low else 2.0)
+        return {"pool": "gemini", "weight": w, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 2100, "speed_tok_s": 132.0}
     if "pro" in low:
-        w = 3.0 if "high" in low else 1.6
-        return {"pool": "gemini", "weight": w, "in": 2.00, "cache": 0.20, "out": 10.00, "weighted": 5.00, "avg_step_base": 2000}
-    w = 0.5 if ("low" in low or "lite" in low) else (0.75 if ("medium" in low or "subagent" in low) else 1.0)
-    return {"pool": "gemini", "weight": w, "in": 0.75, "cache": 0.075, "out": 3.75, "weighted": 2.25, "avg_step_base": 1500}
+        w = 2.5 if "high" in low else 1.4
+        return {"pool": "gemini", "weight": w, "in": 2.00, "cache": 0.20, "out": 10.00, "weighted": 5.00, "avg_step_base": 2000, "speed_tok_s": 120.0}
+    w = 0.45 if ("low" in low or "lite" in low) else (1.0 if ("medium" in low or "subagent" in low) else 1.15)
+    return {"pool": "gemini", "weight": w, "in": 0.75, "cache": 0.075, "out": 3.75, "weighted": 2.25, "avg_step_base": 1500, "speed_tok_s": 225.0}
 
 
 # Win32 Native Setup
@@ -1146,7 +1150,8 @@ HTML_CONTENT = """<!DOCTYPE html>
               <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="w-2 h-2 rounded-full flex-shrink-0" style="background: ${dotColor};"></span>
                 <span class="font-bold text-xs" style="color: var(--text-main);">${m.name}</span>
-                <span class="px-1 rounded text-[9px] font-bold" style="background: var(--bg-card); color: var(--text-dim); border: 1px solid var(--border-card);">${m.weight}x</span>
+                <span class="px-1 rounded text-[9px] font-bold" style="background: var(--bg-card); color: var(--text-dim); border: 1px solid var(--border-card);" title="Empirical Quota Burn Multiplier">${m.weight}x</span>
+                <span class="px-1 rounded text-[9px] font-bold" style="background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-card);" title="Empirically Benchmarked Median Output Speed">${Math.round(m.speed_tok_s || 100)} tok/s</span>
                 ${activeTag}
               </div>
               <div class="text-right flex items-center gap-1.5">
@@ -1491,10 +1496,10 @@ class MetricsEngine:
             pass
 
     def _update_pool_valuations(self):
-        learned_5h_cap = self.compute_learned_cap(self.history.get("samples_5h", []), default=862000)
+        learned_5h_cap = self.compute_learned_cap(self.history.get("samples_5h", []), default=1350000)
         learned_weekly_cap = self.compute_learned_cap(self.history.get("samples_weekly", []), default=8083900)
-        learned_tp_5h_cap = self.compute_learned_cap(self.history.get("samples_tp_5h", []), default=250000)
-        learned_tp_weekly_cap = self.compute_learned_cap(self.history.get("samples_tp_weekly", []), default=1500000)
+        learned_tp_5h_cap = self.compute_learned_cap(self.history.get("samples_tp_5h", []), default=255000)
+        learned_tp_weekly_cap = self.compute_learned_cap(self.history.get("samples_tp_weekly", []), default=510000)
 
         # 1. Gemini Pool Remaining (1.0x Flash-Equivalent Base Units)
         cur_g_5h = self.cached_metrics["gemini_5h_pct"]
@@ -1589,7 +1594,7 @@ class MetricsEngine:
 
         if all_logs is None:
             all_logs = []
-            for b in [CLI_BRAIN, DESKTOP_BRAIN]:
+            for b in BRAIN_DIRS:
                 if os.path.exists(b):
                     for f in glob.glob(os.path.join(b, "*", ".system_generated", "logs", "transcript.jsonl")):
                         try:
@@ -1623,6 +1628,23 @@ class MetricsEngine:
 
         by_model = {}
 
+        bench_tag_models = {
+            "BENCH_phase1_flash_low": "Gemini 3.8 Flash (Low)",
+            "BENCH_phase2_flash_medium": "Gemini 3.8 Flash (Medium)",
+            "BENCH_phase3_flash_high": "Gemini 3.8 Flash (High)",
+            "BENCH_phase4_argon_low": "Gemini 4 Argon (Low)",
+            "BENCH_phase5_argon_medium": "Gemini 4 Argon (Medium)",
+            "BENCH_phase6_argon_medium": "Gemini 4 Argon (Medium)",
+            "BENCH_phase7_argon_high": "Gemini 4 Argon (High)",
+            "BENCH_tp1_gpt_oss_120b": "GPT-OSS 120B (Medium)",
+            "BENCH_tp2_claude_sonnet_55_low": "Claude Sonnet 5.5 (Low)",
+            "BENCH_tp3_claude_sonnet_55_medium": "Claude Sonnet 5.5 (Medium)",
+            "BENCH_tp4_claude_sonnet_55_high": "Claude Sonnet 5.5 (High)",
+            "BENCH_tp5_claude_opus_55_low": "Claude Opus 5.5 (Low)",
+            "BENCH_tp6_claude_opus_55_medium": "Claude Opus 5.5 (Medium)",
+            "BENCH_tp7_claude_opus_55_high": "Claude Opus 5.5 (High)",
+        }
+
         for _, log_path in all_logs:
             conv_id = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(log_path))))
             cur_model = None
@@ -1649,10 +1671,16 @@ class MetricsEngine:
 
                         t = data.get("type", "")
                         c = str(data.get("content", ""))
-                        if t == "USER_INPUT" and "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
-                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\.\n`]+)\.\s+No need", c)
-                            if m:
-                                cur_model = m.group(1).strip()
+                        if t == "USER_INPUT":
+                            if "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
+                                m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\.\n`]+)\.\s+No need", c)
+                                if m:
+                                    cur_model = m.group(1).strip()
+                            elif "BENCH_" in c:
+                                for btag, bmod in bench_tag_models.items():
+                                    if btag in c:
+                                        cur_model = bmod
+                                        break
                         if data.get("modelName"):
                             cur_model = str(data.get("modelName")).strip()
                         elif data.get("model"):
@@ -1870,10 +1898,10 @@ class MetricsEngine:
             self.save_history()
 
     def _build_model_rows(self, by_model_dict, active_model_name):
-        learned_g_5h = self.compute_learned_cap(self.history.get("samples_5h", []), default=862000)
+        learned_g_5h = self.compute_learned_cap(self.history.get("samples_5h", []), default=1350000)
         learned_g_w = self.compute_learned_cap(self.history.get("samples_weekly", []), default=8083900)
-        learned_tp_5h = self.compute_learned_cap(self.history.get("samples_tp_5h", []), default=250000)
-        learned_tp_w = self.compute_learned_cap(self.history.get("samples_tp_weekly", []), default=1500000)
+        learned_tp_5h = self.compute_learned_cap(self.history.get("samples_tp_5h", []), default=255000)
+        learned_tp_w = self.compute_learned_cap(self.history.get("samples_tp_weekly", []), default=510000)
 
         g_5h_rem_base = learned_g_5h * (self.cached_metrics["gemini_5h_pct"] / 100.0)
         g_w_rem_base = learned_g_w * (self.cached_metrics["gemini_weekly_pct"] / 100.0)
@@ -1913,6 +1941,7 @@ class MetricsEngine:
                 "name": m_name,
                 "pool": spec["pool"],
                 "weight": spec["weight"],
+                "speed_tok_s": spec.get("speed_tok_s", 100.0),
                 "is_active": (m_name == active_model_name),
                 "steps": usage["steps"],
                 "in_tokens": usage["in_tokens"],
@@ -1947,7 +1976,7 @@ class MetricsEngine:
         # Gather all transcript logs modified within the last 8 days
         cutoff_ts = min(self.weekly_start_dt.timestamp(), self.tp_weekly_start_dt.timestamp()) - 86400
         all_logs = []
-        for b in [CLI_BRAIN, DESKTOP_BRAIN]:
+        for b in BRAIN_DIRS:
             if os.path.exists(b):
                 for f in glob.glob(os.path.join(b, "*", ".system_generated", "logs", "transcript.jsonl")):
                     try:
