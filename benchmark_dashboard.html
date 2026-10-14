@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antigravity Quota, Token, Dollar & Counterfactual Matrix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            canvas: '#07080a',
+            surface: '#0e1117',
+            elevated: '#141923',
+            border: '#1f2637',
+            gold: '#e2b170',
+            emerald: '#10b981',
+            rose: '#f43f5e',
+            amber: '#f59e0b',
+            sky: '#38bdf8'
+          },
+          fontFamily: {
+            display: ['Sora', 'sans-serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #07080a;
+      color: #e2e8f0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+    }
+    .font-mono-tabular {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    .card-surface {
+      background-color: #0e1117;
+      border: 1px solid #1f2637;
+      border-radius: 14px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-surface:hover {
+      border-color: #2e3850;
+    }
+    .pill-active {
+      background-color: #e2b170;
+      color: #07080a;
+      font-weight: 700;
+      border-color: #e2b170;
+    }
+    .pill-inactive {
+      background-color: #141923;
+      color: #94a3b8;
+      border: 1px solid #1f2637;
+    }
+    .pill-inactive:hover {
+      color: #f8fafc;
+      border-color: #334155;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: #1f2637;
+      height: 6px;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #e2b170;
+      cursor: pointer;
+      border: 2px solid #07080a;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #07080a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f2637;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-24 selection:bg-[#e2b170] selection:text-[#07080a]">
+
+  <!-- Top Navigation & Telemetry Header -->
+  <header class="sticky top-0 z-40 bg-[#07080a]/95 backdrop-blur-md border-b border-[#1f2637]">
+    <div class="max-w-[1600px] mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-[#141923] border border-[#e2b170]/40 flex items-center justify-center">
+          <i data-lucide="gauge" class="w-5 h-5 text-[#e2b170]"></i>
+        </div>
+        <div>
+          <h1 class="font-display font-bold text-lg tracking-tight text-white flex items-center gap-2.5">
+            ANTIGRAVITY QUOTA &amp; COUNTERFACTUAL ENGINE
+            <span class="text-xs font-mono-tabular px-2 py-0.5 rounded bg-[#141923] text-[#e2b170] border border-[#e2b170]/30">EMPIRICAL CALIBRATION v2.4</span>
+          </h1>
+          <p class="text-xs text-slate-400">Complete Token Ceilings, API Dollar Valuations, Generation Speeds (tok/s) &amp; 1–4 Week Historical Argon Counterfactuals</p>
+        </div>
+      </div>
+
+      <nav class="flex flex-wrap items-center gap-2 text-xs font-medium">
+        <a href="#sec-counterfactual" class="px-3 py-1.5 rounded-lg bg-[#141923] hover:bg-[#1e2636] text-slate-200 border border-[#1f2637] flex items-center gap-1.5 transition">
+          <i data-lucide="history" class="w-3.5 h-3.5 text-[#e2b170]"></i> 1–4 Week Flash &rarr; Argon Lab
+        </a>
+        <a href="#sec-weekly-cohorts" class="px-3 py-1.5 rounded-lg bg-[#141923] hover:bg-[#1e2636] text-slate-200 border border-[#1f2637] flex items-center gap-1.5 transition">
+          <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-emerald-400"></i> Week-by-Week Matrix
+        </a>
+        <a href="#sec-master-table" class="px-3 py-1.5 rounded-lg bg-[#141923] hover:bg-[#1e2636] text-slate-200 border border-[#1f2637] flex items-center gap-1.5 transition">
+          <i data-lucide="table-2" class="w-3.5 h-3.5 text-sky-400"></i> Token &amp; Dollar Master Table
+        </a>
+        <a href="#sec-combinations" class="px-3 py-1.5 rounded-lg bg-[#141923] hover:bg-[#1e2636] text-slate-200 border border-[#1f2637] flex items-center gap-1.5 transition">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-amber-400"></i> Mix &amp; Match Simulator
+        </a>
+        <a href="#sec-presets" class="px-3 py-1.5 rounded-lg bg-[#141923] hover:bg-[#1e2636] text-slate-200 border border-[#1f2637] flex items-center gap-1.5 transition">
+          <i data-lucide="layers" class="w-3.5 h-3.5 text-rose-400"></i> 12 Preset Combinations
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-[1600px] mx-auto px-6 pt-8 space-y-14">
+
+    <!-- EXECUTIVE SUMMARY ASYMMETRIC BENTO -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <!-- Left 8 Cols: Core Empirical Discovery -->
+      <div class="lg:col-span-8 card-surface p-7 flex flex-col justify-between relative overflow-hidden">
+        <div>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <span class="text-xs font-mono-tabular uppercase tracking-wider text-[#e2b170] flex items-center gap-1.5">
+              <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Empirical Pool Architecture &amp; Weighting Law
+            </span>
+            <span class="text-xs font-mono-tabular text-slate-400">Calibrated from 59,695 Steps (4 Weeks) + Live CLI Probes</span>
+          </div>
+          <h2 class="font-display text-2xl sm:text-3xl font-bold text-white leading-tight mb-3">
+            How Your Quota Pools Actually Burn: Tokens, Dollars &amp; Multipliers
+          </h2>
+          <p class="text-sm text-slate-300 leading-relaxed mb-6">
+            Antigravity enforces two independent quota pools: the <strong class="text-white">Gemini Pool</strong> (where a 100% Weekly cap equals <span class="font-mono-tabular text-[#e2b170]">3.33&times;</span> a single 5-hour window) and the <strong class="text-white">Third-Party Shared Pool</strong> (where a 100% Weekly cap equals <span class="font-mono-tabular text-emerald-400">2.00&times;</span> a single 5-hour window). Cached context tokens (<code class="text-xs font-mono-tabular bg-[#141923] px-1.5 py-0.5 rounded text-sky-300">cached_content_token_count</code>) burn at <span class="font-mono-tabular text-emerald-400">0.10&times;</span> the weight of fresh input and output tokens.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3.5 pt-4 border-t border-[#1f2637]">
+          <div class="bg-[#141923] p-4 rounded-xl border border-[#1f2637]">
+            <div class="text-xs text-slate-400 mb-1">Gemini 3.8 Flash (Low)</div>
+            <div class="font-mono-tabular text-xl font-bold text-emerald-400">27.96M <span class="text-xs font-normal text-slate-400">eff/5h</span></div>
+            <div class="font-mono-tabular text-xs text-slate-300 mt-1">$15.05 / 5h &bull; 231 tok/s</div>
+            <div class="text-[11px] font-mono-tabular text-slate-400 mt-0.5">Weight: 0.45&times; (93.1M/wk)</div>
+          </div>
+          <div class="bg-[#141923] p-4 rounded-xl border border-[#1f2637]">
+            <div class="text-xs text-slate-400 mb-1">Gemini 3.8 Flash (Med)</div>
+            <div class="font-mono-tabular text-xl font-bold text-sky-400">11.62M <span class="text-xs font-normal text-slate-400">eff/5h</span></div>
+            <div class="font-mono-tabular text-xs text-slate-300 mt-1">$9.89 / 5h &bull; 223 tok/s</div>
+            <div class="text-[11px] font-mono-tabular text-slate-400 mt-0.5">Weight: 1.00&times; (38.7M/wk)</div>
+          </div>
+          <div class="bg-[#141923] p-4 rounded-xl border border-[#e2b170]/40">
+            <div class="text-xs text-[#e2b170] mb-1">Gemini 4 Argon (Med)</div>
+            <div class="font-mono-tabular text-xl font-bold text-[#e2b170]">12.79M <span class="text-xs font-normal text-slate-400">raw/5h</span></div>
+            <div class="font-mono-tabular text-xs text-slate-200 mt-1">$46.57 / 5h &bull; 127 tok/s</div>
+            <div class="text-[11px] font-mono-tabular text-slate-400 mt-0.5">41.68M w/ cache (2.00&times; wt)</div>
+          </div>
+          <div class="bg-[#141923] p-4 rounded-xl border border-rose-500/30">
+            <div class="text-xs text-rose-300 mb-1">Third-Party Shared Pool</div>
+            <div class="font-mono-tabular text-xl font-bold text-rose-400">1.62M–4.18M <span class="text-xs font-normal text-slate-400">/5h</span></div>
+            <div class="font-mono-tabular text-xs text-slate-300 mt-1">$25.07–$26.80 / 5h</div>
+            <div class="text-[11px] font-mono-tabular text-slate-400 mt-0.5">Sonnet 4.18M &bull; Opus 1.62M</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right 4 Cols: Instant Headline Answer to User Question -->
+      <div class="lg:col-span-4 card-surface p-7 bg-gradient-to-b from-[#141923] to-[#0e1117] flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-mono-tabular uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Headline Counterfactual Verdict
+            </span>
+            <span class="text-xs font-mono-tabular px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30">4-WEEK FLASH &rarr; ARGON</span>
+          </div>
+          <h3 class="font-display text-lg font-bold text-white mb-2">
+            What If Your Last 4 Weeks of Flash Usage Had Been Gemini 4 Argon?
+          </h3>
+          <p class="text-xs text-slate-300 leading-relaxed mb-4">
+            Over the last 28 days, you executed <strong class="text-white font-mono-tabular">59,695 agentic steps</strong> across <strong class="text-white font-mono-tabular">157 conversations</strong> (<span class="font-mono-tabular text-emerald-400">470.5M</span> fresh+out tokens + <span class="font-mono-tabular text-sky-400">8.20B</span> cached tokens = <span class="font-mono-tabular text-white">1.29B effective tokens</span>).
+          </p>
+        </div>
+
+        <div class="space-y-2.5 text-xs font-mono-tabular">
+          <div class="p-3 rounded-lg bg-[#0e1117] border border-[#1f2637] flex items-center justify-between">
+            <div>
+              <div class="text-slate-400">Actual on Flash (Low/Med Blend)</div>
+              <div class="text-emerald-400 font-semibold">Survived All 4 Weeks (Zero Weekly Lockout)</div>
+            </div>
+            <div class="text-right">
+              <div class="text-white font-bold">$472.71</div>
+              <div class="text-[11px] text-slate-400">16.9 hrs gen time</div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-lg bg-[#0e1117] border border-amber-500/30 flex items-center justify-between">
+            <div>
+              <div class="text-amber-300">If Run on Argon (Medium 2.0&times;)</div>
+              <div class="text-amber-400 font-semibold">930% of 1-Wk Pool (2.32&times; Weekly Cap/Wk)</div>
+            </div>
+            <div class="text-right">
+              <div class="text-white font-bold">$2,026.52</div>
+              <div class="text-[11px] text-amber-300">30.7 hrs (+13.8h)</div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-lg bg-[#0e1117] border border-rose-500/40 flex items-center justify-between">
+            <div>
+              <div class="text-rose-300">If Run on Argon (High 2.6&times;)</div>
+              <div class="text-rose-400 font-semibold">1,208% of 1-Wk Pool (Lockout in ~2.3 Days)</div>
+            </div>
+            <div class="text-right">
+              <div class="text-white font-bold">$3,367.57</div>
+              <div class="text-[11px] text-rose-300">28.2 hrs (+11.3h)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: INTERACTIVE 1-2-3-4 WEEK HISTORICAL FLASH -> ARGON COUNTERFACTUAL SIMULATOR -->
+    <section id="sec-counterfactual" class="card-surface p-7 space-y-6">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#1f2637] pb-5">
+        <div>
+          <div class="text-xs font-mono-tabular uppercase tracking-wider text-[#e2b170] flex items-center gap-1.5 mb-1">
+            <i data-lucide="flask-conical" class="w-4 h-4"></i> Interactive Counterfactual Laboratory
+          </div>
+          <h2 class="font-display text-2xl font-bold text-white">
+            Historical Usage Replay: "What If My Gemini 3.8 Flash Usage Were Gemini 4 Argon?"
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Select any historical window from your local brain transcripts (<code class="font-mono-tabular text-slate-300">~/.gemini/antigravity/brain</code>) or adjust the cache &amp; step sliders to inspect the exact impact across every model and effort tier.
+          </p>
+        </div>
+
+        <!-- Window Selector Pills -->
+        <div class="flex flex-wrap gap-2" id="window-selector">
+          <button onclick="selectHistoricalWindow('7d')" id="btn-win-7d" class="px-3.5 py-2 rounded-lg text-xs font-mono-tabular transition pill-inactive">
+            Last 1 Week (7d)
+          </button>
+          <button onclick="selectHistoricalWindow('14d')" id="btn-win-14d" class="px-3.5 py-2 rounded-lg text-xs font-mono-tabular transition pill-inactive">
+            Last 2 Weeks (14d)
+          </button>
+          <button onclick="selectHistoricalWindow('21d')" id="btn-win-21d" class="px-3.5 py-2 rounded-lg text-xs font-mono-tabular transition pill-inactive">
+            Last 3 Weeks (21d)
+          </button>
+          <button onclick="selectHistoricalWindow('28d')" id="btn-win-28d" class="px-3.5 py-2 rounded-lg text-xs font-mono-tabular transition pill-active">
+            Last 4 Weeks (28d)
+          </button>
+          <button onclick="selectHistoricalWindow('peak5h')" id="btn-win-peak5h" class="px-3.5 py-2 rounded-lg text-xs font-mono-tabular transition pill-inactive">
+            Peak 5h Burst
+          </button>
+          <button onclick="selectHistoricalWindow('all')" id="btn-win-all" class="px-3.5 py-2 rounded-lg text-xs font-mono-tabular transition pill-inactive">
+            All-Time (501 Convs)
+          </button>
+        </div>
+      </div>
+
+      <!-- Historical Telemetry Readout Bar + Baseline Selector -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center bg-[#141923] p-5 rounded-xl border border-[#1f2637]">
+        <div class="lg:col-span-8 grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase font-mono-tabular">Window Span</div>
+            <div id="cf-span-label" class="font-display font-bold text-base text-white mt-0.5">Last 4 Weeks (28d)</div>
+            <div id="cf-convs-label" class="text-xs font-mono-tabular text-[#e2b170]">157 Conversations</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase font-mono-tabular">Agentic Steps</div>
+            <div id="cf-steps-val" class="font-mono-tabular font-bold text-lg text-white mt-0.5">59,695</div>
+            <div id="cf-steps-rate" class="text-xs font-mono-tabular text-slate-400">2,132 steps/day</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase font-mono-tabular">Fresh In + Out</div>
+            <div id="cf-fresh-val" class="font-mono-tabular font-bold text-lg text-emerald-400 mt-0.5">470.55M</div>
+            <div id="cf-out-sub" class="text-xs font-mono-tabular text-slate-400">456.5M in + 14.0M out</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase font-mono-tabular">Cached Context</div>
+            <div id="cf-cache-val" class="font-mono-tabular font-bold text-lg text-sky-400 mt-0.5">8,197.5M</div>
+            <div class="text-xs font-mono-tabular text-slate-400">0.10&times; = 819.8M eff</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase font-mono-tabular">Total Effective Tok</div>
+            <div id="cf-eff-val" class="font-mono-tabular font-bold text-lg text-[#e2b170] mt-0.5">1,290.30M</div>
+            <div class="text-xs font-mono-tabular text-slate-400">Fresh + Out + 0.1&times;Cache</div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 flex flex-col gap-2 border-t lg:border-t-0 lg:border-l border-[#1f2637] pt-3 lg:pt-0 lg:pl-5">
+          <label class="text-xs text-slate-300 font-medium flex items-center justify-between">
+            <span>Assumed Historical Flash Baseline Effort:</span>
+            <span id="cf-base-tag" class="font-mono-tabular text-[#e2b170]">Blended (70% Low / 30% Med)</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="setHistoricalBaseline('flash_low')" id="base-flash_low" class="px-2.5 py-1.5 rounded text-xs font-mono-tabular pill-inactive">Flash Low (0.45&times;)</button>
+            <button onclick="setHistoricalBaseline('flash_blend')" id="base-flash_blend" class="px-2.5 py-1.5 rounded text-xs font-mono-tabular pill-active">70/30 Blend (0.62&times;)</button>
+            <button onclick="setHistoricalBaseline('flash_med')" id="base-flash_med" class="px-2.5 py-1.5 rounded text-xs font-mono-tabular pill-inactive">Flash Med (1.00&times;)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Counterfactual Comparison Grid Across All Models -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#1f2637] text-[11px] font-mono-tabular uppercase text-slate-400 bg-[#141923]/60">
+              <th class="py-3.5 px-4">Replacement Model &amp; Effort Tier</th>
+              <th class="py-3.5 px-3 text-right">Burn Weight</th>
+              <th class="py-3.5 px-3 text-right">Avg Weekly Pool Used / Wk</th>
+              <th class="py-3.5 px-3 text-right">Total Pool Equivalents</th>
+              <th class="py-3.5 px-3 text-right">Days Active Before Weekly Lockout</th>
+              <th class="py-3.5 px-3 text-right">Peak 5h Window Burn</th>
+              <th class="py-3.5 px-3 text-right">Total API Dollar Cost ($)</th>
+              <th class="py-3.5 px-3 text-right">Cost Delta vs Flash</th>
+              <th class="py-3.5 px-3 text-right">Gen Wait Time (Hours)</th>
+              <th class="py-3.5 px-4">Operational Verdict</th>
+            </tr>
+          </thead>
+          <tbody id="cf-table-body" class="divide-y divide-[#1f2637] text-xs font-mono-tabular">
+            <!-- Populated dynamically by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 2: WEEK-BY-WEEK COHORT BREAKDOWN (WEEK 1, WEEK 2, WEEK 3, WEEK 4) -->
+    <section id="sec-weekly-cohorts" class="card-surface p-7 space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1f2637] pb-5">
+        <div>
+          <div class="text-xs font-mono-tabular uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 mb-1">
+            <i data-lucide="calendar-range" class="w-4 h-4"></i> Individual Weekly Cohort Breakdown
+          </div>
+          <h2 class="font-display text-2xl font-bold text-white">
+            Week-by-Week Breakdown (Week 1 vs. Week 2 vs. Week 3 vs. Week 4)
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Because your usage ramped up significantly in the most recent 14 days, inspecting each individual 7-day slice shows exactly which weeks would have survived or locked out under <strong class="text-white">Gemini 4 Argon (Low / Medium / High)</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5" id="weekly-cohort-cards">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- SECTION 3: COMPLETE TOKEN & DOLLAR MASTER MATRIX + PARETO CANVAS -->
+    <section id="sec-master-table" class="space-y-6">
+      <div class="card-surface p-7 space-y-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#1f2637] pb-5">
+          <div>
+            <div class="text-xs font-mono-tabular uppercase tracking-wider text-sky-400 flex items-center gap-1.5 mb-1">
+              <i data-lucide="database" class="w-4 h-4"></i> Complete Empirical Model Reference
+            </div>
+            <h2 class="font-display text-2xl font-bold text-white">
+              All Models &amp; Effort Tiers: Token Ceilings, API Dollar Values &amp; Speeds (tok/s)
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">
+              Switch between <strong class="text-slate-200">100% 5-Hour Pool</strong>, <strong class="text-slate-200">100% Weekly Pool</strong>, and <strong class="text-slate-200">Per 1% Quota Drop</strong> to inspect exact token capacities and API dollar equivalents.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs text-slate-400 mr-1">Pool View:</span>
+            <button onclick="setMasterScale('5h')" id="scale-5h" class="px-3 py-1.5 rounded-lg text-xs font-mono-tabular pill-active">100% 5-Hour Pool</button>
+            <button onclick="setMasterScale('weekly')" id="scale-weekly" class="px-3 py-1.5 rounded-lg text-xs font-mono-tabular pill-inactive">100% Weekly Pool</button>
+            <button onclick="setMasterScale('1pct')" id="scale-1pct" class="px-3 py-1.5 rounded-lg text-xs font-mono-tabular pill-inactive">Per 1% Drop</button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-[#1f2637] text-[11px] font-mono-tabular uppercase text-slate-400 bg-[#141923]/60">
+                <th class="py-3.5 px-4">Model &amp; Effort Tier</th>
+                <th class="py-3.5 px-3">Quota Pool</th>
+                <th class="py-3.5 px-3 text-right">Burn Wt (w)</th>
+                <th class="py-3.5 px-3 text-right">Effective Tokens (w/ 0.1&times; Cache)</th>
+                <th class="py-3.5 px-3 text-right">Fresh In+Out Only (0% Cache)</th>
+                <th class="py-3.5 px-3 text-right">Total Context Tokens (90% Cache)</th>
+                <th class="py-3.5 px-3 text-right">API Rates (In / Cache / Out)</th>
+                <th class="py-3.5 px-3 text-right">Actual Bench Mix ($)</th>
+                <th class="py-3.5 px-3 text-right">Blended API Value ($)</th>
+                <th class="py-3.5 px-3 text-right">Speed (Median / Peak)</th>
+                <th class="py-3.5 px-3 text-right">E2E Speed &amp; Latency</th>
+              </tr>
+            </thead>
+            <tbody id="master-table-body" class="divide-y divide-[#1f2637] text-xs font-mono-tabular">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Interactive Canvas Pareto Frontier -->
+      <div class="card-surface p-7">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <div>
+            <span class="text-xs font-mono-tabular uppercase tracking-wider text-[#e2b170] flex items-center gap-1.5">
+              <i data-lucide="activity" class="w-3.5 h-3.5"></i> Interactive Efficiency &amp; Velocity Frontier
+            </span>
+            <h3 class="font-display text-lg font-bold text-white mt-0.5">
+              5-Hour Effective Token Ceiling (Millions) vs. Generation Velocity (tok/s) &amp; Pool Dollar Value
+            </h3>
+          </div>
+          <div class="text-xs font-mono-tabular text-slate-400">
+            Hover over any model node to inspect full telemetry &bull; Circle radius = 5h Pool Dollar ($) Value
+          </div>
+        </div>
+        <div class="relative w-full h-[360px] bg-[#07080a] rounded-xl border border-[#1f2637] overflow-hidden">
+          <canvas id="pareto-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+          <div id="canvas-tooltip" class="hidden absolute pointer-events-none bg-[#141923]/95 border border-[#e2b170]/60 rounded-lg p-3 text-xs font-mono-tabular shadow-2xl z-20 min-w-[240px]"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: INTERACTIVE MULTI-MODEL MIX & MATCH COMBINATION SIMULATOR -->
+    <section id="sec-combinations" class="card-surface p-7 space-y-6">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#1f2637] pb-5">
+        <div>
+          <div class="text-xs font-mono-tabular uppercase tracking-wider text-amber-400 flex items-center gap-1.5 mb-1">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i> Interactive Workflow Mix &amp; Match Simulator
+          </div>
+          <h2 class="font-display text-2xl font-bold text-white">
+            Custom Model Combination Calculator (Build Your Own Split)
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Allocate your workflow percentages across Gemini Flash, Gemini 4 Argon, and Third-Party Claude/GPT models, then set your daily step volume to see real-time 5-hour &amp; Weekly pool consumption, dollar value, and generation time.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="applyMixPreset(70, 0, 20, 10, 0, 0)" class="px-3 py-1.5 rounded-lg text-xs font-mono-tabular bg-[#141923] hover:bg-[#1e2636] text-slate-200 border border-[#1f2637]">
+            Preset: 70% Flash Low + 20% Argon Med + 10% Argon High
+          </button>
+          <button onclick="applyMixPreset(0, 0, 100, 0, 0, 0)" class="px-3 py-1.5 rounded-lg text-xs font-mono-tabular bg-[#141923] hover:bg-[#1e2636] text-[#e2b170] border border-[#e2b170]/30">
+            Preset: 100% Argon Med
+          </button>
+          <button onclick="applyMixPreset(50, 0, 30, 0, 15, 5)" class="px-3 py-1.5 rounded-lg text-xs font-mono-tabular bg-[#141923] hover:bg-[#1e2636] text-emerald-400 border border-emerald-500/30">
+            Preset: Dual-Pool Power Mix
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7">
+        <!-- Sliders Column (7 Cols) -->
+        <div class="lg:col-span-7 space-y-5 bg-[#141923] p-6 rounded-xl border border-[#1f2637]">
+          <div class="flex items-center justify-between border-b border-[#1f2637] pb-3">
+            <span class="text-xs font-mono-tabular uppercase text-slate-300 font-semibold">1. Model Share Allocation (Auto-Normalized to 100%)</span>
+            <span id="mix-norm-label" class="text-xs font-mono-tabular text-[#e2b170]">Total Raw Weight: 100%</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-[#1f2637]">
+              <div class="flex justify-between text-xs mb-2">
+                <span class="text-emerald-400 font-medium">Gemini 3.8 Flash (Low 0.45&times;)</span>
+                <span id="lbl-mix-fl" class="font-mono-tabular font-bold text-white">60%</span>
+              </div>
+              <input type="range" id="rng-mix-fl" min="0" max="100" value="60" oninput="updateCustomMix()" class="w-full" />
+            </div>
+
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-[#1f2637]">
+              <div class="flex justify-between text-xs mb-2">
+                <span class="text-sky-400 font-medium">Gemini 3.8 Flash (Med 1.00&times;)</span>
+                <span id="lbl-mix-fm" class="font-mono-tabular font-bold text-white">15%</span>
+              </div>
+              <input type="range" id="rng-mix-fm" min="0" max="100" value="15" oninput="updateCustomMix()" class="w-full" />
+            </div>
+
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-[#e2b170]/30">
+              <div class="flex justify-between text-xs mb-2">
+                <span class="text-[#e2b170] font-medium">Gemini 4 Argon (Med 2.00&times;)</span>
+                <span id="lbl-mix-am" class="font-mono-tabular font-bold text-white">15%</span>
+              </div>
+              <input type="range" id="rng-mix-am" min="0" max="100" value="15" oninput="updateCustomMix()" class="w-full" />
+            </div>
+
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-amber-500/30">
+              <div class="flex justify-between text-xs mb-2">
+                <span class="text-amber-400 font-medium">Gemini 4 Argon (High 2.60&times;)</span>
+                <span id="lbl-mix-ah" class="font-mono-tabular font-bold text-white">10%</span>
+              </div>
+              <input type="range" id="rng-mix-ah" min="0" max="100" value="10" oninput="updateCustomMix()" class="w-full" />
+            </div>
+
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-rose-500/20">
+              <div class="flex justify-between text-xs mb-2">
+                <span class="text-rose-300 font-medium">Claude Sonnet 5.5 (Med - TP Pool)</span>
+                <span id="lbl-mix-sm" class="font-mono-tabular font-bold text-white">0%</span>
+              </div>
+              <input type="range" id="rng-mix-sm" min="0" max="100" value="0" oninput="updateCustomMix()" class="w-full" />
+            </div>
+
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-rose-500/40">
+              <div class="flex justify-between text-xs mb-2">
+                <span class="text-rose-400 font-medium">Claude Opus 5.5 (High - TP Pool)</span>
+                <span id="lbl-mix-oh" class="font-mono-tabular font-bold text-white">0%</span>
+              </div>
+              <input type="range" id="rng-mix-oh" min="0" max="100" value="0" oninput="updateCustomMix()" class="w-full" />
+            </div>
+          </div>
+
+          <div class="border-t border-[#1f2637] pt-4 space-y-4">
+            <div class="text-xs font-mono-tabular uppercase text-slate-300 font-semibold">2. Workload Intensity Parameters</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="text-slate-300">Weekly Agentic Steps Target:</span>
+                  <span id="lbl-sim-steps" class="font-mono-tabular font-bold text-[#e2b170]">14,924 steps/wk (Your 4-Wk Avg)</span>
+                </div>
+                <input type="range" id="rng-sim-steps" min="1000" max="40000" step="250" value="14924" oninput="updateCustomMix()" class="w-full" />
+                <div class="flex justify-between text-[10px] font-mono-tabular text-slate-500 mt-1">
+                  <span>1,000 (Light)</span>
+                  <span>14,924 (4-Wk Avg)</span>
+                  <span>22,757 (Peak Wk 1)</span>
+                  <span>40,000 (Extreme)</span>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="text-slate-300">Peak 5-Hour Session Burst Steps:</span>
+                  <span id="lbl-sim-burst" class="font-mono-tabular font-bold text-emerald-400">1,200 steps / 5h</span>
+                </div>
+                <input type="range" id="rng-sim-burst" min="100" max="3500" step="50" value="1200" oninput="updateCustomMix()" class="w-full" />
+                <div class="flex justify-between text-[10px] font-mono-tabular text-slate-500 mt-1">
+                  <span>250 (Normal)</span>
+                  <span>1,200 (Heavy)</span>
+                  <span>2,258 (Your All-Time Peak)</span>
+                  <span>3,500</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Telemetry Output Column (5 Cols) -->
+        <div class="lg:col-span-5 bg-[#141923] p-6 rounded-xl border border-[#1f2637] flex flex-col justify-between space-y-5">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xs font-mono-tabular uppercase tracking-wider text-[#e2b170]">Simulated Weekly &amp; 5h Telemetry</span>
+              <span id="sim-status-badge" class="text-xs font-mono-tabular px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">SUSTAINABLE</span>
+            </div>
+
+            <!-- Progress Bars for Pool Utilization -->
+            <div class="space-y-4">
+              <div>
+                <div class="flex justify-between text-xs font-mono-tabular mb-1">
+                  <span class="text-slate-300">Gemini Weekly Pool Burn:</span>
+                  <span id="sim-gem-wk-pct" class="font-bold text-white">0%</span>
+                </div>
+                <div class="w-full h-2.5 bg-[#07080a] rounded-full overflow-hidden border border-[#1f2637]">
+                  <div id="bar-gem-wk" class="h-full bg-emerald-400 transition-all duration-300" style="width: 40%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-mono-tabular mb-1">
+                  <span class="text-slate-300">Gemini Peak 5-Hour Burst Burn:</span>
+                  <span id="sim-gem-5h-pct" class="font-bold text-white">0%</span>
+                </div>
+                <div class="w-full h-2.5 bg-[#07080a] rounded-full overflow-hidden border border-[#1f2637]">
+                  <div id="bar-gem-5h" class="h-full bg-sky-400 transition-all duration-300" style="width: 35%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-mono-tabular mb-1">
+                  <span class="text-slate-300">Third-Party Shared Weekly Pool Burn:</span>
+                  <span id="sim-tp-wk-pct" class="font-bold text-white">0%</span>
+                </div>
+                <div class="w-full h-2.5 bg-[#07080a] rounded-full overflow-hidden border border-[#1f2637]">
+                  <div id="bar-tp-wk" class="h-full bg-rose-400 transition-all duration-300" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[#1f2637] font-mono-tabular">
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-[#1f2637]">
+              <div class="text-[11px] text-slate-400">Max Sustainable Steps / Wk</div>
+              <div id="sim-max-steps-wk" class="text-lg font-bold text-white mt-0.5">24,500</div>
+              <div id="sim-max-steps-5h" class="text-[11px] text-slate-400">7,350 steps / 5h cap</div>
+            </div>
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-[#1f2637]">
+              <div class="text-[11px] text-slate-400">Weekly API Dollar Value</div>
+              <div id="sim-weekly-dollars" class="text-lg font-bold text-[#e2b170] mt-0.5">$214.50</div>
+              <div id="sim-4wk-dollars" class="text-[11px] text-slate-400">$858.00 per 4 weeks</div>
+            </div>
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-[#1f2637]">
+              <div class="text-[11px] text-slate-400">Blended Gen Velocity</div>
+              <div id="sim-blended-speed" class="text-lg font-bold text-emerald-400 mt-0.5">204.2 tok/s</div>
+              <div id="sim-wait-hours" class="text-[11px] text-slate-400">4.8 hrs wait / week</div>
+            </div>
+            <div class="p-3.5 rounded-lg bg-[#0e1117] border border-[#1f2637]">
+              <div class="text-[11px] text-slate-400">Effective Weekly Capacity</div>
+              <div id="sim-eff-cap-wk" class="text-lg font-bold text-sky-400 mt-0.5">68.4M tok</div>
+              <div id="sim-eff-cap-5h" class="text-[11px] text-slate-400">20.5M eff tok / 5h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: 12 PRE-COMPUTED COMBINATION SCENARIOS TABLE -->
+    <section id="sec-presets" class="card-surface p-7 space-y-5">
+      <div class="border-b border-[#1f2637] pb-4">
+        <div class="text-xs font-mono-tabular uppercase tracking-wider text-rose-400 flex items-center gap-1.5 mb-1">
+          <i data-lucide="layers" class="w-4 h-4"></i> Ready-Made Reference Matrix
+        </div>
+        <h2 class="font-display text-2xl font-bold text-white">
+          12 Practical Model Combinations Compared Side-by-Side
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">
+          Evaluated against your <strong class="text-white">4-Week Average Weekly Workload (14,924 steps/week = 322.6M effective tokens/week)</strong> and your <strong class="text-white">Most Recent Week 1 Surge (22,757 steps/week = 495.5M effective tokens/week)</strong>. Click any row to load it into the simulator above.
+        </p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#1f2637] text-[11px] font-mono-tabular uppercase text-slate-400 bg-[#141923]/60">
+              <th class="py-3.5 px-4">Combination Strategy</th>
+              <th class="py-3.5 px-3 text-right">Blended Gem Wt</th>
+              <th class="py-3.5 px-3 text-right">5h Ceiling (Eff Tok)</th>
+              <th class="py-3.5 px-3 text-right">Weekly Ceiling (Eff Tok)</th>
+              <th class="py-3.5 px-3 text-right">Max Steps / Week</th>
+              <th class="py-3.5 px-3 text-right">4-Wk Avg (14.9k/wk) Burn</th>
+              <th class="py-3.5 px-3 text-right">Week 1 Surge (22.8k/wk) Burn</th>
+              <th class="py-3.5 px-3 text-right">Weekly API Value ($)</th>
+              <th class="py-3.5 px-3 text-right">Avg Speed</th>
+            </tr>
+          </thead>
+          <tbody id="presets-table-body" class="divide-y divide-[#1f2637] text-xs font-mono-tabular">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ============================================================================
+    // 1. EMPIRICAL MODEL & POOL DATA (Calibrated from argon_benchmark_results.json)
+    // ============================================================================
+    const MODELS = [
+      {
+        id: 'flash_low',
+        name: 'Gemini 3.8 Flash (Low)',
+        pool: 'Gemini',
+        poolRatio: 3.3333,
+        weight: 0.45,
+        effPer1Pct: 279568,
+        rawPer1Pct: 276507,
+        cache90Per1Pct: 1096000,
+        inRate: 0.35,
+        cacheRate: 0.035,
+        outRate: 1.50,
+        blendedRate: 0.95,
+        bench5hDollars: 15.05,
+        blended5hDollars: 26.56,
+        speedMed: 231.0,
+        speedPeak: 247.0,
+        speedE2E: 155.8,
+        prefillS: 2.30,
+        callS: 10.6,
+        accent: '#10b981'
+      },
+      {
+        id: 'flash_med',
+        name: 'Gemini 3.8 Flash (Medium)',
+        pool: 'Gemini',
+        poolRatio: 3.3333,
+        weight: 1.00,
+        effPer1Pct: 116248,
+        rawPer1Pct: 113187,
+        cache90Per1Pct: 455000,
+        inRate: 0.50,
+        cacheRate: 0.05,
+        outRate: 2.50,
+        blendedRate: 1.50,
+        bench5hDollars: 9.89,
+        blended5hDollars: 17.44,
+        speedMed: 222.8,
+        speedPeak: 236.7,
+        speedE2E: 132.5,
+        prefillS: 2.55,
+        callS: 9.5,
+        accent: '#38bdf8'
+      },
+      {
+        id: 'flash_high',
+        name: 'Gemini 3.8 Flash (High)',
+        pool: 'Gemini',
+        poolRatio: 3.3333,
+        weight: 1.15,
+        effPer1Pct: 101085,
+        rawPer1Pct: 98420,
+        cache90Per1Pct: 396000,
+        inRate: 0.75,
+        cacheRate: 0.075,
+        outRate: 3.75,
+        blendedRate: 2.25,
+        bench5hDollars: 13.10,
+        blended5hDollars: 22.74,
+        speedMed: 218.0,
+        speedPeak: 234.0,
+        speedE2E: 128.0,
+        prefillS: 2.80,
+        callS: 10.2,
+        accent: '#60a5fa'
+      },
+      {
+        id: 'argon_low',
+        name: 'Gemini 4 Argon (Low)',
+        pool: 'Gemini',
+        poolRatio: 3.3333,
+        weight: 1.40,
+        effPer1Pct: 199691, // Scaled from Flash Low / 1.4x & Argon Med 1.4x ratio
+        rawPer1Pct: 182645,
+        cache90Per1Pct: 595400,
+        inRate: 1.25,
+        cacheRate: 0.125,
+        outRate: 6.00,
+        blendedRate: 3.20,
+        bench5hDollars: 55.40,
+        blended5hDollars: 63.90,
+        speedMed: 145.0,
+        speedPeak: 390.0,
+        speedE2E: 96.0,
+        prefillS: 3.20,
+        callS: 12.4,
+        accent: '#f59e0b'
+      },
+      {
+        id: 'argon_med',
+        name: 'Gemini 4 Argon (Medium)',
+        pool: 'Gemini',
+        poolRatio: 3.3333,
+        weight: 2.00,
+        effPer1Pct: 139784, // Standard 0.1x cache normalized; 416,796 w/ heavy 96% cache
+        rawPer1Pct: 127852,
+        cache90Per1Pct: 416796,
+        inRate: 1.50,
+        cacheRate: 0.15,
+        outRate: 8.00,
+        blendedRate: 4.25,
+        bench5hDollars: 46.57,
+        blended5hDollars: 61.78,
+        speedMed: 127.0,
+        speedPeak: 420.5,
+        speedE2E: 88.4,
+        prefillS: 3.80,
+        callS: 14.2,
+        accent: '#e2b170'
+      },
+      {
+        id: 'argon_high',
+        name: 'Gemini 4 Argon (High)',
+        pool: 'Gemini',
+        poolRatio: 3.3333,
+        weight: 2.60,
+        effPer1Pct: 107526,
+        rawPer1Pct: 98348,
+        cache90Per1Pct: 320612,
+        inRate: 2.50,
+        cacheRate: 0.25,
+        outRate: 12.00,
+        blendedRate: 6.00,
+        bench5hDollars: 59.54,
+        blended5hDollars: 64.51,
+        speedMed: 138.0,
+        speedPeak: 430.0,
+        speedE2E: 91.2,
+        prefillS: 4.10,
+        callS: 15.1,
+        accent: '#f97316'
+      },
+      {
+        id: 'gpt_oss_120b',
+        name: 'GPT-OSS 120B (Medium)',
+        pool: 'Third-Party',
+        poolRatio: 2.00,
+        weight: 0.20,
+        effPer1Pct: 208955,
+        rawPer1Pct: 205894,
+        cache90Per1Pct: 810000,
+        inRate: 0.80,
+        cacheRate: 0.08,
+        outRate: 3.20,
+        blendedRate: 1.80,
+        bench5hDollars: 24.40,
+        blended5hDollars: 37.61,
+        speedMed: 105.8,
+        speedPeak: 114.2,
+        speedE2E: 56.1,
+        prefillS: 5.79,
+        callS: 12.9,
+        accent: '#a78bfa'
+      },
+      {
+        id: 'sonnet_low',
+        name: 'Claude Sonnet 5.5 (Low)',
+        pool: 'Third-Party',
+        poolRatio: 2.00,
+        weight: 1.00,
+        effPer1Pct: 35883,
+        rawPer1Pct: 34352,
+        cache90Per1Pct: 140700,
+        inRate: 3.00,
+        cacheRate: 0.30,
+        outRate: 15.00,
+        blendedRate: 6.00,
+        bench5hDollars: 13.75,
+        blended5hDollars: 21.53,
+        speedMed: 101.3,
+        speedPeak: 102.0,
+        speedE2E: 57.6,
+        prefillS: 6.13,
+        callS: 14.3,
+        accent: '#fb7185'
+      },
+      {
+        id: 'sonnet_med',
+        name: 'Claude Sonnet 5.5 (Medium)',
+        pool: 'Third-Party',
+        poolRatio: 2.00,
+        weight: 1.00,
+        effPer1Pct: 41791,
+        rawPer1Pct: 39750,
+        cache90Per1Pct: 163800,
+        inRate: 3.00,
+        cacheRate: 0.30,
+        outRate: 15.00,
+        blendedRate: 6.00,
+        bench5hDollars: 16.01,
+        blended5hDollars: 25.07,
+        speedMed: 103.7,
+        speedPeak: 121.2,
+        speedE2E: 54.6,
+        prefillS: 6.80,
+        callS: 14.1,
+        accent: '#f43f5e'
+      },
+      {
+        id: 'sonnet_high',
+        name: 'Claude Sonnet 5.5 (High)',
+        pool: 'Third-Party',
+        poolRatio: 2.00,
+        weight: 1.25,
+        effPer1Pct: 33265,
+        rawPer1Pct: 31734,
+        cache90Per1Pct: 130400,
+        inRate: 3.00,
+        cacheRate: 0.30,
+        outRate: 15.00,
+        blendedRate: 6.00,
+        bench5hDollars: 12.74,
+        blended5hDollars: 19.96,
+        speedMed: 109.5,
+        speedPeak: 110.3,
+        speedE2E: 64.9,
+        prefillS: 5.51,
+        callS: 13.5,
+        accent: '#e11d48'
+      },
+      {
+        id: 'opus_low',
+        name: 'Claude Opus 5.5 (Low)',
+        pool: 'Third-Party',
+        poolRatio: 2.00,
+        weight: 1.90,
+        effPer1Pct: 22161,
+        rawPer1Pct: 21141,
+        cache90Per1Pct: 86900,
+        inRate: 15.00,
+        cacheRate: 1.50,
+        outRate: 75.00,
+        blendedRate: 30.00,
+        bench5hDollars: 42.45,
+        blended5hDollars: 66.48,
+        speedMed: 93.6,
+        speedPeak: 94.7,
+        speedE2E: 52.8,
+        prefillS: 7.45,
+        callS: 17.2,
+        accent: '#c084fc'
+      },
+      {
+        id: 'opus_med',
+        name: 'Claude Opus 5.5 (Medium)',
+        pool: 'Third-Party',
+        poolRatio: 2.00,
+        weight: 2.50,
+        effPer1Pct: 16189,
+        rawPer1Pct: 15169,
+        cache90Per1Pct: 63500,
+        inRate: 15.00,
+        cacheRate: 1.50,
+        outRate: 75.00,
+        blendedRate: 30.00,
+        bench5hDollars: 31.01,
+        blended5hDollars: 48.57,
+        speedMed: 98.6,
+        speedPeak: 99.2,
+        speedE2E: 47.2,
+        prefillS: 7.67,
+        callS: 14.8,
+        accent: '#a855f7'
+      },
+      {
+        id: 'opus_high',
+        name: 'Claude Opus 5.5 (High)',
+        pool: 'Third-Party',
+        poolRatio: 2.00,
+        weight: 2.50,
+        effPer1Pct: 17009,
+        rawPer1Pct: 15989,
+        cache90Per1Pct: 66700,
+        inRate: 15.00,
+        cacheRate: 1.50,
+        outRate: 75.00,
+        blendedRate: 30.00,
+        bench5hDollars: 32.58,
+        blended5hDollars: 51.03,
+        speedMed: 100.3,
+        speedPeak: 102.0,
+        speedE2E: 52.2,
+        prefillS: 7.51,
+        callS: 16.0,
+        accent: '#9333ea'
+      }
+    ];
+
+    // ============================================================================
+    // 2. HISTORICAL BRAIN TRANSCRIPT USAGE WINDOWS (Extracted from ~/.gemini)
+    // ============================================================================
+    const HISTORICAL_WINDOWS = {
+      '7d': {
+        label: 'Last 1 Week (0–7d)',
+        weeks: 1,
+        days: 7,
+        steps: 22757,
+        inTok: 175326840,
+        cacheTok: 3148155000,
+        outTok: 5382285,
+        convs: 38,
+        peak5hEff: 49575826
+      },
+      '14d': {
+        label: 'Last 2 Weeks (0–14d)',
+        weeks: 2,
+        days: 14,
+        steps: 37856,
+        inTok: 291221880,
+        cacheTok: 5229103400,
+        outTok: 8834763,
+        convs: 75,
+        peak5hEff: 49575826
+      },
+      '21d': {
+        label: 'Last 3 Weeks (0–21d)',
+        weeks: 3,
+        days: 21,
+        steps: 50271,
+        inTok: 385629720,
+        cacheTok: 6923947800,
+        outTok: 11920342,
+        convs: 115,
+        peak5hEff: 49575826
+      },
+      '28d': {
+        label: 'Last 4 Weeks (0–28d)',
+        weeks: 4,
+        days: 28,
+        steps: 59695,
+        inTok: 456521640,
+        cacheTok: 8197548000,
+        outTok: 14027078,
+        convs: 157,
+        peak5hEff: 49575826
+      },
+      'peak5h': {
+        label: 'Single Peak 5h Burst',
+        weeks: 0.02976, // 5h out of 168h
+        days: 0.2083,
+        steps: 2258,
+        inTok: 17582000,
+        cacheTok: 314831200,
+        outTok: 510706,
+        convs: 6,
+        peak5hEff: 49575826
+      },
+      'all': {
+        label: 'All-Time Brain Archive',
+        weeks: 8,
+        days: 56,
+        steps: 115460,
+        inTok: 867937080,
+        cacheTok: 15596277000,
+        outTok: 28700718,
+        convs: 501,
+        peak5hEff: 49575826
+      }
+    };
+
+    const WEEKLY_COHORTS = [
+      {
+        id: 'w1',
+        title: 'Week 1 (Days 0–7 Ago)',
+        subtitle: 'Most Recent High-Intensity Sprint',
+        steps: 22757,
+        inTok: 175326840,
+        cacheTok: 3148155000,
+        outTok: 5382285,
+        convs: 38
+      },
+      {
+        id: 'w2',
+        title: 'Week 2 (Days 7–14 Ago)',
+        subtitle: 'Heavy Feature Engineering Week',
+        steps: 15099,
+        inTok: 115895040,
+        cacheTok: 2080948400,
+        outTok: 3452478,
+        convs: 42
+      },
+      {
+        id: 'w3',
+        title: 'Week 3 (Days 14–21 Ago)',
+        subtitle: 'Sustained Multi-Repo Development',
+        steps: 12415,
+        inTok: 94407840,
+        cacheTok: 1694844400,
+        outTok: 3085579,
+        convs: 47
+      },
+      {
+        id: 'w4',
+        title: 'Week 4 (Days 21–28 Ago)',
+        subtitle: 'Moderate Baseline Cadence',
+        steps: 9424,
+        inTok: 70891920,
+        cacheTok: 1273600200,
+        outTok: 2106736,
+        convs: 43
+      }
+    ];
+
+    let activeWindowKey = '28d';
+    let activeBaselineKey = 'flash_blend';
+    let activeMasterScale = '5h';
+
+    function fmtNum(n, dec = 0) {
+      return Number(n).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    }
+
+    function fmtM(n, dec = 2) {
+      if (n >= 1e9) return (n / 1e9).toFixed(dec) + 'B';
+      if (n >= 1e6) return (n / 1e6).toFixed(dec) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return fmtNum(n);
+    }
+
+    function calcApiCost(inTok, cacheTok, outTok, m) {
+      return (inTok / 1e6) * m.inRate + (cacheTok / 1e6) * m.cacheRate + (outTok / 1e6) * m.outRate;
+    }
+
+    // Calibrated Weekly Effective Token Ceiling for each model
+    // Note: Using empirical 93%+ cache-adjusted weekly ceiling:
+    // On Gemini 4 Argon (Medium), 100% 5h pool = 41.68M eff tok (with realistic agentic cache) -> 100% Weekly pool = 138.9M eff tok.
+    // Relative to Argon Medium (w=2.0 -> 138.9M eff/wk), a model with weight w in Gemini pool has Weekly Effective Ceiling = 138.9M * (2.0 / w).
+    // For Third-Party Pool, Weekly Pool = 2.0 * 5h Pool, where Sonnet Medium (w=1.0) = 4.18M * 2 = 8.36M eff/wk (or w/ 90% cache = 32.76M).
+    function getRealisticAgenticWeeklyEffCap(m) {
+      if (m.pool === 'Gemini') {
+        return 138930000 * (2.0 / m.weight);
+      } else {
+        return (m.effPer1Pct * 100 * 2.0) * 2.8; // Adjusted for multi-turn agentic cache factor
+      }
+    }
+
+    function getRealisticAgentic5hEffCap(m) {
+      if (m.pool === 'Gemini') {
+        return 41679600 * (2.0 / m.weight);
+      } else {
+        return (m.effPer1Pct * 100) * 2.8;
+      }
+    }
+
+    // ============================================================================
+    // 3. RENDER COUNTERFACTUAL TABLE
+    // ============================================================================
+    function selectHistoricalWindow(winKey) {
+      activeWindowKey = winKey;
+      ['7d', '14d', '21d', '28d', 'peak5h', 'all'].forEach(k => {
+        const el = document.getElementById('btn-win-' + k);
+        if (el) el.className = 'px-3.5 py-2 rounded-lg text-xs font-mono-tabular transition ' + (k === winKey ? 'pill-active' : 'pill-inactive');
+      });
+      renderCounterfactual();
+    }
+
+    function setHistoricalBaseline(baseKey) {
+      activeBaselineKey = baseKey;
+      ['flash_low', 'flash_blend', 'flash_med'].forEach(k => {
+        const el = document.getElementById('base-' + k);
+        if (el) el.className = 'px-2.5 py-1.5 rounded text-xs font-mono-tabular ' + (k === baseKey ? 'pill-active' : 'pill-inactive');
+      });
+      const labels = {
+        'flash_low': 'Flash Low (0.45x)',
+        'flash_blend': 'Blended (70% Low / 30% Med)',
+        'flash_med': 'Flash Med (1.00x)'
+      };
+      document.getElementById('cf-base-tag').textContent = labels[baseKey];
+      renderCounterfactual();
+    }
+
+    function renderCounterfactual() {
+      const w = HISTORICAL_WINDOWS[activeWindowKey];
+      const freshOut = w.inTok + w.outTok;
+      const effTok = freshOut + Math.round(w.cacheTok * 0.10);
+
+      document.getElementById('cf-span-label').textContent = w.label;
+      document.getElementById('cf-convs-label').textContent = `${w.convs} Conversations`;
+      document.getElementById('cf-steps-val').textContent = fmtNum(w.steps);
+      document.getElementById('cf-steps-rate').textContent = w.days >= 1 ? `${fmtNum(Math.round(w.steps / w.days))} steps/day` : `452 steps/hour`;
+      document.getElementById('cf-fresh-val').textContent = fmtM(freshOut);
+      document.getElementById('cf-out-sub').textContent = `${fmtM(w.inTok, 1)} in + ${fmtM(w.outTok, 1)} out`;
+      document.getElementById('cf-cache-val').textContent = fmtM(w.cacheTok, 1);
+      document.getElementById('cf-eff-val').textContent = fmtM(effTok, 2);
+
+      // Baseline cost & wait time
+      const flashLow = MODELS[0];
+      const flashMed = MODELS[1];
+      let baseCost = 0;
+      if (activeBaselineKey === 'flash_low') {
+        baseCost = calcApiCost(w.inTok, w.cacheTok, w.outTok, flashLow);
+      } else if (activeBaselineKey === 'flash_med') {
+        baseCost = calcApiCost(w.inTok, w.cacheTok, w.outTok, flashMed);
+      } else {
+        baseCost = 0.7 * calcApiCost(w.inTok, w.cacheTok, w.outTok, flashLow) + 0.3 * calcApiCost(w.inTok, w.cacheTok, w.outTok, flashMed);
+      }
+      const baseHours = (w.outTok / 228.0) / 3600;
+
+      const tbody = document.getElementById('cf-table-body');
+      tbody.innerHTML = '';
+
+      MODELS.forEach(m => {
+        const wkCap = getRealisticAgenticWeeklyEffCap(m);
+        const cap5h = getRealisticAgentic5hEffCap(m);
+
+        const totalPoolsUsed = effTok / wkCap;
+        const avgWeeklyPct = (totalPoolsUsed / Math.max(w.weeks, 1)) * 100;
+        const daysBeforeLockout = Math.min(7.0, 7.0 / (avgWeeklyPct / 100));
+        const peak5hPct = (w.peak5hEff / cap5h) * 100;
+
+        const totalCost = calcApiCost(w.inTok, w.cacheTok, w.outTok, m);
+        const costDelta = totalCost - baseCost;
+        const genHours = (w.outTok / m.speedMed) / 3600;
+        const deltaHours = genHours - baseHours;
+
+        let verdictBadge = '';
+        if (avgWeeklyPct <= 85) {
+          verdictBadge = `<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">SURVIVES (${avgWeeklyPct.toFixed(0)}%/wk)</span>`;
+        } else if (avgWeeklyPct <= 115) {
+          verdictBadge = `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">BORDERLINE (${avgWeeklyPct.toFixed(0)}%/wk)</span>`;
+        } else {
+          verdictBadge = `<span class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">LOCKOUT IN ${daysBeforeLockout.toFixed(1)}d</span>`;
+        }
+
+        const isArgon = m.id.startsWith('argon');
+        const rowBg = isArgon ? 'bg-[#e2b170]/[0.05] hover:bg-[#e2b170]/[0.10]' : 'hover:bg-[#141923]';
+
+        const tr = document.createElement('tr');
+        tr.className = `${rowBg} transition`;
+        tr.innerHTML = `
+          <td class="py-3.5 px-4 font-sans font-semibold text-white flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color:${m.accent}"></span>
+            <span>${m.name}</span>
+            ${isArgon ? '<span class="text-[10px] font-mono-tabular px-1.5 py-0.5 rounded bg-[#e2b170]/20 text-[#e2b170]">TARGET</span>' : ''}
+          </td>
+          <td class="py-3.5 px-3 text-right text-slate-300">${m.weight.toFixed(2)}&times;</td>
+          <td class="py-3.5 px-3 text-right font-bold ${avgWeeklyPct > 100 ? 'text-rose-400' : 'text-emerald-400'}">${avgWeeklyPct.toFixed(1)}% / wk</td>
+          <td class="py-3.5 px-3 text-right text-slate-200">${totalPoolsUsed.toFixed(2)}&times; Wk Pool</td>
+          <td class="py-3.5 px-3 text-right ${daysBeforeLockout < 7 ? 'text-amber-300 font-semibold' : 'text-emerald-400'}">
+            ${daysBeforeLockout >= 7 ? 'Full 7.0 Days (No Lockout)' : `${daysBeforeLockout.toFixed(1)} Days / Wk`}
+          </td>
+          <td class="py-3.5 px-3 text-right ${peak5hPct > 100 ? 'text-rose-400 font-bold' : 'text-sky-400'}">${peak5hPct.toFixed(0)}% of 5h</td>
+          <td class="py-3.5 px-3 text-right font-bold text-white">$${fmtNum(totalCost, 2)}</td>
+          <td class="py-3.5 px-3 text-right ${costDelta >= 0 ? 'text-amber-300' : 'text-emerald-400'}">
+            ${costDelta >= 0 ? '+' : '-$'}${fmtNum(Math.abs(costDelta), 2)}
+          </td>
+          <td class="py-3.5 px-3 text-right text-slate-300">
+            ${genHours.toFixed(1)}h <span class="text-[11px] ${deltaHours > 0 ? 'text-rose-400' : 'text-emerald-400'}">(${deltaHours >= 0 ? '+' : ''}${deltaHours.toFixed(1)}h)</span>
+          </td>
+          <td class="py-3.5 px-4">${verdictBadge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ============================================================================
+    // 4. RENDER WEEK-BY-WEEK COHORT BREAKDOWN CARDS
+    // ============================================================================
+    function renderWeeklyCohorts() {
+      const container = document.getElementById('weekly-cohort-cards');
+      container.innerHTML = '';
+
+      const keyModels = [
+        MODELS[0], // Flash Low
+        MODELS[1], // Flash Med
+        MODELS[3], // Argon Low
+        MODELS[4], // Argon Med
+        MODELS[5], // Argon High
+        MODELS[8], // Sonnet Med
+        MODELS[12] // Opus High
+      ];
+
+      WEEKLY_COHORTS.forEach(c => {
+        const freshOut = c.inTok + c.outTok;
+        const effTok = freshOut + Math.round(c.cacheTok * 0.10);
+
+        let rowsHtml = '';
+        keyModels.forEach(m => {
+          const wkCap = getRealisticAgenticWeeklyEffCap(m);
+          const pct = (effTok / wkCap) * 100;
+          const cost = calcApiCost(c.inTok, c.cacheTok, c.outTok, m);
+          const days = Math.min(7.0, 7.0 / (pct / 100));
+          const isArgon = m.id.startsWith('argon');
+
+          rowsHtml += `
+            <div class="py-2 px-2.5 rounded ${isArgon ? 'bg-[#141923] border border-[#e2b170]/25' : 'bg-[#07080a]/60'} flex items-center justify-between text-xs font-mono-tabular">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full" style="background:${m.accent}"></span>
+                <span class="${isArgon ? 'text-white font-semibold' : 'text-slate-300'}">${m.name.replace('Gemini ', '').replace('Claude ', '')}</span>
+              </div>
+              <div class="text-right flex items-center gap-2.5">
+                <span class="${pct > 100 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-semibold'}">${pct.toFixed(0)}% wk</span>
+                <span class="text-slate-400 text-[11px] w-14 text-right">${days >= 7 ? '7.0d OK' : days.toFixed(1) + 'd lock'}</span>
+                <span class="text-white font-semibold w-16 text-right">$${cost.toFixed(0)}</span>
+              </div>
+            </div>
+          `;
+        });
+
+        const card = document.createElement('div');
+        card.className = 'bg-[#141923] p-5 rounded-xl border border-[#1f2637] flex flex-col justify-between space-y-4';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between text-xs font-mono-tabular text-[#e2b170] mb-1">
+              <span>${c.title}</span>
+              <span>${c.convs} Convs</span>
+            </div>
+            <h3 class="font-display font-bold text-base text-white">${c.subtitle}</h3>
+            <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[#1f2637] font-mono-tabular text-xs">
+              <div>
+                <div class="text-[10px] text-slate-400">STEPS</div>
+                <div class="font-bold text-white">${fmtNum(c.steps)}</div>
+              </div>
+              <div>
+                <div class="text-[10px] text-slate-400">FRESH+OUT</div>
+                <div class="font-bold text-emerald-400">${fmtM(freshOut, 1)}</div>
+              </div>
+              <div>
+                <div class="text-[10px] text-slate-400">EFF TOKENS</div>
+                <div class="font-bold text-sky-400">${fmtM(effTok, 1)}</div>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-1.5 pt-2 border-t border-[#1f2637]">
+            <div class="flex justify-between text-[10px] font-mono-tabular uppercase text-slate-400 px-1 mb-1">
+              <span>If 100% Run On:</span>
+              <span>Pool % &bull; Survival &bull; API $</span>
+            </div>
+            ${rowsHtml}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // ============================================================================
+    // 5. RENDER MASTER TOKEN & DOLLAR TABLE
+    // ============================================================================
+    function setMasterScale(scale) {
+      activeMasterScale = scale;
+      ['5h', 'weekly', '1pct'].forEach(k => {
+        const el = document.getElementById('scale-' + k);
+        if (el) el.className = 'px-3 py-1.5 rounded-lg text-xs font-mono-tabular ' + (k === scale ? 'pill-active' : 'pill-inactive');
+      });
+      renderMasterTable();
+    }
+
+    function renderMasterTable() {
+      const tbody = document.getElementById('master-table-body');
+      tbody.innerHTML = '';
+
+      MODELS.forEach(m => {
+        let mult = 100; // default 5h = 100%
+        if (activeMasterScale === 'weekly') {
+          mult = 100 * m.poolRatio;
+        } else if (activeMasterScale === '1pct') {
+          mult = 1;
+        }
+
+        const effTok = m.effPer1Pct * mult;
+        const rawTok = m.rawPer1Pct * mult;
+        const cache90Tok = m.cache90Per1Pct * mult;
+        const benchDollars = (m.bench5hDollars / 100) * mult;
+        const blendedDollars = (m.blended5hDollars / 100) * mult;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-[#141923] transition';
+        tr.innerHTML = `
+          <td class="py-3.5 px-4 font-sans font-semibold text-white flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full" style="background-color:${m.accent}"></span>
+            ${m.name}
+          </td>
+          <td class="py-3.5 px-3">
+            <span class="px-2 py-0.5 rounded text-[11px] ${m.pool === 'Gemini' ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'}">
+              ${m.pool} (${m.poolRatio.toFixed(2)}&times; wk)
+            </span>
+          </td>
+          <td class="py-3.5 px-3 text-right text-slate-300">${m.weight.toFixed(2)}&times;</td>
+          <td class="py-3.5 px-3 text-right font-bold text-emerald-400">${fmtM(effTok, 2)}</td>
+          <td class="py-3.5 px-3 text-right text-slate-200">${fmtM(rawTok, 2)}</td>
+          <td class="py-3.5 px-3 text-right text-sky-400">${fmtM(cache90Tok, 2)}</td>
+          <td class="py-3.5 px-3 text-right text-slate-400">$${m.inRate.toFixed(2)} / $${m.cacheRate.toFixed(3)} / $${m.outRate.toFixed(2)}</td>
+          <td class="py-3.5 px-3 text-right font-bold text-[#e2b170]">$${fmtNum(benchDollars, 2)}</td>
+          <td class="py-3.5 px-3 text-right font-bold text-white">$${fmtNum(blendedDollars, 2)}</td>
+          <td class="py-3.5 px-3 text-right text-emerald-400">${m.speedMed.toFixed(1)} <span class="text-slate-400 text-[11px]">/ ${m.speedPeak.toFixed(0)} tok/s</span></td>
+          <td class="py-3.5 px-3 text-right text-slate-300">${m.speedE2E.toFixed(1)} tok/s <span class="text-slate-500 text-[11px]">(${m.prefillS.toFixed(1)}s pre)</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ============================================================================
+    // 6. INTERACTIVE MIX & MATCH SIMULATOR + 12 PRESETS
+    // ============================================================================
+    function applyMixPreset(fl, fm, am, ah, sm, oh) {
+      document.getElementById('rng-mix-fl').value = fl;
+      document.getElementById('rng-mix-fm').value = fm;
+      document.getElementById('rng-mix-am').value = am;
+      document.getElementById('rng-mix-ah').value = ah;
+      document.getElementById('rng-mix-sm').value = sm;
+      document.getElementById('rng-mix-oh').value = oh;
+      updateCustomMix();
+    }
+
+    function updateCustomMix() {
+      const rawFl = Number(document.getElementById('rng-mix-fl').value);
+      const rawFm = Number(document.getElementById('rng-mix-fm').value);
+      const rawAm = Number(document.getElementById('rng-mix-am').value);
+      const rawAh = Number(document.getElementById('rng-mix-ah').value);
+      const rawSm = Number(document.getElementById('rng-mix-sm').value);
+      const rawOh = Number(document.getElementById('rng-mix-oh').value);
+
+      const sum = Math.max(1, rawFl + rawFm + rawAm + rawAh + rawSm + rawOh);
+      const pFl = rawFl / sum;
+      const pFm = rawFm / sum;
+      const pAm = rawAm / sum;
+      const pAh = rawAh / sum;
+      const pSm = rawSm / sum;
+      const pOh = rawOh / sum;
+
+      document.getElementById('lbl-mix-fl').textContent = `${Math.round(pFl * 100)}%`;
+      document.getElementById('lbl-mix-fm').textContent = `${Math.round(pFm * 100)}%`;
+      document.getElementById('lbl-mix-am').textContent = `${Math.round(pAm * 100)}%`;
+      document.getElementById('lbl-mix-ah').textContent = `${Math.round(pAh * 100)}%`;
+      document.getElementById('lbl-mix-sm').textContent = `${Math.round(pSm * 100)}%`;
+      document.getElementById('lbl-mix-oh').textContent = `${Math.round(pOh * 100)}%`;
+      document.getElementById('mix-norm-label').textContent = `Normalized 100% (Raw Slider Sum: ${rawFl + rawFm + rawAm + rawAh + rawSm + rawOh}%)`;
+
+      const stepsWk = Number(document.getElementById('rng-sim-steps').value);
+      const burst5h = Number(document.getElementById('rng-sim-burst').value);
+
+      document.getElementById('lbl-sim-steps').textContent = `${fmtNum(stepsWk)} steps/wk`;
+      document.getElementById('lbl-sim-burst').textContent = `${fmtNum(burst5h)} steps / 5h`;
+
+      // Per-step empirical averages from user's 4-week history:
+      // 59,695 steps = 456.52M in, 8,197.55M cache, 14.03M out -> 21,615 eff tok/step
+      const effPerStep = 21615;
+      const inPerStep = 7647;
+      const cachePerStep = 137324;
+      const outPerStep = 235;
+
+      const totalEffWk = stepsWk * effPerStep;
+      const totalEff5h = burst5h * effPerStep;
+
+      const mixEntries = [
+        { share: pFl, m: MODELS[0] },
+        { share: pFm, m: MODELS[1] },
+        { share: pAm, m: MODELS[4] },
+        { share: pAh, m: MODELS[5] },
+        { share: pSm, m: MODELS[8] },
+        { share: pOh, m: MODELS[12] }
+      ];
+
+      let gemWkPct = 0;
+      let gem5hPct = 0;
+      let tpWkPct = 0;
+      let weeklyDollars = 0;
+      let blendedSpeed = 0;
+      let waitHours = 0;
+
+      mixEntries.forEach(({ share, m }) => {
+        if (share <= 0) return;
+        const subEffWk = totalEffWk * share;
+        const subEff5h = totalEff5h * share;
+        const wkCap = getRealisticAgenticWeeklyEffCap(m);
+        const cap5h = getRealisticAgentic5hEffCap(m);
+
+        if (m.pool === 'Gemini') {
+          gemWkPct += (subEffWk / wkCap) * 100;
+          gem5hPct += (subEff5h / cap5h) * 100;
+        } else {
+          tpWkPct += (subEffWk / wkCap) * 100;
+        }
+
+        const stepCount = stepsWk * share;
+        weeklyDollars += calcApiCost(stepCount * inPerStep, stepCount * cachePerStep, stepCount * outPerStep, m);
+        blendedSpeed += share * m.speedMed;
+        waitHours += ((stepCount * outPerStep) / m.speedMed) / 3600;
+      });
+
+      document.getElementById('sim-gem-wk-pct').textContent = `${gemWkPct.toFixed(1)}%`;
+      document.getElementById('sim-gem-5h-pct').textContent = `${gem5hPct.toFixed(1)}%`;
+      document.getElementById('sim-tp-wk-pct').textContent = `${tpWkPct.toFixed(1)}%`;
+
+      document.getElementById('bar-gem-wk').style.width = `${Math.min(100, gemWkPct)}%`;
+      document.getElementById('bar-gem-wk').className = `h-full transition-all duration-300 ${gemWkPct > 100 ? 'bg-rose-500' : gemWkPct > 85 ? 'bg-amber-400' : 'bg-emerald-400'}`;
+
+      document.getElementById('bar-gem-5h').style.width = `${Math.min(100, gem5hPct)}%`;
+      document.getElementById('bar-gem-5h').className = `h-full transition-all duration-300 ${gem5hPct > 100 ? 'bg-rose-500' : 'bg-sky-400'}`;
+
+      document.getElementById('bar-tp-wk').style.width = `${Math.min(100, tpWkPct)}%`;
+      document.getElementById('bar-tp-wk').className = `h-full transition-all duration-300 ${tpWkPct > 100 ? 'bg-rose-500' : 'bg-rose-400'}`;
+
+      const maxPct = Math.max(gemWkPct, tpWkPct);
+      const maxStepsWk = maxPct > 0 ? Math.round(stepsWk / (maxPct / 100)) : 99999;
+      const maxSteps5h = Math.round(maxStepsWk / 3.333);
+
+      document.getElementById('sim-max-steps-wk').textContent = `${fmtNum(maxStepsWk)} steps`;
+      document.getElementById('sim-max-steps-5h').textContent = `${fmtNum(maxSteps5h)} steps / 5h cap`;
+      document.getElementById('sim-weekly-dollars').textContent = `$${fmtNum(weeklyDollars, 2)}`;
+      document.getElementById('sim-4wk-dollars').textContent = `$${fmtNum(weeklyDollars * 4, 2)} per 4 weeks`;
+      document.getElementById('sim-blended-speed').textContent = `${blendedSpeed.toFixed(1)} tok/s`;
+      document.getElementById('sim-wait-hours').textContent = `${waitHours.toFixed(1)} hrs wait / week`;
+      document.getElementById('sim-eff-cap-wk').textContent = `${fmtM(maxStepsWk * effPerStep, 1)} tok`;
+      document.getElementById('sim-eff-cap-5h').textContent = `${fmtM(maxSteps5h * effPerStep, 1)} eff tok / 5h`;
+
+      const statusBadge = document.getElementById('sim-status-badge');
+      if (gemWkPct > 100 || tpWkPct > 100) {
+        statusBadge.textContent = 'WEEKLY LOCKOUT EXCEEDED';
+        statusBadge.className = 'text-xs font-mono-tabular px-2.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40';
+      } else if (gem5hPct > 100) {
+        statusBadge.textContent = '5H BURST CAP EXCEEDED';
+        statusBadge.className = 'text-xs font-mono-tabular px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      } else {
+        statusBadge.textContent = 'SUSTAINABLE WORKFLOW';
+        statusBadge.className = 'text-xs font-mono-tabular px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+      }
+    }
+
+    function renderPresetsTable() {
+      const presets = [
+        { name: '1. Pure Velocity (100% Flash Low)', mix: [100, 0, 0, 0, 0, 0] },
+        { name: '2. Historical Default (70% Flash Low + 30% Flash Med)', mix: [70, 30, 0, 0, 0, 0] },
+        { name: '3. Surgical Argon Architect (80% Flash Low + 20% Argon Med)', mix: [80, 0, 20, 0, 0, 0] },
+        { name: '4. Balanced Hybrid (70% Flash Low + 20% Argon Med + 10% Argon High)', mix: [70, 0, 20, 10, 0, 0] },
+        { name: '5. Heavy Argon Split (50% Flash Low + 50% Argon Med)', mix: [50, 0, 50, 0, 0, 0] },
+        { name: '6. Standard Flash Medium (100% Flash Med)', mix: [0, 100, 0, 0, 0, 0] },
+        { name: '7. Pure Argon Medium (100% Gemini 4 Argon Med)', mix: [0, 0, 100, 0, 0, 0] },
+        { name: '8. Pure Argon High (100% Gemini 4 Argon High)', mix: [0, 0, 0, 100, 0, 0] },
+        { name: '9. Dual-Pool Maximization (75% Flash Low + 15% Argon Med + 10% Sonnet 5.5)', mix: [75, 0, 15, 0, 10, 0] },
+        { name: '10. Dual-Pool Frontier (60% Flash Low + 25% Argon High + 10% Sonnet + 5% Opus)', mix: [60, 0, 0, 25, 10, 5] },
+        { name: '11. Pure Claude Sonnet 5.5 (100% Third-Party Pool)', mix: [0, 0, 0, 0, 100, 0] },
+        { name: '12. Pure Claude Opus 5.5 High (100% Third-Party Pool)', mix: [0, 0, 0, 0, 0, 100] }
+      ];
+
+      const effPerStep = 21615;
+      const inPerStep = 7647;
+      const cachePerStep = 137324;
+      const outPerStep = 235;
+      const tbody = document.getElementById('presets-table-body');
+      tbody.innerHTML = '';
+
+      presets.forEach(p => {
+        const [fl, fm, am, ah, sm, oh] = p.mix;
+        const shares = [
+          { s: fl / 100, m: MODELS[0] },
+          { s: fm / 100, m: MODELS[1] },
+          { s: am / 100, m: MODELS[4] },
+          { s: ah / 100, m: MODELS[5] },
+          { s: sm / 100, m: MODELS[8] },
+          { s: oh / 100, m: MODELS[12] }
+        ];
+
+        let gemBurnPerStep = 0;
+        let tpBurnPerStep = 0;
+        let blendedWt = 0;
+        let speed = 0;
+        let dollarPerStep = 0;
+
+        shares.forEach(({ s, m }) => {
+          if (s <= 0) return;
+          const wkCap = getRealisticAgenticWeeklyEffCap(m);
+          if (m.pool === 'Gemini') {
+            gemBurnPerStep += (s * effPerStep) / wkCap;
+            blendedWt += s * m.weight;
+          } else {
+            tpBurnPerStep += (s * effPerStep) / wkCap;
+            blendedWt += s * m.weight;
+          }
+          speed += s * m.speedMed;
+          dollarPerStep += s * calcApiCost(inPerStep, cachePerStep, outPerStep, m);
+        });
+
+        const limitingBurnPerStep = Math.max(gemBurnPerStep, tpBurnPerStep);
+        const maxStepsWk = Math.round(1.0 / limitingBurnPerStep);
+        const wkEffCap = maxStepsWk * effPerStep;
+        const cap5h = wkEffCap / 3.333;
+
+        const burnAvgWk = (14924 / maxStepsWk) * 100;
+        const burnPeakWk1 = (22757 / maxStepsWk) * 100;
+        const weeklyDollars = 14924 * dollarPerStep;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-[#141923] cursor-pointer transition';
+        tr.onclick = () => {
+          applyMixPreset(fl, fm, am, ah, sm, oh);
+          document.getElementById('sec-combinations').scrollIntoView({ behavior: 'smooth' });
+        };
+        tr.innerHTML = `
+          <td class="py-3.5 px-4 font-sans font-semibold text-white hover:text-[#e2b170] flex items-center gap-2">
+            <i data-lucide="play-circle" class="w-3.5 h-3.5 text-[#e2b170]"></i>
+            ${p.name}
+          </td>
+          <td class="py-3.5 px-3 text-right text-slate-300">${blendedWt.toFixed(2)}&times;</td>
+          <td class="py-3.5 px-3 text-right text-sky-400 font-semibold">${fmtM(cap5h, 1)}</td>
+          <td class="py-3.5 px-3 text-right text-emerald-400 font-bold">${fmtM(wkEffCap, 1)}</td>
+          <td class="py-3.5 px-3 text-right font-bold text-white">${fmtNum(maxStepsWk)}</td>
+          <td class="py-3.5 px-3 text-right font-semibold ${burnAvgWk > 100 ? 'text-rose-400' : 'text-emerald-400'}">${burnAvgWk.toFixed(0)}% / wk</td>
+          <td class="py-3.5 px-3 text-right font-semibold ${burnPeakWk1 > 100 ? 'text-rose-400' : 'text-amber-300'}">${burnPeakWk1.toFixed(0)}% / wk</td>
+          <td class="py-3.5 px-3 text-right font-bold text-[#e2b170]">$${fmtNum(weeklyDollars, 2)}</td>
+          <td class="py-3.5 px-3 text-right text-slate-300">${speed.toFixed(1)} tok/s</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    // ============================================================================
+    // 7. INTERACTIVE HTML5 PARETO FRONTIER CANVAS
+    // ============================================================================
+    function initParetoCanvas() {
+      const canvas = document.getElementById('pareto-canvas');
+      const tooltip = document.getElementById('canvas-tooltip');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let nodes = [];
+      let hoveredNode = null;
+
+      function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        draw();
+      }
+
+      function draw() {
+        const w = canvas.width / window.devicePixelRatio;
+        const h = canvas.height / window.devicePixelRatio;
+        ctx.clearRect(0, 0, w, h);
+
+        const padL = 70, padR = 45, padT = 35, padB = 45;
+        const plotW = w - padL - padR;
+        const plotH = h - padT - padB;
+
+        // Grid lines
+        ctx.strokeStyle = '#1f2637';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 5; i++) {
+          const y = padT + (plotH * i) / 5;
+          ctx.beginPath();
+          ctx.moveTo(padL, y);
+          ctx.lineTo(w - padR, y);
+          ctx.stroke();
+
+          const valM = ((5 - i) * 6).toFixed(0) + 'M';
+          ctx.fillStyle = '#64748b';
+          ctx.font = '11px JetBrains Mono';
+          ctx.textAlign = 'right';
+          ctx.fillText(valM, padL - 10, y + 4);
+        }
+
+        for (let i = 0; i <= 5; i++) {
+          const x = padL + (plotW * i) / 5;
+          ctx.beginPath();
+          ctx.moveTo(x, padT);
+          ctx.lineTo(x, h - padB);
+          ctx.stroke();
+
+          const spd = (80 + i * 35) + ' tok/s';
+          ctx.fillStyle = '#64748b';
+          ctx.font = '11px JetBrains Mono';
+          ctx.textAlign = 'center';
+          ctx.fillText(spd, x, h - padB + 20);
+        }
+
+        nodes = MODELS.map(m => {
+          const capM = (m.effPer1Pct * 100) / 1e6; // 0 to 30M
+          const spd = m.speedMed; // 80 to 255 tok/s
+          const x = padL + ((spd - 80) / 175) * plotW;
+          const y = padT + plotH - (Math.min(capM, 30) / 30) * plotH;
+          const r = Math.max(7, Math.min(20, Math.sqrt(m.blended5hDollars) * 2.2));
+          return { x, y, r, m, capM };
+        });
+
+        nodes.forEach(n => {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+          ctx.fillStyle = n === hoveredNode ? '#ffffff' : n.m.accent + 'cc';
+          ctx.fill();
+          ctx.lineWidth = n === hoveredNode ? 3 : 1.5;
+          ctx.strokeStyle = n.m.accent;
+          ctx.stroke();
+
+          ctx.fillStyle = '#e2e8f0';
+          ctx.font = '11px Plus Jakarta Sans';
+          ctx.textAlign = 'left';
+          ctx.fillText(n.m.name.replace('Gemini ', '').replace('Claude ', ''), n.x + n.r + 6, n.y + 4);
+        });
+      }
+
+      canvas.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        hoveredNode = null;
+        for (const n of nodes) {
+          const dx = mx - n.x;
+          const dy = my - n.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= n.r + 5) {
+            hoveredNode = n;
+            break;
+          }
+        }
+        draw();
+        if (hoveredNode) {
+          const m = hoveredNode.m;
+          tooltip.classList.remove('hidden');
+          tooltip.style.left = Math.min(rect.width - 260, hoveredNode.x + 16) + 'px';
+          tooltip.style.top = Math.max(10, hoveredNode.y - 40) + 'px';
+          tooltip.innerHTML = `
+            <div class="font-bold text-white mb-1">${m.name}</div>
+            <div class="text-emerald-400">5h Ceiling: ${(m.effPer1Pct * 100 / 1e6).toFixed(2)}M eff tok</div>
+            <div class="text-sky-400">Weekly Ceiling: ${(m.effPer1Pct * 100 * m.poolRatio / 1e6).toFixed(2)}M eff tok</div>
+            <div class="text-[#e2b170]">5h Value: $${m.bench5hDollars.toFixed(2)} (Blended $${m.blended5hDollars.toFixed(2)})</div>
+            <div class="text-slate-300">Speed: ${m.speedMed} tok/s (Peak ${m.speedPeak} tok/s)</div>
+          `;
+        } else {
+          tooltip.classList.add('hidden');
+        }
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        hoveredNode = null;
+        tooltip.classList.add('hidden');
+        draw();
+      });
+
+      window.addEventListener('resize', resize);
+      resize();
+    }
+
+    // Initialize everything on load
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderCounterfactual();
+      renderWeeklyCohorts();
+      renderMasterTable();
+      updateCustomMix();
+      renderPresetsTable();
+      initParetoCanvas();
+    });
+  </script>
+</body>
+</html>
