@@ -2,8 +2,7 @@
 
 Covers BOTH Quota Pools + Per-Model / Per-Effort Speed Benchmarking:
 1. Gemini Pool (Gemini 3.8 Flash Low/Med/High & Gemini 4 Argon Low/Med/High):
-   Waits until <= N minutes remain on the expiring 5-hour Gemini window (default: 16 mins),
-   runs isolated calibration phases across every Gemini model & effort tier, measures exact
+   Runs isolated calibration phases across every Gemini model & effort tier, measures exact
    Output/Thinking tok/s and Fresh Input prefill tok/s, and drains the expiring 5h Gemini quota
    to 0% before reset.
 2. Third-Party Pool (GPT-OSS 120B Medium, Claude Sonnet 5.5 Low/Med/High, Claude Opus 5.5 Low/Med/High):
@@ -205,7 +204,6 @@ def get_transcript_snapshot(
                         conv_out += out_t
 
                 if conv_counted:
-                    # Determine elapsed seconds for this conversation
                     elapsed_sec = matched_wall_sec
                     if elapsed_sec is None and first_dt and last_dt:
                         diff = (last_dt - first_dt).total_seconds()
@@ -246,23 +244,25 @@ def get_transcript_snapshot(
 
 
 def run_agy_prompt(
-    prompt: str, model: str, effort: str, call_nonce: str, timeout: int = 85
+    prompt: str, model: str, call_nonce: str, timeout: int = 85
 ) -> tuple[bool, str, float]:
-    """Execute a single headless prompt and measure exact wall-clock execution time."""
+    """Execute a single headless prompt and measure exact wall-clock execution time.
+
+    IMPORTANT: Do NOT pass `--effort` alongside `--model "<Model> (Low/Medium/High)"` because
+    `agy.exe` already encodes the effort level in the model name and rejects `--effort` with exit code 1.
+    """
     cmd = [
         str(AGY_EXE if AGY_EXE.exists() else "agy"),
         "-p",
         prompt,
         "--model",
         model,
-        "--effort",
-        effort,
         "--disable-slash-commands",
         "--dangerously-skip-permissions",
     ]
     t0 = time.perf_counter()
     try:
-        subprocess.run(
+        res = subprocess.run(
             cmd,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
@@ -272,17 +272,17 @@ def run_agy_prompt(
             timeout=timeout,
             check=False,
         )
-        return True, call_nonce, (time.perf_counter() - t0)
+        return (res.returncode == 0), call_nonce, (time.perf_counter() - t0)
     except Exception:
         return False, call_nonce, (time.perf_counter() - t0)
 
 
 def make_synthetic_input_prompt(
-    phase_tag: str, call_nonce: str, word_count: int = 22000
+    phase_tag: str, call_nonce: str, word_count: int = 1800
 ) -> str:
-    """Create an un-cached synthetic payload (~30k+ tokens + 22k system prompt = ~52k fresh input tokens)."""
+    """Create an un-cached synthetic payload safely under Windows 32KB CreateProcess command-line limit."""
     block = " ".join(
-        f"v{(i * 73) % 9973}_{call_nonce[-5:]}_{i % 389}" for i in range(word_count)
+        f"v{(i * 73) % 9973}_{call_nonce[-4:]}_{i % 389}" for i in range(word_count)
     )
     return (
         f"Benchmark Nonce {call_nonce} [{phase_tag}].\n"
@@ -292,9 +292,9 @@ def make_synthetic_input_prompt(
 
 
 def make_heavy_output_prompt(
-    phase_tag: str, call_nonce: str, extra_input_words: int = 4000
+    phase_tag: str, call_nonce: str, extra_input_words: int = 600
 ) -> str:
-    """Create a prompt that forces maximum chain-of-thought reasoning + dense output tokens."""
+    """Create a compact prompt (<10KB, safely under Windows 32KB CLI limit) that forces max output+thinking."""
     pad = " ".join(
         f"ctx_{(i * 31) % 4099}_{call_nonce[-4:]}" for i in range(extra_input_words)
     )
@@ -499,13 +499,12 @@ def save_results(state: dict[str, Any]) -> None:
 
 def run_parallel_batch(
     model: str,
-    effort: str,
     mode: str,
     phase_tag: str,
     workers: int,
     call_timings: dict[str, float],
-    input_words: int = 22000,
-    output_pad_words: int = 4000,
+    input_words: int = 1800,
+    output_pad_words: int = 600,
 ) -> int:
     """Run `workers` concurrent headless `agy.exe` calls and record exact wall-clock timings per call."""
     completed = 0
@@ -518,7 +517,7 @@ def run_parallel_batch(
                 if mode == "input"
                 else make_heavy_output_prompt(phase_tag, c_nonce, extra_input_words=output_pad_words)
             )
-            futures.append(pool.submit(run_agy_prompt, prompt, model, effort, c_nonce, 85))
+            futures.append(pool.submit(run_agy_prompt, prompt, model, c_nonce, 85))
         for fut in as_completed(futures):
             try:
                 ok, c_nonce, w_sec = fut.result()
@@ -602,12 +601,12 @@ def main() -> None:
         ("phase2_flash_medium", "gemini", "Gemini 3.8 Flash (Medium)", "medium", "output", 2, 4, 4),
         ("phase3_flash_high_baseline", "gemini", "Gemini 3.8 Flash (High)", "high", "output", 3, 4, 5),
         ("phase4_argon_low", "gemini", "Gemini 4 Argon (Low)", "low", "output", 4, 4, 5),
-        ("phase5_argon_medium_fresh_input", "gemini", "Gemini 4 Argon (Medium)", "medium", "input", 5, 4, 6),
+        ("phase5_argon_medium_fresh_input", "gemini", "Gemini 4 Argon (Medium)", "medium", "input", 5, 6, 8),
         ("phase6_argon_medium_heavy_output", "gemini", "Gemini 4 Argon (Medium)", "medium", "output", 5, 4, 6),
         ("phase7_argon_high_max_drain", "gemini", "Gemini 4 Argon (High)", "high", "output", 999, 6, 25),
     ]
 
-    for phase_id, pool, model_name, effort_flag, mode, target_drop, workers, max_batches in gemini_phases:
+    for phase_id, pool, model_name, effort_label, mode, target_drop, workers, max_batches in gemini_phases:
         try:
             u_before = query_usage()
         except Exception:
@@ -630,7 +629,7 @@ def main() -> None:
         while batches_run < max_batches:
             batches_run += 1
             calls_completed += run_parallel_batch(
-                model_name, effort_flag, mode, phase_tag, workers, call_timings
+                model_name, mode, phase_tag, workers, call_timings
             )
             try:
                 u_after = query_usage()
@@ -660,7 +659,7 @@ def main() -> None:
                 "pool": pool,
                 "phase_tag": phase_tag,
                 "model": model_name,
-                "effort": effort_flag,
+                "effort": effort_label,
                 "mode": mode,
                 "workers": workers,
                 "batches": batches_run,
@@ -697,7 +696,7 @@ def main() -> None:
     except Exception:
         tp_start_5h_pct = 100
 
-    for phase_id, pool, model_name, effort_flag, mode, target_drop, workers, max_batches in tp_phases:
+    for phase_id, pool, model_name, effort_label, mode, target_drop, workers, max_batches in tp_phases:
         try:
             u_before = query_usage()
         except Exception:
@@ -719,13 +718,12 @@ def main() -> None:
             batches_run += 1
             calls_completed += run_parallel_batch(
                 model_name,
-                effort_flag,
                 mode,
                 phase_tag,
                 workers,
                 call_timings,
-                input_words=8000,
-                output_pad_words=1500,
+                input_words=1200,
+                output_pad_words=500,
             )
             try:
                 u_after = query_usage()
@@ -754,7 +752,7 @@ def main() -> None:
                 "pool": pool,
                 "phase_tag": phase_tag,
                 "model": model_name,
-                "effort": effort_flag,
+                "effort": effort_label,
                 "mode": mode,
                 "workers": workers,
                 "batches": batches_run,
