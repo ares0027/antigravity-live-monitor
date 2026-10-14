@@ -292,20 +292,19 @@ def make_synthetic_input_prompt(
 
 
 def make_heavy_output_prompt(
-    phase_tag: str, call_nonce: str, extra_input_words: int = 600
+    phase_tag: str, call_nonce: str, extra_input_words: int = 500, target_words: int = 1000
 ) -> str:
-    """Create a compact prompt (<10KB, safely under Windows 32KB CLI limit) that forces max output+thinking."""
+    """Create a compact prompt (<10KB, safely under Windows 32KB CLI limit) that forces dense output+thinking."""
     pad = " ".join(
         f"ctx_{(i * 31) % 4099}_{call_nonce[-4:]}" for i in range(extra_input_words)
     )
     return (
         f"[Benchmark ID: {call_nonce}] [{phase_tag}]\n"
         f"IMPORTANT: Do NOT call any tools or read any files. Respond purely in plain text.\n"
-        f"Write an exhaustive, 3,500-word graduate-level mathematical and systems engineering treatise "
-        f"deriving: (1) Continuous-time Extended Kalman-Bucy filtering over Riemannian manifolds, "
-        f"(2) Hamiltonian Monte Carlo convergence bounds with explicit Lyapunov functions, "
-        f"(3) Non-asymptotic concentration inequalities for high-dimensional random matrices, and "
-        f"(4) Full step-by-step symbolic derivations for every theorem.\n\n"
+        f"Write a dense, {target_words}-word graduate-level mathematical and systems engineering derivation "
+        f"covering: (1) Continuous-time Extended Kalman-Bucy filtering over Riemannian manifolds, "
+        f"(2) Hamiltonian Monte Carlo convergence bounds with explicit Lyapunov functions, and "
+        f"(3) Non-asymptotic concentration inequalities for high-dimensional random matrices.\n\n"
         f"Reference entropy seed:\n{pad}"
     )
 
@@ -345,6 +344,15 @@ def compute_empirical_summary(phases: list[dict[str, Any]]) -> dict[str, Any]:
         if p.get("model") == "Gemini 3.8 Flash (High)" and drop > 0 and eff_per_1pct > 0:
             gemini_base_eff_per_pct = eff_per_1pct
             gemini_base_leg_per_pct = leg_per_1pct
+        elif (
+            gemini_base_eff_per_pct is None
+            and p.get("model") == "Gemini 3.8 Flash (Low)"
+            and drop > 0
+            and eff_per_1pct > 0
+        ):
+            # Fallback: normalize relative to Flash Low (0.5x configured) -> 1.0x equivalent = 0.5 * eff_per_1pct
+            gemini_base_eff_per_pct = eff_per_1pct * 0.5
+            gemini_base_leg_per_pct = leg_per_1pct * 0.5
         elif p.get("model") == "Claude Sonnet 5.5 (Medium)" and drop > 0 and eff_per_1pct > 0:
             tp_base_eff_per_pct = eff_per_1pct
             tp_base_leg_per_pct = leg_per_1pct
@@ -504,7 +512,8 @@ def run_parallel_batch(
     workers: int,
     call_timings: dict[str, float],
     input_words: int = 1800,
-    output_pad_words: int = 600,
+    output_pad_words: int = 500,
+    target_words: int = 1000,
 ) -> int:
     """Run `workers` concurrent headless `agy.exe` calls and record exact wall-clock timings per call."""
     completed = 0
@@ -515,7 +524,9 @@ def run_parallel_batch(
             prompt = (
                 make_synthetic_input_prompt(phase_tag, c_nonce, word_count=input_words)
                 if mode == "input"
-                else make_heavy_output_prompt(phase_tag, c_nonce, extra_input_words=output_pad_words)
+                else make_heavy_output_prompt(
+                    phase_tag, c_nonce, extra_input_words=output_pad_words, target_words=target_words
+                )
             )
             futures.append(pool.submit(run_agy_prompt, prompt, model, c_nonce, 85))
         for fut in as_completed(futures):
@@ -540,154 +551,172 @@ def main() -> None:
     parser.add_argument(
         "--tp-max-5h-drop",
         type=int,
-        default=28,
-        help="Maximum total 5-hour %% to spend on the Third-Party pool across all TP phases (default: 28%%)",
+        default=60,
+        help="Maximum total 5-hour %% to spend on the Third-Party pool across all TP phases (default: 60%%)",
     )
     parser.add_argument(
         "--now",
         action="store_true",
         help="Start benchmarking immediately without waiting",
     )
+    parser.add_argument(
+        "--tp-only",
+        action="store_true",
+        help="Only run Part B (Third-Party Shared Pool benchmark), preserving existing Gemini phases in results JSON",
+    )
     args = parser.parse_args()
+
+    existing_phases: list[dict[str, Any]] = []
+    if args.tp_only and RESULTS_FILE.exists():
+        try:
+            old_data = json.loads(RESULTS_FILE.read_text(encoding="utf-8"))
+            existing_phases = [
+                p for p in old_data.get("phases", []) if p.get("pool") == "gemini"
+            ]
+        except Exception:
+            existing_phases = []
 
     state: dict[str, Any] = {
         "started_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "wait_until_mins": 0.0 if args.now else args.wait_until_mins,
+        "wait_until_mins": 0.0 if (args.now or args.tp_only) else args.wait_until_mins,
         "tp_max_5h_drop": args.tp_max_5h_drop,
-        "status": "waiting_for_window",
-        "phases": [],
+        "status": "running_third_party_benchmark" if args.tp_only else "waiting_for_window",
+        "phases": existing_phases,
     }
     save_results(state)
 
-    target_rem_secs = 0.0 if args.now else (args.wait_until_mins * 60.0)
-    initial_reset_iso: str | None = None
+    if not args.tp_only:
+        target_rem_secs = 0.0 if args.now else (args.wait_until_mins * 60.0)
+        initial_reset_iso: str | None = None
 
-    while True:
-        try:
-            u = query_usage()
-        except Exception as exc:
-            state["last_error"] = str(exc)
-            save_results(state)
-            time.sleep(25.0)
-            continue
-
-        rem_secs = u.get("gemini_5h_rem_secs", 999999.0)
-        pct_rem = u.get("gemini_5h_pct", 0)
-        initial_reset_iso = u.get("gemini_5h_reset_iso")
-        state["last_usage_check"] = {
-            "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "gemini_5h_pct": pct_rem,
-            "gemini_weekly_pct": u.get("gemini_weekly_pct"),
-            "tp_5h_pct": u.get("tp_5h_pct"),
-            "tp_weekly_pct": u.get("tp_weekly_pct"),
-            "rem_mins": round(rem_secs / 60.0, 2),
-            "reset_iso": initial_reset_iso,
-        }
-        save_results(state)
-
-        if args.now or rem_secs <= target_rem_secs:
-            break
-
-        sleep_s = 12.0 if rem_secs <= target_rem_secs + 240 else 30.0
-        time.sleep(sleep_s)
-
-    state["status"] = "running_gemini_benchmark"
-    state["benchmark_triggered_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    save_results(state)
-
-    # PART A: 7 Gemini Model & Effort Phases (executed first before the expiring 5h Gemini window resets!)
-    gemini_phases = [
-        ("phase1_flash_low", "gemini", "Gemini 3.8 Flash (Low)", "low", "output", 2, 4, 4),
-        ("phase2_flash_medium", "gemini", "Gemini 3.8 Flash (Medium)", "medium", "output", 2, 4, 4),
-        ("phase3_flash_high_baseline", "gemini", "Gemini 3.8 Flash (High)", "high", "output", 3, 4, 5),
-        ("phase4_argon_low", "gemini", "Gemini 4 Argon (Low)", "low", "output", 4, 4, 5),
-        ("phase5_argon_medium_fresh_input", "gemini", "Gemini 4 Argon (Medium)", "medium", "input", 5, 6, 8),
-        ("phase6_argon_medium_heavy_output", "gemini", "Gemini 4 Argon (Medium)", "medium", "output", 5, 4, 6),
-        ("phase7_argon_high_max_drain", "gemini", "Gemini 4 Argon (High)", "high", "output", 999, 6, 25),
-    ]
-
-    for phase_id, pool, model_name, effort_label, mode, target_drop, workers, max_batches in gemini_phases:
-        try:
-            u_before = query_usage()
-        except Exception:
-            continue
-
-        if (
-            u_before.get("gemini_5h_pct", 0) <= 0
-            or u_before.get("gemini_5h_rem_secs", 0) <= 10.0
-            or (initial_reset_iso and u_before.get("gemini_5h_reset_iso") != initial_reset_iso)
-        ):
-            break
-
-        phase_tag = f"BENCH_{phase_id}_{uuid.uuid4().hex[:6]}"
-        phase_start_ts = time.time()
-        batches_run = 0
-        calls_completed = 0
-        call_timings: dict[str, float] = {}
-        u_after = u_before
-
-        while batches_run < max_batches:
-            batches_run += 1
-            calls_completed += run_parallel_batch(
-                model_name, mode, phase_tag, workers, call_timings
-            )
+        while True:
             try:
-                u_after = query_usage()
-            except Exception:
+                u = query_usage()
+            except Exception as exc:
+                state["last_error"] = str(exc)
+                save_results(state)
+                time.sleep(25.0)
+                continue
+
+            rem_secs = u.get("gemini_5h_rem_secs", 999999.0)
+            pct_rem = u.get("gemini_5h_pct", 0)
+            initial_reset_iso = u.get("gemini_5h_reset_iso")
+            state["last_usage_check"] = {
+                "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "gemini_5h_pct": pct_rem,
+                "gemini_weekly_pct": u.get("gemini_weekly_pct"),
+                "tp_5h_pct": u.get("tp_5h_pct"),
+                "tp_weekly_pct": u.get("tp_weekly_pct"),
+                "rem_mins": round(rem_secs / 60.0, 2),
+                "reset_iso": initial_reset_iso,
+            }
+            save_results(state)
+
+            if args.now or rem_secs <= target_rem_secs:
                 break
 
-            cur_drop = int(u_before.get("gemini_5h_pct", 0)) - int(u_after.get("gemini_5h_pct", 0))
+            sleep_s = 12.0 if rem_secs <= target_rem_secs + 240 else 30.0
+            time.sleep(sleep_s)
+
+        state["status"] = "running_gemini_benchmark"
+        state["benchmark_triggered_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        save_results(state)
+
+        # PART A: 7 Gemini Model & Effort Phases (executed first before the expiring 5h Gemini window resets!)
+        gemini_phases = [
+            ("phase1_flash_low", "gemini", "Gemini 3.8 Flash (Low)", "low", "output", 2, 6, 3),
+            ("phase2_flash_medium", "gemini", "Gemini 3.8 Flash (Medium)", "medium", "output", 2, 6, 3),
+            ("phase3_flash_high_baseline", "gemini", "Gemini 3.8 Flash (High)", "high", "output", 3, 6, 3),
+            ("phase4_argon_low", "gemini", "Gemini 4 Argon (Low)", "low", "output", 4, 6, 3),
+            ("phase5_argon_medium_fresh_input", "gemini", "Gemini 4 Argon (Medium)", "medium", "input", 5, 8, 4),
+            ("phase6_argon_medium_heavy_output", "gemini", "Gemini 4 Argon (Medium)", "medium", "output", 5, 6, 3),
+            ("phase7_argon_high_max_drain", "gemini", "Gemini 4 Argon (High)", "high", "output", 999, 8, 15),
+        ]
+
+        for phase_id, pool, model_name, effort_label, mode, target_drop, workers, max_batches in gemini_phases:
+            try:
+                u_before = query_usage()
+            except Exception:
+                continue
+
             if (
-                cur_drop >= target_drop
-                or u_after.get("gemini_5h_pct", 0) <= 0
-                or u_after.get("gemini_5h_rem_secs", 0) <= 10.0
-                or (initial_reset_iso and u_after.get("gemini_5h_reset_iso") != initial_reset_iso)
+                u_before.get("gemini_5h_pct", 0) <= 0
+                or u_before.get("gemini_5h_rem_secs", 0) <= 10.0
+                or (initial_reset_iso and u_before.get("gemini_5h_reset_iso") != initial_reset_iso)
             ):
                 break
 
-        tok_delta = get_transcript_snapshot(
-            phase_start_ts, phase_tag=phase_tag, call_timings=call_timings
-        )
-        pct_drop_5h = int(u_before.get("gemini_5h_pct", 0)) - int(u_after.get("gemini_5h_pct", 0))
-        pct_drop_weekly = int(u_before.get("gemini_weekly_pct", 0)) - int(
-            u_after.get("gemini_weekly_pct", 0)
-        )
+            phase_tag = f"BENCH_{phase_id}_{uuid.uuid4().hex[:6]}"
+            phase_start_ts = time.time()
+            batches_run = 0
+            calls_completed = 0
+            call_timings: dict[str, float] = {}
+            u_after = u_before
 
-        state["phases"].append(
-            {
-                "phase": phase_id,
-                "pool": pool,
-                "phase_tag": phase_tag,
-                "model": model_name,
-                "effort": effort_label,
-                "mode": mode,
-                "workers": workers,
-                "batches": batches_run,
-                "calls_completed": calls_completed,
-                "pct_5h_before": u_before.get("gemini_5h_pct"),
-                "pct_5h_after": u_after.get("gemini_5h_pct"),
-                "pct_drop_5h": pct_drop_5h,
-                "pct_weekly_before": u_before.get("gemini_weekly_pct"),
-                "pct_weekly_after": u_after.get("gemini_weekly_pct"),
-                "pct_drop_weekly": pct_drop_weekly,
-                "tokens": tok_delta,
-                "rem_secs_after": round(u_after.get("gemini_5h_rem_secs", 0.0), 1),
-            }
-        )
-        save_results(state)
+            while batches_run < max_batches:
+                batches_run += 1
+                calls_completed += run_parallel_batch(
+                    model_name, mode, phase_tag, workers, call_timings
+                )
+                try:
+                    u_after = query_usage()
+                except Exception:
+                    break
+
+                cur_drop = int(u_before.get("gemini_5h_pct", 0)) - int(u_after.get("gemini_5h_pct", 0))
+                if (
+                    cur_drop >= target_drop
+                    or u_after.get("gemini_5h_pct", 0) <= 0
+                    or u_after.get("gemini_5h_rem_secs", 0) <= 10.0
+                    or (initial_reset_iso and u_after.get("gemini_5h_reset_iso") != initial_reset_iso)
+                ):
+                    break
+
+            tok_delta = get_transcript_snapshot(
+                phase_start_ts, phase_tag=phase_tag, call_timings=call_timings
+            )
+            pct_drop_5h = int(u_before.get("gemini_5h_pct", 0)) - int(u_after.get("gemini_5h_pct", 0))
+            pct_drop_weekly = int(u_before.get("gemini_weekly_pct", 0)) - int(
+                u_after.get("gemini_weekly_pct", 0)
+            )
+
+            state["phases"].append(
+                {
+                    "phase": phase_id,
+                    "pool": pool,
+                    "phase_tag": phase_tag,
+                    "model": model_name,
+                    "effort": effort_label,
+                    "mode": mode,
+                    "workers": workers,
+                    "batches": batches_run,
+                    "calls_completed": calls_completed,
+                    "pct_5h_before": u_before.get("gemini_5h_pct"),
+                    "pct_5h_after": u_after.get("gemini_5h_pct"),
+                    "pct_drop_5h": pct_drop_5h,
+                    "pct_weekly_before": u_before.get("gemini_weekly_pct"),
+                    "pct_weekly_after": u_after.get("gemini_weekly_pct"),
+                    "pct_drop_weekly": pct_drop_weekly,
+                    "tokens": tok_delta,
+                    "rem_secs_after": round(u_after.get("gemini_5h_rem_secs", 0.0), 1),
+                }
+            )
+            save_results(state)
+    else:
+        state["benchmark_triggered_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
     # PART B: Surgical Third-Party (Claude & GPT) Shared Pool Calibration + Speed Benchmark
     state["status"] = "running_third_party_benchmark"
     save_results(state)
 
     tp_phases = [
-        ("tp1_gpt_oss_120b_medium", "tp", "GPT-OSS 120B (Medium)", "medium", "output", 2, 2, 3),
-        ("tp2_claude_sonnet_55_low", "tp", "Claude Sonnet 5.5 (Low)", "low", "output", 2, 2, 3),
-        ("tp3_claude_sonnet_55_medium_baseline", "tp", "Claude Sonnet 5.5 (Medium)", "medium", "output", 3, 2, 3),
-        ("tp4_claude_sonnet_55_high", "tp", "Claude Sonnet 5.5 (High)", "high", "output", 3, 2, 3),
-        ("tp5_claude_opus_55_low", "tp", "Claude Opus 5.5 (Low)", "low", "output", 3, 1, 2),
-        ("tp6_claude_opus_55_medium", "tp", "Claude Opus 5.5 (Medium)", "medium", "output", 4, 1, 2),
-        ("tp7_claude_opus_55_high", "tp", "Claude Opus 5.5 (High)", "high", "output", 4, 1, 2),
+        ("tp1_gpt_oss_120b_medium", "tp", "GPT-OSS 120B (Medium)", "medium", "output", 2, 3, 2),
+        ("tp2_claude_sonnet_55_low", "tp", "Claude Sonnet 5.5 (Low)", "low", "output", 2, 3, 2),
+        ("tp3_claude_sonnet_55_medium_baseline", "tp", "Claude Sonnet 5.5 (Medium)", "medium", "output", 3, 3, 2),
+        ("tp4_claude_sonnet_55_high", "tp", "Claude Sonnet 5.5 (High)", "high", "output", 3, 3, 2),
+        ("tp5_claude_opus_55_low", "tp", "Claude Opus 5.5 (Low)", "low", "output", 3, 2, 2),
+        ("tp6_claude_opus_55_medium", "tp", "Claude Opus 5.5 (Medium)", "medium", "output", 4, 2, 2),
+        ("tp7_claude_opus_55_high", "tp", "Claude Opus 5.5 (High)", "high", "output", 4, 2, 2),
     ]
 
     try:
