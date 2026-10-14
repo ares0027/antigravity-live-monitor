@@ -29,24 +29,26 @@ if os.path.exists(hud_script) and os.path.exists(pythonw):
     DETACHED_PROCESS = 0x00000008
     CREATE_NEW_PROCESS_GROUP = 0x00000200
     try:
-        # Spawn via Windows Task Scheduler service with /IT (Interactive) so the GUI runs on WinSta0\Default outside any parent Job Object
-        task_name = "AntigravityHUD_Launch"
-        tr_cmd = f'"{pythonw}" "{hud_script}"'
-        subprocess.run(
-            ["schtasks", "/Create", "/TN", task_name, "/TR", tr_cmd, "/SC", "ONCE", "/ST", "00:00", "/IT", "/F"],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            creationflags=CREATE_NO_WINDOW,
-            timeout=5,
+        # Start the Interactive Scheduled Task so pythonw runs on WinSta0\Default outside any parent Job Object
+        ps_cmd = (
+            f"$t = Get-ScheduledTask -TaskName 'AntigravityHUD_Launch' -ErrorAction SilentlyContinue; "
+            f"if (-not $t) {{ "
+            f"$a = New-ScheduledTaskAction -Execute '{pythonw}' -Argument '\"{hud_script}\"' -WorkingDirectory '{os.path.dirname(hud_script)}'; "
+            f"$tr = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME; "
+            f"$p = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive; "
+            f"$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero); "
+            f"Register-ScheduledTask -TaskName 'AntigravityHUD_Launch' -Action $a -Trigger $tr -Principal $p -Settings $s -Force | Out-Null "
+            f"}}; "
+            f"Start-ScheduledTask -TaskName 'AntigravityHUD_Launch'"
         )
         subprocess.run(
-            ["schtasks", "/Run", "/TN", task_name],
+            ["powershell", "-NoProfile", "-WindowStyle", "Hidden", "-Command", ps_cmd],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             creationflags=CREATE_NO_WINDOW,
-            timeout=5,
+            timeout=8,
+            check=True,
         )
     except Exception:
         try:
@@ -56,7 +58,7 @@ if os.path.exists(hud_script) and os.path.exists(pythonw):
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 close_fds=True,
-                creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
+                creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
             )
         except Exception:
             pass

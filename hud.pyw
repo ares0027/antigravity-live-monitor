@@ -184,7 +184,20 @@ def save_hud_config(config_dict):
         pass
 
 
+_ACTIVE_WEBVIEW_WINDOW = None
+
+
 def get_hud_hwnd():
+    global _ACTIVE_WEBVIEW_WINDOW
+    if _ACTIVE_WEBVIEW_WINDOW is not None:
+        try:
+            nat = getattr(_ACTIVE_WEBVIEW_WINDOW, "native", None)
+            if nat is not None and getattr(nat, "Handle", None) is not None:
+                h = int(nat.Handle.ToInt64())
+                if h:
+                    return h
+        except Exception:
+            pass
     my_pid = os.getpid()
     hwnds = []
     WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
@@ -2553,31 +2566,31 @@ class AutoPrimerWorker(threading.Thread):
 
 class Api:
     def __init__(self, engine, config):
-        self.engine = engine
-        self.config = config
-        self.window = None
-        self.is_on_top = config.get("pinned", True)
-        self.is_auto_prime = config.get("auto_prime", True)
-        self.is_global_yolo = config.get("global_yolo", True)
-        self.is_tp_expanded = config.get("tp_expanded", False)
-        self.models_show_all = config.get("models_show_all", True)
-        self.is_compact = False
-        self.current_theme = config.get("theme", "oled")
+        self._engine = engine
+        self._config = config
+        self._window = None
+        self._is_on_top = config.get("pinned", True)
+        self._is_auto_prime = config.get("auto_prime", True)
+        self._is_global_yolo = config.get("global_yolo", True)
+        self._is_tp_expanded = config.get("tp_expanded", False)
+        self._models_show_all = config.get("models_show_all", True)
+        self._is_compact = False
+        self._current_theme = config.get("theme", "oled")
 
-        self.last_expanded_w = config.get("last_w", 550)
-        self.last_expanded_h = config.get("last_h", 820 if self.is_tp_expanded else 790)
+        self._last_expanded_w = config.get("last_w", 550)
+        self._last_expanded_h = config.get("last_h", 820 if self._is_tp_expanded else 790)
 
-    def set_window(self, window):
-        self.window = window
+    def _set_window(self, window):
+        self._window = window
 
     def get_config(self):
-        return self.config
+        return self._config
 
     def get_metrics(self):
-        return self.engine.cached_metrics
+        return self._engine.cached_metrics
 
     def force_sync(self):
-        self.engine.query_official_usage()
+        self._engine.query_official_usage()
         return True
 
     def move_by(self, dx, dy):
@@ -2588,24 +2601,24 @@ class Api:
             cur_x = rect[0]
             cur_y = rect[1]
             user32.SetWindowPos(hwnd, 0, cur_x + dx, cur_y + dy, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE)
-        elif self.window:
+        elif self._window:
             try:
-                self.window.move(self.window.x + dx, self.window.y + dy)
+                self._window.move(self._window.x + dx, self._window.y + dy)
             except Exception:
                 pass
 
     def resize_window(self, new_w, new_h):
-        min_w = 160 if self.is_compact else 380
-        min_h = 30 if self.is_compact else 320
+        min_w = 160 if self._is_compact else 380
+        min_h = 30 if self._is_compact else 320
         target_w = max(min_w, int(new_w))
         target_h = max(min_h, int(new_h))
 
-        if not self.is_compact:
-            self.last_expanded_w = target_w
-            self.last_expanded_h = target_h
-            self.config["last_w"] = target_w
-            self.config["last_h"] = target_h
-            save_hud_config(self.config)
+        if not self._is_compact:
+            self._last_expanded_w = target_w
+            self._last_expanded_h = target_h
+            self._config["last_w"] = target_w
+            self._config["last_h"] = target_h
+            save_hud_config(self._config)
 
         hwnd = get_hud_hwnd()
         if hwnd:
@@ -2614,25 +2627,25 @@ class Api:
             cur_x = rect[0]
             cur_y = rect[1]
             user32.SetWindowPos(hwnd, 0, cur_x, cur_y, target_w, target_h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
-        elif self.window:
+        elif self._window:
             try:
-                self.window.resize(target_w, target_h)
+                self._window.resize(target_w, target_h)
             except Exception:
                 pass
         return True
 
     def set_compact_mode(self, is_compact):
         hwnd = get_hud_hwnd()
-        if hwnd and not self.is_compact:
+        if hwnd and not self._is_compact:
             rect = (ctypes.c_long * 4)()
             user32.GetWindowRect(hwnd, rect)
             cur_w = rect[2] - rect[0]
             cur_h = rect[3] - rect[1]
             if cur_w > 300 and cur_h > 200:
-                self.last_expanded_w = cur_w
-                self.last_expanded_h = cur_h
+                self._last_expanded_w = cur_w
+                self._last_expanded_h = cur_h
 
-        self.is_compact = is_compact
+        self._is_compact = is_compact
 
         if hwnd:
             rect = (ctypes.c_long * 4)()
@@ -2642,84 +2655,97 @@ class Api:
             if is_compact:
                 w, h = 205, 34
             else:
-                w = max(520, self.last_expanded_w)
-                min_safe_h = 820 if self.is_tp_expanded else 760
-                h = max(min_safe_h, self.last_expanded_h)
+                w = max(520, self._last_expanded_w)
+                min_safe_h = 820 if self._is_tp_expanded else 760
+                h = max(min_safe_h, self._last_expanded_h)
             user32.SetWindowPos(hwnd, 0, cur_x, cur_y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
-        elif self.window:
+        elif self._window:
             try:
                 if is_compact:
-                    self.window.resize(205, 34)
+                    self._window.resize(205, 34)
                 else:
-                    w = max(520, self.last_expanded_w)
-                    min_safe_h = 820 if self.is_tp_expanded else 760
-                    h = max(min_safe_h, self.last_expanded_h)
-                    self.window.resize(w, h)
+                    w = max(520, self._last_expanded_w)
+                    min_safe_h = 820 if self._is_tp_expanded else 760
+                    h = max(min_safe_h, self._last_expanded_h)
+                    self._window.resize(w, h)
             except Exception:
                 pass
-        return self.is_compact
+        return self._is_compact
 
     def set_tp_expanded(self, expanded):
-        self.is_tp_expanded = expanded
-        self.config["tp_expanded"] = self.is_tp_expanded
-        save_hud_config(self.config)
-        return self.is_tp_expanded
+        self._is_tp_expanded = expanded
+        self._config["tp_expanded"] = self._is_tp_expanded
+        save_hud_config(self._config)
+        return self._is_tp_expanded
 
     def set_models_show_all(self, show_all):
-        self.models_show_all = bool(show_all)
-        self.config["models_show_all"] = self.models_show_all
-        save_hud_config(self.config)
-        return self.models_show_all
+        self._models_show_all = bool(show_all)
+        self._config["models_show_all"] = self._models_show_all
+        save_hud_config(self._config)
+        return self._models_show_all
 
     def set_theme(self, theme_name):
-        self.current_theme = theme_name
-        self.config["theme"] = theme_name
-        save_hud_config(self.config)
-        return self.current_theme
+        self._current_theme = theme_name
+        self._config["theme"] = theme_name
+        save_hud_config(self._config)
+        return self._current_theme
 
     def toggle_global_yolo(self):
-        self.is_global_yolo = not self.is_global_yolo
-        self.config["global_yolo"] = self.is_global_yolo
-        save_hud_config(self.config)
-        return self.is_global_yolo
+        self._is_global_yolo = not self._is_global_yolo
+        self._config["global_yolo"] = self._is_global_yolo
+        save_hud_config(self._config)
+        return self._is_global_yolo
 
     def toggle_auto_prime(self):
-        self.is_auto_prime = not self.is_auto_prime
-        self.config["auto_prime"] = self.is_auto_prime
-        save_hud_config(self.config)
-        return self.is_auto_prime
+        self._is_auto_prime = not self._is_auto_prime
+        self._config["auto_prime"] = self._is_auto_prime
+        save_hud_config(self._config)
+        return self._is_auto_prime
 
     def toggle_on_top(self):
-        self.is_on_top = not self.is_on_top
-        self.config["pinned"] = self.is_on_top
-        save_hud_config(self.config)
+        self._is_on_top = not self._is_on_top
+        self._config["pinned"] = self._is_on_top
+        save_hud_config(self._config)
         
         hwnd = get_hud_hwnd()
         if hwnd:
-            flag = HWND_TOPMOST if self.is_on_top else HWND_NOTOPMOST
+            flag = HWND_TOPMOST if self._is_on_top else HWND_NOTOPMOST
             user32.SetWindowPos(hwnd, flag, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW)
-        return self.is_on_top
+        return self._is_on_top
 
     def minimize(self):
         hwnd = get_hud_hwnd()
         if hwnd:
             user32.ShowWindow(hwnd, 6)
-        elif self.window:
+        elif self._window:
             try:
-                self.window.minimize()
+                self._window.minimize()
             except Exception:
                 pass
 
     def close(self):
-        if self.window:
-            threading.Thread(target=self.window.destroy, daemon=True).start()
+        if self._window:
+            threading.Thread(target=self._window.destroy, daemon=True).start()
+
+
+def _hud_trace(msg: str):
+    try:
+        trace_p = os.path.join(os.path.dirname(HUD_CONFIG_FILE), "hud_startup_trace.log")
+        with open(trace_p, "a", encoding="utf-8") as f:
+            f.write(f"{datetime.datetime.now().isoformat()} [PID {os.getpid()}] {msg}\n")
+    except Exception:
+        pass
 
 
 def main():
+    global _ACTIVE_WEBVIEW_WINDOW
+    _hud_trace(f"main() enter argv={sys.argv}")
     mutex_name = "Global\\AntigravityHUD_SingleInstance_Mutex"
     mutex = kernel32.CreateMutexW(None, False, mutex_name)
     if kernel32.GetLastError() == 183:
+        _hud_trace("mutex already exists (183), exiting")
         sys.exit(0)
+    _hud_trace("mutex acquired")
 
     start_minimized = ("--minimized" in sys.argv) or ("-m" in sys.argv)
     config = load_hud_config()
@@ -2734,6 +2760,7 @@ def main():
     init_w = config.get("last_w", 550)
     init_h = config.get("last_h", 820 if is_tp else 790)
 
+    _hud_trace(f"creating window {init_w}x{init_h} minimized={start_minimized}")
     window = webview.create_window(
         title="Antigravity Live Monitor",
         html=HTML_CONTENT,
@@ -2746,19 +2773,37 @@ def main():
         resizable=True,
         background_color="#000000"
     )
-    api.set_window(window)
+    _ACTIVE_WEBVIEW_WINDOW = window
+    api._set_window(window)
 
     def on_startup():
-        if start_minimized:
-            for _ in range(25):
-                hwnd = get_hud_hwnd()
-                if hwnd:
-                    # SW_SHOWMINNOACTIVE = 7 (minimizes to taskbar without stealing focus)
+        _hud_trace("on_startup() entered")
+        for i in range(30):
+            hwnd = get_hud_hwnd()
+            if hwnd:
+                if start_minimized:
                     user32.ShowWindow(hwnd, 7)
-                    break
-                time.sleep(0.08)
+                    _hud_trace(f"tick {i}: minimized hwnd={hwnd}")
+                else:
+                    user32.ShowWindow(hwnd, 4)
+                    flag = HWND_TOPMOST if config.get("pinned", True) else HWND_NOTOPMOST
+                    user32.SetWindowPos(
+                        hwnd,
+                        flag,
+                        0,
+                        0,
+                        0,
+                        0,
+                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW,
+                    )
+                    vis = user32.IsWindowVisible(hwnd)
+                    _hud_trace(f"tick {i}: shown hwnd={hwnd} visible={vis}")
+                break
+            time.sleep(0.08)
 
+    _hud_trace("calling webview.start(on_startup)")
     webview.start(on_startup)
+    _hud_trace("webview.start returned")
 
 
 if __name__ == "__main__":
