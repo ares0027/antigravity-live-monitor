@@ -1559,24 +1559,26 @@ class MetricsEngine:
                         except Exception:
                             continue
                         c = str(d.get("content", ""))
-                        if "Model Selection" in c:
-                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+(.+?)\.\s+No need", c, re.S)
+                        if d.get("type") == "USER_INPUT" and "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
+                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\.\n`]+)\.\s+No need", c)
                             if m:
                                 cur_model = m.group(1).strip()
                         for tc in d.get("tool_calls") or []:
                             if tc.get("name") == "invoke_subagent":
-                                args_str = str((tc.get("args") or {}).get("Subagents", ""))
+                                raw_subs = (tc.get("args") or {}).get("Subagents", "")
                                 try:
-                                    subs = json.loads(args_str)
-                                    for s in subs:
-                                        pending_subagents.append(s.get("Model", "inherit"))
+                                    subs = raw_subs if isinstance(raw_subs, list) else json.loads(str(raw_subs))
+                                    if isinstance(subs, list):
+                                        for s in subs:
+                                            if isinstance(s, dict):
+                                                pending_subagents.append(s.get("Model", "inherit"))
                                 except Exception:
                                     pass
                         if "Created the following subagents:" in c:
                             cids = re.findall(r'"conversationId":\s*"([a-f0-9\-]+)"', c)
                             for idx, cid in enumerate(cids):
                                 sm = pending_subagents[idx] if idx < len(pending_subagents) else "inherit"
-                                subagent_map[cid] = (sm, cur_model or "Gemini 3.8 Flash (High)")
+                                subagent_map[cid] = (sm, cur_model or "Gemini 4 Argon (Medium)")
                             pending_subagents = []
             except Exception:
                 pass
@@ -1611,8 +1613,12 @@ class MetricsEngine:
         total_cache_cost = 0.0
         gemini_tokens = 0
         gemini_cost = 0.0
+        gemini_base_units = 0
+        gemini_legacy_units = 0
         tp_tokens = 0
         tp_cost = 0.0
+        tp_base_units = 0
+        tp_legacy_units = 0
         legacy_weighted_units = 0
 
         by_model = {}
@@ -1641,9 +1647,10 @@ class MetricsEngine:
                         except Exception:
                             continue
 
+                        t = data.get("type", "")
                         c = str(data.get("content", ""))
-                        if "Model Selection" in c:
-                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+(.+?)\.\s+No need", c, re.S)
+                        if t == "USER_INPUT" and "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
+                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\.\n`]+)\.\s+No need", c)
                             if m:
                                 cur_model = m.group(1).strip()
                         if data.get("modelName"):
@@ -1661,16 +1668,25 @@ class MetricsEngine:
                         if dt < start_dt:
                             continue
 
-                        t = data.get("type", "")
                         model_key = cur_model or "Gemini 3.8 Flash (High)"
                         spec = get_model_spec(model_key)
 
-                        # Maintain legacy content heuristic for quota_history.json compatibility
+                        # Maintain legacy content heuristic separated by pool for quota_history.json compatibility
                         if t in ["USER_INPUT", "CODE_ACTION", "RUN_COMMAND", "GENERIC", "TOOL_RESULT"]:
-                            legacy_weighted_units += int(estimate_tokens(c) * spec["weight"])
+                            lw = int(estimate_tokens(c) * spec["weight"])
+                            legacy_weighted_units += lw
+                            if spec["pool"] == "tp":
+                                tp_legacy_units += lw
+                            else:
+                                gemini_legacy_units += lw
                         elif t in ["PLANNER_RESPONSE", "MODEL"]:
                             legacy_tok = estimate_tokens(c) + estimate_tokens(str(data.get("thinking", "")))
-                            legacy_weighted_units += int(legacy_tok * spec["weight"])
+                            lw = int(legacy_tok * spec["weight"])
+                            legacy_weighted_units += lw
+                            if spec["pool"] == "tp":
+                                tp_legacy_units += lw
+                            else:
+                                gemini_legacy_units += lw
 
                             # Extract exact server-reported telemetry tokens
                             if "input_tokens" in data or "output_tokens" in data:
@@ -1687,6 +1703,10 @@ class MetricsEngine:
                             step_out_cost = (out_tok / 1_000_000.0) * spec["out"]
                             step_total_cost = step_in_cost + step_cache_cost + step_out_cost
 
+                            # Effective cache-discounted tokens (90% discount on cached reads) & 1.0x pool base units
+                            step_eff_tokens = in_tok + out_tok + int(cache_tok * 0.1)
+                            step_base_units = int(step_eff_tokens * spec["weight"])
+
                             total_in += in_tok
                             total_cache += cache_tok
                             total_out += out_tok
@@ -1697,9 +1717,11 @@ class MetricsEngine:
                             if spec["pool"] == "tp":
                                 tp_tokens += (in_tok + out_tok)
                                 tp_cost += step_total_cost
+                                tp_base_units += step_base_units
                             else:
                                 gemini_tokens += (in_tok + out_tok)
                                 gemini_cost += step_total_cost
+                                gemini_base_units += step_base_units
 
                             m_entry = by_model.setdefault(model_key, {
                                 "name": model_key,
@@ -1709,12 +1731,14 @@ class MetricsEngine:
                                 "in_tokens": 0,
                                 "cache_tokens": 0,
                                 "out_tokens": 0,
+                                "base_units": 0,
                                 "cost": 0.0,
                             })
                             m_entry["steps"] += 1
                             m_entry["in_tokens"] += in_tok
                             m_entry["cache_tokens"] += cache_tok
                             m_entry["out_tokens"] += out_tok
+                            m_entry["base_units"] += step_base_units
                             m_entry["cost"] += step_total_cost
             except Exception:
                 pass
@@ -1730,11 +1754,120 @@ class MetricsEngine:
             "total_cost": total_in_cost + total_out_cost + total_cache_cost,
             "gemini_tokens": gemini_tokens,
             "gemini_cost": gemini_cost,
+            "gemini_base_units": gemini_base_units,
+            "gemini_legacy_units": gemini_legacy_units,
             "tp_tokens": tp_tokens,
             "tp_cost": tp_cost,
+            "tp_base_units": tp_base_units,
+            "tp_legacy_units": tp_legacy_units,
             "legacy_weighted_units": legacy_weighted_units,
             "by_model": by_model,
         }
+
+    def _append_cal_sample(self, key: str, used_units: int, pct_used: int, min_pct: int = 5, max_pct: int = 98, extra: dict = None) -> bool:
+        if used_units <= 0 or pct_used < min_pct or pct_used > max_pct:
+            return False
+        implied_cap = int(used_units / (pct_used / 100.0))
+        if implied_cap <= 10000:
+            return False
+        samples = self.history.setdefault(key, [])
+        if samples:
+            last = samples[-1]
+            # Avoid duplicate consecutive samples when neither pct_used nor used_units moved significantly
+            if last.get("pct_used") == pct_used and abs(int(last.get("used", 0)) - used_units) < 250:
+                return False
+        entry = {
+            "ts": time.time(),
+            "used": int(used_units),
+            "pct_used": int(pct_used),
+            "implied_cap": int(implied_cap),
+        }
+        if extra:
+            entry.update(extra)
+        samples.append(entry)
+        if len(samples) > 600:
+            del samples[:-600]
+        return True
+
+    def _record_calibration_samples(self, w5, wWeek, w5_tp, wWeek_tp):
+        if self.gemini_5h_reset_dt is None:
+            return
+        now_ts = time.time()
+        changed = False
+
+        g5_pct_used = 100 - int(self.cached_metrics.get("gemini_5h_pct", 100))
+        gw_pct_used = 100 - int(self.cached_metrics.get("gemini_weekly_pct", 100))
+        tp5_pct_used = 100 - int(self.cached_metrics.get("tp_5h_pct", 100))
+        tpw_pct_used = 100 - int(self.cached_metrics.get("tp_weekly_pct", 100))
+
+        # Check if percentage changed on 5h pool (record immediately) or periodic 30s interval
+        samples_5h = self.history.get("samples_5h", [])
+        last_g5_pct = samples_5h[-1].get("pct_used") if samples_5h else None
+        pct_jumped = (last_g5_pct != g5_pct_used)
+
+        if not pct_jumped and (now_ts - self.last_cal_save_ts) < 30.0:
+            return
+
+        if self._append_cal_sample(
+            "samples_5h",
+            w5["gemini_legacy_units"],
+            g5_pct_used,
+            min_pct=5,
+            max_pct=98,
+            extra={
+                "server_base_units": w5["gemini_base_units"],
+                "raw_tokens": w5["gemini_tokens"],
+                "cache_tokens": w5["cache"],
+                "cost_usd": round(w5["gemini_cost"], 4),
+            },
+        ):
+            changed = True
+
+        if self._append_cal_sample(
+            "samples_weekly",
+            wWeek["gemini_legacy_units"],
+            gw_pct_used,
+            min_pct=2,
+            max_pct=98,
+            extra={
+                "server_base_units": wWeek["gemini_base_units"],
+                "raw_tokens": wWeek["gemini_tokens"],
+                "cost_usd": round(wWeek["gemini_cost"], 4),
+            },
+        ):
+            changed = True
+
+        if self._append_cal_sample(
+            "samples_tp_5h",
+            w5_tp["tp_legacy_units"],
+            tp5_pct_used,
+            min_pct=5,
+            max_pct=98,
+            extra={
+                "server_base_units": w5_tp["tp_base_units"],
+                "raw_tokens": w5_tp["tp_tokens"],
+                "cost_usd": round(w5_tp["tp_cost"], 4),
+            },
+        ):
+            changed = True
+
+        if self._append_cal_sample(
+            "samples_tp_weekly",
+            wWeek_tp["tp_legacy_units"],
+            tpw_pct_used,
+            min_pct=2,
+            max_pct=98,
+            extra={
+                "server_base_units": wWeek_tp["tp_base_units"],
+                "raw_tokens": wWeek_tp["tp_tokens"],
+                "cost_usd": round(wWeek_tp["tp_cost"], 4),
+            },
+        ):
+            changed = True
+
+        if changed:
+            self.last_cal_save_ts = now_ts
+            self.save_history()
 
     def _build_model_rows(self, by_model_dict, active_model_name):
         learned_g_5h = self.compute_learned_cap(self.history.get("samples_5h", []), default=862000)
@@ -1850,16 +1983,23 @@ class MetricsEngine:
                         except Exception:
                             continue
 
+                        t = data.get("type", "")
                         c = str(data.get("content", ""))
-                        if turns == 0 and data.get("type") == "USER_INPUT":
-                            if "<USER_REQUEST>\n/usage\n</USER_REQUEST>" in c or "<USER_REQUEST>\n1\n</USER_REQUEST>" in c:
+                        if turns == 0 and t == "USER_INPUT":
+                            if (
+                                "<USER_REQUEST>\n/usage\n</USER_REQUEST>" in c
+                                or "<USER_REQUEST>\n1\n</USER_REQUEST>" in c
+                                or "Benchmark Nonce " in c
+                                or "[Benchmark ID:" in c
+                            ):
                                 is_ping = True
                                 break
 
-                        if "Model Selection" in c:
-                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+(.+?)\.\s+No need", c, re.S)
+                        if t == "USER_INPUT" and "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
+                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\.\n`]+)\.\s+No need", c)
                             if m:
                                 session_model = m.group(1).strip()
+
 
                         t = data.get("type", "")
                         if t == "USER_INPUT":
@@ -1898,38 +2038,61 @@ class MetricsEngine:
             self.cached_metrics["session_total_tokens"] = in_tokens + out_tokens
             break
 
-        # 1. 5-Hour Slot Metrics
+        # 1. 5-Hour Slot Metrics (Gemini & Third-Party anchored to their respective reset timestamps)
         w5 = self.calculate_slot(self.five_h_start_dt, subagent_map=subagent_map, all_logs=all_logs)
+        if abs((self.tp_five_h_start_dt - self.five_h_start_dt).total_seconds()) > 60:
+            w5_tp = self.calculate_slot(self.tp_five_h_start_dt, subagent_map=subagent_map, all_logs=all_logs)
+        else:
+            w5_tp = w5
+
         self.cached_metrics["slot5_in"] = w5["in"]
         self.cached_metrics["slot5_out"] = w5["out"]
         self.cached_metrics["slot5_cache"] = w5["cache"]
         self.cached_metrics["slot5_in_cost"] = w5["in_cost"]
         self.cached_metrics["slot5_out_cost"] = w5["out_cost"]
         self.cached_metrics["slot5_cache_cost"] = w5["cache_cost"]
-        self.cached_metrics["slot5_total_cost"] = w5["total_cost"]
+        self.cached_metrics["slot5_total_cost"] = w5["gemini_cost"] + w5_tp["tp_cost"]
         self.cached_metrics["slot5_gemini_cost"] = w5["gemini_cost"]
         self.cached_metrics["slot5_gemini_tokens"] = w5["gemini_tokens"]
-        self.cached_metrics["slot5_tp_cost"] = w5["tp_cost"]
-        self.cached_metrics["slot5_tp_tokens"] = w5["tp_tokens"]
+        self.cached_metrics["slot5_tp_cost"] = w5_tp["tp_cost"]
+        self.cached_metrics["slot5_tp_tokens"] = w5_tp["tp_tokens"]
 
-        # 2. Weekly Slot Metrics
+        # 2. Weekly Slot Metrics (Gemini & Third-Party anchored to their respective reset timestamps)
         wWeek = self.calculate_slot(self.weekly_start_dt, subagent_map=subagent_map, all_logs=all_logs)
+        if abs((self.tp_weekly_start_dt - self.weekly_start_dt).total_seconds()) > 60:
+            wWeek_tp = self.calculate_slot(self.tp_weekly_start_dt, subagent_map=subagent_map, all_logs=all_logs)
+        else:
+            wWeek_tp = wWeek
+
         self.cached_metrics["slotW_in"] = wWeek["in"]
         self.cached_metrics["slotW_out"] = wWeek["out"]
         self.cached_metrics["slotW_cache"] = wWeek["cache"]
         self.cached_metrics["slotW_in_cost"] = wWeek["in_cost"]
         self.cached_metrics["slotW_out_cost"] = wWeek["out_cost"]
         self.cached_metrics["slotW_cache_cost"] = wWeek["cache_cost"]
-        self.cached_metrics["slotW_total_cost"] = wWeek["total_cost"]
+        self.cached_metrics["slotW_total_cost"] = wWeek["gemini_cost"] + wWeek_tp["tp_cost"]
         self.cached_metrics["slotW_gemini_cost"] = wWeek["gemini_cost"]
         self.cached_metrics["slotW_gemini_tokens"] = wWeek["gemini_tokens"]
-        self.cached_metrics["slotW_tp_cost"] = wWeek["tp_cost"]
-        self.cached_metrics["slotW_tp_tokens"] = wWeek["tp_tokens"]
+        self.cached_metrics["slotW_tp_cost"] = wWeek_tp["tp_cost"]
+        self.cached_metrics["slotW_tp_tokens"] = wWeek_tp["tp_tokens"]
 
-        # 3. Build Per-Model Usage & Remaining Rows
-        self.cached_metrics["models_5h"] = self._build_model_rows(w5["by_model"], active_model_name)
-        self.cached_metrics["models_weekly"] = self._build_model_rows(wWeek["by_model"], active_model_name)
+        # Merge per-model dictionaries when TP window differs from Gemini window
+        by_model_5h = {k: v for k, v in w5["by_model"].items() if v.get("pool") != "tp"}
+        for k, v in w5_tp["by_model"].items():
+            if v.get("pool") == "tp":
+                by_model_5h[k] = v
+
+        by_model_w = {k: v for k, v in wWeek["by_model"].items() if v.get("pool") != "tp"}
+        for k, v in wWeek_tp["by_model"].items():
+            if v.get("pool") == "tp":
+                by_model_w[k] = v
+
+        # 3. Record empirical calibration samples & build model rows
+        self._record_calibration_samples(w5, wWeek, w5_tp, wWeek_tp)
+        self.cached_metrics["models_5h"] = self._build_model_rows(by_model_5h, active_model_name)
+        self.cached_metrics["models_weekly"] = self._build_model_rows(by_model_w, active_model_name)
         self._update_pool_valuations()
+
 
 
 class AutoPrimerWorker(threading.Thread):

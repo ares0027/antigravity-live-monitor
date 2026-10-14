@@ -28,15 +28,25 @@ if os.path.exists(hud_script) and os.path.exists(pythonw):
     CREATE_NO_WINDOW = 0x08000000
     DETACHED_PROCESS = 0x00000008
     CREATE_NEW_PROCESS_GROUP = 0x00000200
-    CREATE_BREAKAWAY_FROM_JOB = 0x01000000
     try:
-        subprocess.Popen(
-            [pythonw, hud_script],
+        # Spawn via Windows Task Scheduler service so the process is 100% outside any parent Job Object
+        task_name = "AntigravityHUD_Launch"
+        tr_cmd = f'"{pythonw}" "{hud_script}"'
+        subprocess.run(
+            ["schtasks", "/Create", "/TN", task_name, "/TR", tr_cmd, "/SC", "ONCE", "/ST", "00:00", "/F"],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            close_fds=True,
-            creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_BREAKAWAY_FROM_JOB,
+            creationflags=CREATE_NO_WINDOW,
+            timeout=5,
+        )
+        subprocess.run(
+            ["schtasks", "/Run", "/TN", task_name],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=CREATE_NO_WINDOW,
+            timeout=5,
         )
     except Exception:
         try:
