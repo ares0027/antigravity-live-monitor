@@ -2186,6 +2186,7 @@ def main():
     if kernel32.GetLastError() == 183:
         sys.exit(0)
 
+    start_minimized = ("--minimized" in sys.argv) or ("-m" in sys.argv)
     config = load_hud_config()
 
     engine = MetricsEngine()
@@ -2206,12 +2207,25 @@ def main():
         height=init_h,
         frameless=True,
         on_top=config.get("pinned", True),
+        minimized=start_minimized,
         resizable=True,
         background_color="#000000"
     )
     api.set_window(window)
-    webview.start()
+
+    def on_startup():
+        if start_minimized:
+            for _ in range(25):
+                hwnd = get_hud_hwnd()
+                if hwnd:
+                    # SW_SHOWMINNOACTIVE = 7 (minimizes to taskbar without stealing focus)
+                    user32.ShowWindow(hwnd, 7)
+                    break
+                time.sleep(0.08)
+
+    webview.start(on_startup)
 
 
 if __name__ == "__main__":
     main()
+
