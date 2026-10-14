@@ -1,14 +1,15 @@
-"""Headless Empirical Model-Specific & Effort-Specific Quota Benchmark for Antigravity.
+"""Headless Empirical Quota, Effort & Token Speed (tok/s) Benchmark for Antigravity.
 
-Covers BOTH Quota Pools:
+Covers BOTH Quota Pools + Per-Model / Per-Effort Speed Benchmarking:
 1. Gemini Pool (Gemini 3.8 Flash Low/Med/High & Gemini 4 Argon Low/Med/High):
    Waits until <= N minutes remain on the expiring 5-hour Gemini window (default: 16 mins),
-   runs isolated calibration phases across every Gemini model & effort tier, and drains
-   the expiring 5h Gemini quota to 0% before reset.
+   runs isolated calibration phases across every Gemini model & effort tier, measures exact
+   Output/Thinking tok/s and Fresh Input prefill tok/s, and drains the expiring 5h Gemini quota
+   to 0% before reset.
 2. Third-Party Pool (GPT-OSS 120B Medium, Claude Sonnet 5.5 Low/Med/High, Claude Opus 5.5 Low/Med/High):
-   Runs surgical, bounded calibration phases (2%-3% 5h drop per tier) across every Third-Party
-   model & effort tier to reverse-engineer the shared Third-Party pool ceiling and relative model
-   multipliers without exhausting the 7-day Weekly Third-Party quota.
+   Runs surgical, bounded calibration phases (2%-4% 5h drop per tier) across every Third-Party
+   model & effort tier to reverse-engineer the shared Third-Party pool ceiling, relative model
+   multipliers, and generation speeds (tok/s) without exhausting the 7-day Weekly Third-Party quota.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ import datetime
 import glob
 import json
 import os
+import statistics
 import subprocess
 import time
 import uuid
@@ -33,6 +35,7 @@ RESULTS_FILE = Path(__file__).resolve().parent / "argon_benchmark_results.json"
 REPORT_FILE = Path(__file__).resolve().parent / "BENCHMARK_REPORT.md"
 
 CREATE_NO_WINDOW = 0x08000000
+CLI_BOOT_OVERHEAD_SECS = 2.2  # Local agy.exe process init & auth handshake overhead
 
 CONFIGURED_WEIGHTS = {
     # Gemini Pool (Baseline: Gemini 3.8 Flash (High) = 1.00x)
@@ -108,9 +111,13 @@ def query_usage() -> dict[str, Any]:
     return info
 
 
-def get_transcript_snapshot(since_ts: float, phase_tag: str | None = None) -> dict[str, int]:
-    """Sum exact server-reported telemetry & legacy content tokens since `since_ts`."""
-    totals = {
+def get_transcript_snapshot(
+    since_ts: float,
+    phase_tag: str | None = None,
+    call_timings: dict[str, float] | None = None,
+) -> dict[str, Any]:
+    """Sum exact server-reported telemetry, legacy content tokens, and per-call tok/s speeds."""
+    totals: dict[str, Any] = {
         "conversations": 0,
         "steps": 0,
         "in_tokens": 0,
@@ -119,7 +126,13 @@ def get_transcript_snapshot(since_ts: float, phase_tag: str | None = None) -> di
         "thinking_chars": 0,
         "response_chars": 0,
         "legacy_content_tokens": 0,
+        "call_latencies_sec": [],
+        "out_tok_per_sec_samples": [],
+        "e2e_out_tok_per_sec_samples": [],
+        "in_tok_per_sec_samples": [],
     }
+    call_timings = call_timings or {}
+
     for brain in (CLI_BRAIN, DESKTOP_BRAIN):
         if not brain.exists():
             continue
@@ -133,12 +146,23 @@ def get_transcript_snapshot(since_ts: float, phase_tag: str | None = None) -> di
                 if not lines:
                     continue
 
-                if phase_tag:
-                    first_obj = json.loads(lines[0])
-                    if phase_tag not in str(first_obj.get("content", "")):
-                        continue
+                first_obj = json.loads(lines[0])
+                first_content = str(first_obj.get("content", ""))
+                if phase_tag and phase_tag not in first_content:
+                    continue
+
+                matched_wall_sec: float | None = None
+                for c_nonce, w_sec in call_timings.items():
+                    if c_nonce in first_content:
+                        matched_wall_sec = w_sec
+                        break
 
                 conv_counted = False
+                conv_in = 0
+                conv_out = 0
+                first_dt: datetime.datetime | None = None
+                last_dt: datetime.datetime | None = None
+
                 for line in lines:
                     data = json.loads(line)
                     created = data.get("created_at")
@@ -147,6 +171,10 @@ def get_transcript_snapshot(since_ts: float, phase_tag: str | None = None) -> di
                     dt = datetime.datetime.fromisoformat(created.replace("Z", "+00:00"))
                     if dt.timestamp() < since_ts - 2.0:
                         continue
+
+                    if first_dt is None:
+                        first_dt = dt
+                    last_dt = dt
 
                     t = data.get("type", "")
                     c = str(data.get("content", ""))
@@ -163,24 +191,64 @@ def get_transcript_snapshot(since_ts: float, phase_tag: str | None = None) -> di
                         totals["legacy_content_tokens"] += (
                             estimate_content_tokens(c) + estimate_content_tokens(think_str)
                         )
-                        totals["in_tokens"] += int(data.get("input_tokens", 0) or 0)
-                        totals["cache_tokens"] += int(
+                        in_t = int(data.get("input_tokens", 0) or 0)
+                        cache_t = int(
                             data.get("cache_read_tokens", 0)
                             or data.get("cached_content_token_count", 0)
                             or 0
                         )
-                        totals["out_tokens"] += int(data.get("output_tokens", 0) or 0)
+                        out_t = int(data.get("output_tokens", 0) or 0)
+                        totals["in_tokens"] += in_t
+                        totals["cache_tokens"] += cache_t
+                        totals["out_tokens"] += out_t
+                        conv_in += in_t
+                        conv_out += out_t
+
+                if conv_counted:
+                    # Determine elapsed seconds for this conversation
+                    elapsed_sec = matched_wall_sec
+                    if elapsed_sec is None and first_dt and last_dt:
+                        diff = (last_dt - first_dt).total_seconds()
+                        if diff > 0.2:
+                            elapsed_sec = diff
+                    if elapsed_sec and elapsed_sec > 0.2:
+                        net_sec = max(0.4, elapsed_sec - CLI_BOOT_OVERHEAD_SECS)
+                        totals["call_latencies_sec"].append(round(elapsed_sec, 2))
+                        if conv_out > 0:
+                            totals["out_tok_per_sec_samples"].append(round(conv_out / net_sec, 2))
+                            totals["e2e_out_tok_per_sec_samples"].append(
+                                round(conv_out / elapsed_sec, 2)
+                            )
+                        if conv_in > 0:
+                            totals["in_tok_per_sec_samples"].append(round(conv_in / net_sec, 2))
             except Exception:
                 continue
+
     totals["total_fresh_plus_out"] = totals["in_tokens"] + totals["out_tokens"]
     totals["effective_cache_discounted_tokens"] = (
         totals["in_tokens"] + totals["out_tokens"] + int(totals["cache_tokens"] * 0.1)
     )
+
+    out_sps = totals["out_tok_per_sec_samples"]
+    e2e_sps = totals["e2e_out_tok_per_sec_samples"]
+    in_sps = totals["in_tok_per_sec_samples"]
+    lats = totals["call_latencies_sec"]
+
+    totals["speed_metrics"] = {
+        "median_out_tok_per_sec": round(statistics.median(out_sps), 1) if out_sps else 0.0,
+        "mean_out_tok_per_sec": round(statistics.mean(out_sps), 1) if out_sps else 0.0,
+        "max_out_tok_per_sec": round(max(out_sps), 1) if out_sps else 0.0,
+        "median_e2e_out_tok_per_sec": round(statistics.median(e2e_sps), 1) if e2e_sps else 0.0,
+        "median_in_tok_per_sec": round(statistics.median(in_sps), 1) if in_sps else 0.0,
+        "avg_call_latency_sec": round(statistics.mean(lats), 2) if lats else 0.0,
+    }
     return totals
 
 
-def run_agy_prompt(prompt: str, model: str, effort: str, timeout: int = 85) -> bool:
-    """Execute a single headless prompt with explicit `--model` and `--effort` flags."""
+def run_agy_prompt(
+    prompt: str, model: str, effort: str, call_nonce: str, timeout: int = 85
+) -> tuple[bool, str, float]:
+    """Execute a single headless prompt and measure exact wall-clock execution time."""
     cmd = [
         str(AGY_EXE if AGY_EXE.exists() else "agy"),
         "-p",
@@ -192,6 +260,7 @@ def run_agy_prompt(prompt: str, model: str, effort: str, timeout: int = 85) -> b
         "--disable-slash-commands",
         "--dangerously-skip-permissions",
     ]
+    t0 = time.perf_counter()
     try:
         subprocess.run(
             cmd,
@@ -203,28 +272,34 @@ def run_agy_prompt(prompt: str, model: str, effort: str, timeout: int = 85) -> b
             timeout=timeout,
             check=False,
         )
-        return True
+        return True, call_nonce, (time.perf_counter() - t0)
     except Exception:
-        return False
+        return False, call_nonce, (time.perf_counter() - t0)
 
 
-def make_synthetic_input_prompt(phase_tag: str, word_count: int = 22000) -> str:
+def make_synthetic_input_prompt(
+    phase_tag: str, call_nonce: str, word_count: int = 22000
+) -> str:
     """Create an un-cached synthetic payload (~30k+ tokens + 22k system prompt = ~52k fresh input tokens)."""
-    nonce = uuid.uuid4().hex
-    block = " ".join(f"v{(i * 73) % 9973}_{nonce[:5]}_{i % 389}" for i in range(word_count))
+    block = " ".join(
+        f"v{(i * 73) % 9973}_{call_nonce[-5:]}_{i % 389}" for i in range(word_count)
+    )
     return (
-        f"Benchmark Nonce {nonce} [{phase_tag}].\n"
+        f"Benchmark Nonce {call_nonce} [{phase_tag}].\n"
         f"Do not call any tools. Do not analyze or summarize the text below. "
         f"Reply with the single word OK and nothing else.\n\n{block}"
     )
 
 
-def make_heavy_output_prompt(phase_tag: str, extra_input_words: int = 4000) -> str:
+def make_heavy_output_prompt(
+    phase_tag: str, call_nonce: str, extra_input_words: int = 4000
+) -> str:
     """Create a prompt that forces maximum chain-of-thought reasoning + dense output tokens."""
-    nonce = uuid.uuid4().hex[:8]
-    pad = " ".join(f"ctx_{(i * 31) % 4099}_{nonce[:4]}" for i in range(extra_input_words))
+    pad = " ".join(
+        f"ctx_{(i * 31) % 4099}_{call_nonce[-4:]}" for i in range(extra_input_words)
+    )
     return (
-        f"[Benchmark ID: {nonce}] [{phase_tag}]\n"
+        f"[Benchmark ID: {call_nonce}] [{phase_tag}]\n"
         f"IMPORTANT: Do NOT call any tools or read any files. Respond purely in plain text.\n"
         f"Write an exhaustive, 3,500-word graduate-level mathematical and systems engineering treatise "
         f"deriving: (1) Continuous-time Extended Kalman-Bucy filtering over Riemannian manifolds, "
@@ -236,7 +311,7 @@ def make_heavy_output_prompt(phase_tag: str, extra_input_words: int = 4000) -> s
 
 
 def compute_empirical_summary(phases: list[dict[str, Any]]) -> dict[str, Any]:
-    """Compute model-specific and effort-specific capacity ceilings and empirical burn weights for both pools."""
+    """Compute model-specific and effort-specific capacity ceilings, burn weights, and tok/s speeds."""
     by_phase: dict[str, Any] = {}
     gemini_base_eff_per_pct: float | None = None
     gemini_base_leg_per_pct: float | None = None
@@ -247,6 +322,7 @@ def compute_empirical_summary(phases: list[dict[str, Any]]) -> dict[str, Any]:
         pool = p.get("pool", "gemini")
         drop = p.get("pct_drop_5h", 0)
         tok = p.get("tokens", {})
+        spd = tok.get("speed_metrics", {})
         fresh_plus_out = tok.get("total_fresh_plus_out", 0)
         eff_tok = tok.get("effective_cache_discounted_tokens", 0)
         leg_tok = tok.get("legacy_content_tokens", 0)
@@ -286,6 +362,12 @@ def compute_empirical_summary(phases: list[dict[str, Any]]) -> dict[str, Any]:
             "out_tokens": tok.get("out_tokens", 0),
             "thinking_chars": tok.get("thinking_chars", 0),
             "avg_out_tokens_per_step": int(tok.get("out_tokens", 0) / max(1, tok.get("steps", 1))),
+            "median_out_tok_per_sec": spd.get("median_out_tok_per_sec", 0.0),
+            "mean_out_tok_per_sec": spd.get("mean_out_tok_per_sec", 0.0),
+            "max_out_tok_per_sec": spd.get("max_out_tok_per_sec", 0.0),
+            "median_e2e_out_tok_per_sec": spd.get("median_e2e_out_tok_per_sec", 0.0),
+            "median_in_tok_per_sec": spd.get("median_in_tok_per_sec", 0.0),
+            "avg_call_latency_sec": spd.get("avg_call_latency_sec", 0.0),
             "tokens_per_1pct_drop": int(tok_per_1pct),
             "eff_tokens_per_1pct_drop": int(eff_per_1pct),
             "legacy_units_per_1pct_drop": int(leg_per_1pct),
@@ -340,38 +422,56 @@ def compute_empirical_summary(phases: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def write_markdown_report(state: dict[str, Any]) -> None:
-    """Write a comprehensive Markdown report (`BENCHMARK_REPORT.md`) covering Gemini & Third-Party pools."""
+    """Write a comprehensive Markdown report (`BENCHMARK_REPORT.md`) with Quota + Tok/s Speed tables."""
     summary = state.get("empirical_summary", {})
     by_phase = summary.get("by_phase", {})
     io_reg = summary.get("argon_medium_input_vs_output_regression", {})
 
     lines = [
-        "# Antigravity Live Monitor — Empirical Quota Benchmark Report (Gemini & Third-Party Pools)",
+        "# Antigravity Live Monitor — Empirical Quota & Token Speed (`tok/s`) Benchmark Report",
         "",
         f"- **Started At**: `{state.get('started_at')}`",
         f"- **Triggered At**: `{state.get('benchmark_triggered_at')}`",
         f"- **Completed At**: `{state.get('completed_at')}`",
         f"- **Status**: `{state.get('status')}`",
         "",
-        "## 1. Per-Model & Per-Effort Empirical Measurements",
+        "## 1. Per-Model & Per-Effort Quota Ceiling & Weight Measurements",
         "",
-        "| Pool | Phase | Model | Effort | Mode | 5h Drop (%) | Wk Drop (%) | Steps | Fresh Input | Output + Thinking | Tokens / 1% Drop | Implied 100% 5h Pool | Configured `w` | Empirical `w` |",
-        "| :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
+        "| Pool | Phase | Model | Effort | Mode | 5h Drop | Wk Drop | Fresh Input | Output+Think | Tokens / 1% Drop | Implied 100% 5h Pool | Configured `w` | Empirical `w` |",
+        "| :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
     ]
     for phase_key, d in by_phase.items():
         emp_w = f"{d['empirical_server_token_weight']}x" if d.get("empirical_server_token_weight") else "N/A"
         lines.append(
             f"| `{d.get('pool')}` | `{phase_key}` | **{d.get('model')}** | `{d.get('effort')}` | `{d.get('mode')}` | "
-            f"**-{d.get('pct_drop_5h')}%** | -{d.get('pct_drop_weekly')}% | {d.get('steps')} | "
+            f"**-{d.get('pct_drop_5h')}%** | -{d.get('pct_drop_weekly')}% | "
             f"{d.get('in_tokens'):,} | {d.get('out_tokens'):,} | **{d.get('eff_tokens_per_1pct_drop'):,}** | "
             f"**{d.get('implied_100pct_5h_ceiling_eff_tokens'):,}** | `{d.get('configured_weight')}x` | **{emp_w}** |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## 2. Per-Model & Per-Effort Generation Speed (`tok/s`) & Latency Benchmark",
+            "",
+            "| Pool | Model | Effort | Mode | Steps | Avg Output Tok/Step | Median Output Speed (`tok/s`) | Peak Output Speed (`tok/s`) | E2E Speed (`tok/s`) | Input Prefill Speed (`tok/s`) | Avg Call Latency (`s`) |",
+            "| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
+        ]
+    )
+    for phase_key, d in by_phase.items():
+        lines.append(
+            f"| `{d.get('pool')}` | **{d.get('model')}** | `{d.get('effort')}` | `{d.get('mode')}` | "
+            f"{d.get('steps')} | {d.get('avg_out_tokens_per_step'):,} | "
+            f"**{d.get('median_out_tok_per_sec')} tok/s** | **{d.get('max_out_tok_per_sec')} tok/s** | "
+            f"{d.get('median_e2e_out_tok_per_sec')} tok/s | {d.get('median_in_tok_per_sec'):,} tok/s | "
+            f"{d.get('avg_call_latency_sec')}s |"
         )
 
     if io_reg:
         lines.extend(
             [
                 "",
-                "## 2. Gemini 4 Argon (Medium) — Input vs. Output/Thinking Token Weight Regression",
+                "## 3. Gemini 4 Argon (Medium) — Input vs. Output/Thinking Token Weight Regression",
                 "",
                 f"- **Quota Burn per 1M Fresh Input Tokens**: `{io_reg.get('pct_drop_per_1M_input_tokens')}%`",
                 f"- **Quota Burn per 1M Output + Thinking Tokens**: `{io_reg.get('pct_drop_per_1M_output_tokens')}%`",
@@ -403,23 +503,27 @@ def run_parallel_batch(
     mode: str,
     phase_tag: str,
     workers: int,
+    call_timings: dict[str, float],
     input_words: int = 22000,
     output_pad_words: int = 4000,
 ) -> int:
-    """Run `workers` concurrent headless `agy.exe` calls for a single model+effort phase."""
+    """Run `workers` concurrent headless `agy.exe` calls and record exact wall-clock timings per call."""
     completed = 0
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = []
         for _ in range(workers):
+            c_nonce = f"CALL_{uuid.uuid4().hex[:10]}"
             prompt = (
-                make_synthetic_input_prompt(phase_tag, word_count=input_words)
+                make_synthetic_input_prompt(phase_tag, c_nonce, word_count=input_words)
                 if mode == "input"
-                else make_heavy_output_prompt(phase_tag, extra_input_words=output_pad_words)
+                else make_heavy_output_prompt(phase_tag, c_nonce, extra_input_words=output_pad_words)
             )
-            futures.append(pool.submit(run_agy_prompt, prompt, model, effort, 85))
+            futures.append(pool.submit(run_agy_prompt, prompt, model, effort, c_nonce, 85))
         for fut in as_completed(futures):
             try:
-                if fut.result():
+                ok, c_nonce, w_sec = fut.result()
+                call_timings[c_nonce] = w_sec
+                if ok:
                     completed += 1
             except Exception:
                 pass
@@ -427,7 +531,7 @@ def run_parallel_batch(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Gemini & Third-Party Model/Effort Quota Benchmark Runner")
+    parser = argparse.ArgumentParser(description="Gemini & Third-Party Quota + Speed Benchmark Runner")
     parser.add_argument(
         "--wait-until-mins",
         type=float,
@@ -438,7 +542,7 @@ def main() -> None:
         "--tp-max-5h-drop",
         type=int,
         default=28,
-        help="Maximum total 5-hour % to spend on the Third-Party pool across all TP phases (default: 28%%)",
+        help="Maximum total 5-hour %% to spend on the Third-Party pool across all TP phases (default: 28%%)",
     )
     parser.add_argument(
         "--now",
@@ -493,7 +597,6 @@ def main() -> None:
     save_results(state)
 
     # PART A: 7 Gemini Model & Effort Phases (executed first before the expiring 5h Gemini window resets!)
-    # (phase_id, pool, model_name, effort_flag, mode, target_pct_drop, parallel_workers, max_batches)
     gemini_phases = [
         ("phase1_flash_low", "gemini", "Gemini 3.8 Flash (Low)", "low", "output", 2, 4, 4),
         ("phase2_flash_medium", "gemini", "Gemini 3.8 Flash (Medium)", "medium", "output", 2, 4, 4),
@@ -521,11 +624,14 @@ def main() -> None:
         phase_start_ts = time.time()
         batches_run = 0
         calls_completed = 0
+        call_timings: dict[str, float] = {}
         u_after = u_before
 
         while batches_run < max_batches:
             batches_run += 1
-            calls_completed += run_parallel_batch(model_name, effort_flag, mode, phase_tag, workers)
+            calls_completed += run_parallel_batch(
+                model_name, effort_flag, mode, phase_tag, workers, call_timings
+            )
             try:
                 u_after = query_usage()
             except Exception:
@@ -540,7 +646,9 @@ def main() -> None:
             ):
                 break
 
-        tok_delta = get_transcript_snapshot(phase_start_ts, phase_tag=phase_tag)
+        tok_delta = get_transcript_snapshot(
+            phase_start_ts, phase_tag=phase_tag, call_timings=call_timings
+        )
         pct_drop_5h = int(u_before.get("gemini_5h_pct", 0)) - int(u_after.get("gemini_5h_pct", 0))
         pct_drop_weekly = int(u_before.get("gemini_weekly_pct", 0)) - int(
             u_after.get("gemini_weekly_pct", 0)
@@ -569,8 +677,7 @@ def main() -> None:
         )
         save_results(state)
 
-    # PART B: Surgical Third-Party (Claude & GPT) Shared Pool Calibration
-    # Runs compact 2-worker probes across each Third-Party model & effort tier, capped at `--tp-max-5h-drop` total
+    # PART B: Surgical Third-Party (Claude & GPT) Shared Pool Calibration + Speed Benchmark
     state["status"] = "running_third_party_benchmark"
     save_results(state)
 
@@ -598,7 +705,6 @@ def main() -> None:
 
         cur_tp_5h = int(u_before.get("tp_5h_pct", 0))
         total_tp_spent = tp_start_5h_pct - cur_tp_5h
-        # Safety guard: never exceed args.tp_max_5h_drop or drop below 50% on TP 5h pool
         if cur_tp_5h <= 50 or total_tp_spent >= args.tp_max_5h_drop:
             break
 
@@ -606,6 +712,7 @@ def main() -> None:
         phase_start_ts = time.time()
         batches_run = 0
         calls_completed = 0
+        call_timings = {}
         u_after = u_before
 
         while batches_run < max_batches:
@@ -616,6 +723,7 @@ def main() -> None:
                 mode,
                 phase_tag,
                 workers,
+                call_timings,
                 input_words=8000,
                 output_pad_words=1500,
             )
@@ -632,7 +740,9 @@ def main() -> None:
             ):
                 break
 
-        tok_delta = get_transcript_snapshot(phase_start_ts, phase_tag=phase_tag)
+        tok_delta = get_transcript_snapshot(
+            phase_start_ts, phase_tag=phase_tag, call_timings=call_timings
+        )
         pct_drop_5h = int(u_before.get("tp_5h_pct", 0)) - int(u_after.get("tp_5h_pct", 0))
         pct_drop_weekly = int(u_before.get("tp_weekly_pct", 0)) - int(
             u_after.get("tp_weekly_pct", 0)
