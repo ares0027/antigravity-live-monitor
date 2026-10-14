@@ -37,33 +37,33 @@ TP_PRICE_WEIGHTED = 6.00     # Blended weighted rate
 MODEL_CATALOG = {
     # Gemini 4 Argon Family (Empirical: ~2.0x-2.6x relative burn, 127-138 tok/s median, 420-430 tok/s burst)
     "Gemini 4 Argon (High)": {
-        "pool": "gemini", "weight": 2.6, "in": 2.50, "cache": 0.25, "out": 12.00, "weighted": 6.00, "avg_step_base": 2400, "speed_tok_s": 138.0
+        "pool": "gemini", "weight": 1.70, "in": 2.50, "cache": 0.25, "out": 12.00, "weighted": 6.00, "avg_step_base": 2000, "speed_tok_s": 138.0
     },
     "Gemini 4 Argon (Medium)": {
-        "pool": "gemini", "weight": 2.0, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 2100, "speed_tok_s": 127.0
+        "pool": "gemini", "weight": 1.34, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 1650, "speed_tok_s": 127.0
     },
     "Gemini 4 Argon (Low)": {
-        "pool": "gemini", "weight": 1.4, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.20, "avg_step_base": 1800, "speed_tok_s": 145.0
+        "pool": "gemini", "weight": 1.05, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.20, "avg_step_base": 1400, "speed_tok_s": 145.0
     },
     # Gemini 3.1 Pro Family (Historical + Subagent Pro)
     "Gemini 3.1 Pro (High)": {
-        "pool": "gemini", "weight": 2.5, "in": 2.00, "cache": 0.20, "out": 10.00, "weighted": 5.00, "avg_step_base": 2200, "speed_tok_s": 115.0
+        "pool": "gemini", "weight": 1.65, "in": 2.00, "cache": 0.20, "out": 10.00, "weighted": 5.00, "avg_step_base": 1900, "speed_tok_s": 115.0
     },
     "Gemini 3.1 Pro (Low)": {
-        "pool": "gemini", "weight": 1.4, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.00, "avg_step_base": 1800, "speed_tok_s": 130.0
+        "pool": "gemini", "weight": 1.05, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.00, "avg_step_base": 1400, "speed_tok_s": 130.0
     },
-    # Gemini 3.8 Flash Family (Empirical: Low=0.45x @ 231 tok/s [27.96M 5h], Med=1.0x @ 222.8 tok/s [11.62M 5h])
+    # Gemini 3.8 Flash Family (1.00x Baseline = Flash High [862k 5h / 8.08M wk legacy units]; Med=0.87x, Low=0.45x)
     "Gemini 3.8 Flash (High)": {
-        "pool": "gemini", "weight": 1.15, "in": 0.75, "cache": 0.075, "out": 3.75, "weighted": 2.25, "avg_step_base": 1500, "speed_tok_s": 218.0
+        "pool": "gemini", "weight": 1.00, "in": 0.75, "cache": 0.075, "out": 3.75, "weighted": 2.25, "avg_step_base": 1350, "speed_tok_s": 218.0
     },
     "Gemini 3.8 Flash (Medium)": {
-        "pool": "gemini", "weight": 1.0, "in": 0.50, "cache": 0.05, "out": 2.50, "weighted": 1.50, "avg_step_base": 1350, "speed_tok_s": 222.8
+        "pool": "gemini", "weight": 0.87, "in": 0.50, "cache": 0.05, "out": 2.50, "weighted": 1.50, "avg_step_base": 1200, "speed_tok_s": 222.8
     },
     "Gemini 3.8 Flash (Low)": {
-        "pool": "gemini", "weight": 0.45, "in": 0.35, "cache": 0.035, "out": 1.50, "weighted": 0.95, "avg_step_base": 1100, "speed_tok_s": 231.0
+        "pool": "gemini", "weight": 0.45, "in": 0.35, "cache": 0.035, "out": 1.50, "weighted": 0.95, "avg_step_base": 950, "speed_tok_s": 231.0
     },
     "Gemini 3.8 Flash (Subagent)": {
-        "pool": "gemini", "weight": 0.85, "in": 0.50, "cache": 0.05, "out": 2.50, "weighted": 1.50, "avg_step_base": 1200, "speed_tok_s": 225.0
+        "pool": "gemini", "weight": 0.75, "in": 0.50, "cache": 0.05, "out": 2.50, "weighted": 1.50, "avg_step_base": 1100, "speed_tok_s": 225.0
     },
     # Third-Party Shared Pool (Empirical: 5h pool = 4.18M Sonnet-Med eff tokens, Weekly pool = 2.0x 5h pool = 8.36M eff tokens)
     "Claude Opus 5.5 (High)": {
@@ -123,13 +123,13 @@ def get_model_spec(model_name: str) -> dict:
         w = 1.25 if ("high" in low or "thinking" in low) else 1.0
         return {"pool": "tp", "weight": w, "in": 3.0, "cache": 0.30, "out": 15.0, "weighted": 6.0, "avg_step_base": 1800, "speed_tok_s": 103.7}
     if "argon" in low:
-        w = 2.6 if "high" in low else (1.4 if "low" in low else 2.0)
-        return {"pool": "gemini", "weight": w, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 2100, "speed_tok_s": 132.0}
+        w = 1.70 if "high" in low else (1.05 if "low" in low else 1.34)
+        return {"pool": "gemini", "weight": w, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 1650, "speed_tok_s": 132.0}
     if "pro" in low:
-        w = 2.5 if "high" in low else 1.4
-        return {"pool": "gemini", "weight": w, "in": 2.00, "cache": 0.20, "out": 10.00, "weighted": 5.00, "avg_step_base": 2000, "speed_tok_s": 120.0}
-    w = 0.45 if ("low" in low or "lite" in low) else (1.0 if ("medium" in low or "subagent" in low) else 1.15)
-    return {"pool": "gemini", "weight": w, "in": 0.75, "cache": 0.075, "out": 3.75, "weighted": 2.25, "avg_step_base": 1500, "speed_tok_s": 225.0}
+        w = 1.65 if "high" in low else 1.05
+        return {"pool": "gemini", "weight": w, "in": 2.00, "cache": 0.20, "out": 10.00, "weighted": 5.00, "avg_step_base": 1800, "speed_tok_s": 120.0}
+    w = 0.45 if ("low" in low or "lite" in low) else (0.87 if ("medium" in low or "subagent" in low) else 1.00)
+    return {"pool": "gemini", "weight": w, "in": 0.75, "cache": 0.075, "out": 3.75, "weighted": 2.25, "avg_step_base": 1350, "speed_tok_s": 225.0}
 
 
 # Win32 Native Setup
@@ -1496,7 +1496,7 @@ class MetricsEngine:
             pass
 
     def _update_pool_valuations(self):
-        learned_5h_cap = self.compute_learned_cap(self.history.get("samples_5h", []), default=1350000)
+        learned_5h_cap = self.compute_learned_cap(self.history.get("samples_5h", []), default=862066)
         learned_weekly_cap = self.compute_learned_cap(self.history.get("samples_weekly", []), default=8083900)
         learned_tp_5h_cap = self.compute_learned_cap(self.history.get("samples_tp_5h", []), default=255000)
         learned_tp_weekly_cap = self.compute_learned_cap(self.history.get("samples_tp_weekly", []), default=510000)
@@ -1898,7 +1898,7 @@ class MetricsEngine:
             self.save_history()
 
     def _build_model_rows(self, by_model_dict, active_model_name):
-        learned_g_5h = self.compute_learned_cap(self.history.get("samples_5h", []), default=1350000)
+        learned_g_5h = self.compute_learned_cap(self.history.get("samples_5h", []), default=862066)
         learned_g_w = self.compute_learned_cap(self.history.get("samples_weekly", []), default=8083900)
         learned_tp_5h = self.compute_learned_cap(self.history.get("samples_tp_5h", []), default=255000)
         learned_tp_w = self.compute_learned_cap(self.history.get("samples_tp_weekly", []), default=510000)
