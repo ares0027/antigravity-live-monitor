@@ -29,11 +29,11 @@ if os.path.exists(hud_script) and os.path.exists(pythonw):
     DETACHED_PROCESS = 0x00000008
     CREATE_NEW_PROCESS_GROUP = 0x00000200
     try:
-        # Spawn via Windows Task Scheduler service so the process is 100% outside any parent Job Object
+        # Spawn via Windows Task Scheduler service with /IT (Interactive) so the GUI runs on WinSta0\Default outside any parent Job Object
         task_name = "AntigravityHUD_Launch"
         tr_cmd = f'"{pythonw}" "{hud_script}"'
         subprocess.run(
-            ["schtasks", "/Create", "/TN", task_name, "/TR", tr_cmd, "/SC", "ONCE", "/ST", "00:00", "/F"],
+            ["schtasks", "/Create", "/TN", task_name, "/TR", tr_cmd, "/SC", "ONCE", "/ST", "00:00", "/IT", "/F"],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

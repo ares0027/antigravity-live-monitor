@@ -17,6 +17,7 @@ DESKTOP_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity", "brain")
 BRAIN_DIRS = [AGY_CLI_BRAIN, CLI_BRAIN, DESKTOP_BRAIN]
 QUOTA_HISTORY_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "quota_history.json")
 HUD_CONFIG_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud_config.json")
+QUOTA_PACE_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "quota_pace_status.json")
 AGY_EXE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "agy.exe")
 
 CREATE_NO_WINDOW = 0x08000000
@@ -482,6 +483,7 @@ HTML_CONTENT = """<!DOCTYPE html>
         </svg>
         <span class="mono text-xs font-black tracking-tight" style="color: var(--accent-warn);" id="miniG5Pct">--%</span>
         <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">5h</span>
+        <span id="miniPaceWarn" class="hidden px-1 py-0.2 rounded text-[9px] mono font-black animate-pulse" style="background: rgba(239, 68, 68, 0.25); color: var(--accent-yolo); border: 1px solid var(--accent-yolo);" title="5h Burn Pace Depletion Alert">PACE!</span>
       </div>
     </div>
 
@@ -578,6 +580,49 @@ HTML_CONTENT = """<!DOCTYPE html>
             <div class="subcard p-1.5 rounded-lg text-center">
               <span class="block text-[9px] font-semibold" style="color: var(--text-dim);">4. Cache</span>
               <span class="font-bold text-xs" style="color: var(--accent-warn);" id="gfValCache">$0.00</span>
+            </div>
+          </div>
+
+          <!-- 3-Window 5h Burn Pace & Depletion Guard (0->Now, Last 30m, Last 15m) -->
+          <div class="mt-2.5 pt-2 border-t space-y-1.5" style="border-color: var(--border-card);">
+            <div id="paceAlertBanner" class="px-2 py-1 rounded-lg text-[10px] mono font-bold flex items-center justify-between" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--accent-gemini);">
+              <span id="paceAlertText">✓ 5h Burn Pace Safe (Checking windows...)</span>
+              <span id="paceClockSplit" style="color: var(--text-muted);">-- elapsed · -- left</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-1.5 text-[10px] mono">
+              <!-- Window 1: 0 -> Current Time -->
+              <div id="paceCardSlot" class="subcard p-1.5 rounded-lg space-y-0.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-[9px] font-bold uppercase" style="color: var(--text-dim);">0→Now Slot</span>
+                  <span id="paceBadgeSlot" class="px-1 rounded text-[8px] font-black" style="background: rgba(16,185,129,0.18); color: var(--accent-gemini);">SAFE</span>
+                </div>
+                <div class="font-bold text-[11px]" style="color: var(--text-main);" id="paceRateSlot">0.0%/hr</div>
+                <div class="text-[9px]" style="color: var(--text-muted);" id="paceProjSlot">Proj: +0% vs 100% left</div>
+                <div class="text-[9px] font-semibold" style="color: var(--text-dim);" id="paceEtaSlot">Runway: Safe</div>
+              </div>
+
+              <!-- Window 2: Last 30m -->
+              <div id="paceCard30m" class="subcard p-1.5 rounded-lg space-y-0.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-[9px] font-bold uppercase" style="color: var(--text-dim);">Last 30m</span>
+                  <span id="paceBadge30m" class="px-1 rounded text-[8px] font-black" style="background: rgba(16,185,129,0.18); color: var(--accent-gemini);">SAFE</span>
+                </div>
+                <div class="font-bold text-[11px]" style="color: var(--text-main);" id="paceRate30m">0.0%/hr</div>
+                <div class="text-[9px]" style="color: var(--text-muted);" id="paceProj30m">Proj: +0% vs 100% left</div>
+                <div class="text-[9px] font-semibold" style="color: var(--text-dim);" id="paceEta30m">Runway: Safe</div>
+              </div>
+
+              <!-- Window 3: Last 15m -->
+              <div id="paceCard15m" class="subcard p-1.5 rounded-lg space-y-0.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-[9px] font-bold uppercase" style="color: var(--text-dim);">Last 15m</span>
+                  <span id="paceBadge15m" class="px-1 rounded text-[8px] font-black" style="background: rgba(16,185,129,0.18); color: var(--accent-gemini);">SAFE</span>
+                </div>
+                <div class="font-bold text-[11px]" style="color: var(--text-main);" id="paceRate15m">0.0%/hr</div>
+                <div class="text-[9px]" style="color: var(--text-muted);" id="paceProj15m">Proj: +0% vs 100% left</div>
+                <div class="text-[9px] font-semibold" style="color: var(--text-dim);" id="paceEta15m">Runway: Safe</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1171,6 +1216,77 @@ HTML_CONTENT = """<!DOCTYPE html>
       container.innerHTML = html;
     }
 
+    function applyPaceWindowCard(suffix, w, remPct) {
+      const card = document.getElementById('paceCard' + suffix);
+      const badge = document.getElementById('paceBadge' + suffix);
+      const rateEl = document.getElementById('paceRate' + suffix);
+      const projEl = document.getElementById('paceProj' + suffix);
+      const etaEl = document.getElementById('paceEta' + suffix);
+      if (!card || !w) return;
+
+      const isWarn = Boolean(w.warn);
+      const isCrit = Boolean(w.critical);
+      const accent = isCrit ? 'var(--accent-yolo)' : (isWarn ? 'var(--accent-warn)' : 'var(--accent-gemini)');
+      const bgBadge = isCrit ? 'rgba(239,68,68,0.22)' : (isWarn ? 'rgba(245,158,11,0.22)' : 'rgba(16,185,129,0.18)');
+
+      card.style.border = (isWarn || isCrit) ? ('1px solid ' + accent) : '1px solid var(--border-card)';
+      if (badge) {
+        badge.style.background = bgBadge;
+        badge.style.color = accent;
+        badge.textContent = isCrit ? 'DEPLETES!' : (isWarn ? 'WARN' : 'SAFE');
+      }
+      if (rateEl) {
+        rateEl.textContent = w.rate_pct_hr.toFixed(1) + '%/hr (' + w.used_pct.toFixed(1) + '%)';
+        rateEl.style.color = (isWarn || isCrit) ? accent : 'var(--text-main)';
+      }
+      if (projEl) {
+        projEl.textContent = 'Proj: +' + Math.round(w.proj_rem_burn_pct) + '% vs ' + remPct + '% left';
+      }
+      if (etaEl) {
+        etaEl.textContent = w.runway_label || 'Runway: Safe';
+        etaEl.style.color = (isWarn || isCrit) ? accent : 'var(--text-dim)';
+      }
+    }
+
+    function renderPaceMonitor(d) {
+      const p = d.pace_5h;
+      if (!p) return;
+
+      const banner = document.getElementById('paceAlertBanner');
+      const alertText = document.getElementById('paceAlertText');
+      const clockSplit = document.getElementById('paceClockSplit');
+      const miniWarn = document.getElementById('miniPaceWarn');
+
+      if (clockSplit) {
+        clockSplit.textContent = p.elapsed_str + ' in · ' + p.left_str + ' left';
+      }
+
+      if (banner && alertText) {
+        if (p.any_warning) {
+          const isCrit = Boolean(p.any_critical);
+          const col = isCrit ? 'var(--accent-yolo)' : 'var(--accent-warn)';
+          banner.style.background = isCrit ? 'rgba(239, 68, 68, 0.16)' : 'rgba(245, 158, 11, 0.16)';
+          banner.style.borderColor = col;
+          banner.style.color = col;
+          alertText.textContent = p.headline || '⚠️ 5h Pace Alert: Projected to deplete before reset!';
+          if (miniWarn) {
+            miniWarn.classList.remove('hidden');
+            miniWarn.title = p.headline || '5h Burn Pace Alert';
+          }
+        } else {
+          banner.style.background = 'var(--bg-subcard)';
+          banner.style.borderColor = 'var(--border-card)';
+          banner.style.color = 'var(--accent-gemini)';
+          alertText.textContent = p.headline || '✓ 5h Pace Safe across Slot, 30m & 15m windows';
+          if (miniWarn) miniWarn.classList.add('hidden');
+        }
+      }
+
+      applyPaceWindowCard('Slot', p.slot, d.gemini_5h_pct);
+      applyPaceWindowCard('30m', p.w30m, d.gemini_5h_pct);
+      applyPaceWindowCard('15m', p.w15m, d.gemini_5h_pct);
+    }
+
     async function refreshData() {
       if (window.pywebview && window.pywebview.api) {
         try {
@@ -1209,6 +1325,8 @@ HTML_CONTENT = """<!DOCTYPE html>
           document.getElementById('gfValInput').textContent = '$' + d.gf_cost_in.toFixed(2);
           document.getElementById('gfValOutput').textContent = '$' + d.gf_cost_out.toFixed(2);
           document.getElementById('gfValCache').textContent = '$' + d.gf_cost_cache.toFixed(2);
+
+          renderPaceMonitor(d);
 
           // 3. Claude & GPT Summary & Details
           document.getElementById('tpSummary').textContent = 'Claude & GPT: ' + d.tp_weekly_pct + '% Weekly · ' + d.tp_5h_pct + '% 5h';
@@ -1620,11 +1738,21 @@ class MetricsEngine:
         gemini_cost = 0.0
         gemini_base_units = 0
         gemini_legacy_units = 0
+        gemini_legacy_30m = 0
+        gemini_legacy_15m = 0
+        gemini_base_30m = 0
+        gemini_base_15m = 0
+        gemini_steps_30m = 0
+        gemini_steps_15m = 0
         tp_tokens = 0
         tp_cost = 0.0
         tp_base_units = 0
         tp_legacy_units = 0
         legacy_weighted_units = 0
+
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        cut_30m = now_utc - datetime.timedelta(minutes=30)
+        cut_15m = now_utc - datetime.timedelta(minutes=15)
 
         by_model = {}
 
@@ -1707,6 +1835,10 @@ class MetricsEngine:
                                 tp_legacy_units += lw
                             else:
                                 gemini_legacy_units += lw
+                                if dt >= cut_30m:
+                                    gemini_legacy_30m += lw
+                                if dt >= cut_15m:
+                                    gemini_legacy_15m += lw
                         elif t in ["PLANNER_RESPONSE", "MODEL"]:
                             legacy_tok = estimate_tokens(c) + estimate_tokens(str(data.get("thinking", "")))
                             lw = int(legacy_tok * spec["weight"])
@@ -1715,6 +1847,12 @@ class MetricsEngine:
                                 tp_legacy_units += lw
                             else:
                                 gemini_legacy_units += lw
+                                if dt >= cut_30m:
+                                    gemini_legacy_30m += lw
+                                    gemini_steps_30m += 1
+                                if dt >= cut_15m:
+                                    gemini_legacy_15m += lw
+                                    gemini_steps_15m += 1
 
                             # Extract exact server-reported telemetry tokens
                             if "input_tokens" in data or "output_tokens" in data:
@@ -1750,6 +1888,10 @@ class MetricsEngine:
                                 gemini_tokens += (in_tok + out_tok)
                                 gemini_cost += step_total_cost
                                 gemini_base_units += step_base_units
+                                if dt >= cut_30m:
+                                    gemini_base_30m += step_base_units
+                                if dt >= cut_15m:
+                                    gemini_base_15m += step_base_units
 
                             m_entry = by_model.setdefault(model_key, {
                                 "name": model_key,
@@ -1784,6 +1926,12 @@ class MetricsEngine:
             "gemini_cost": gemini_cost,
             "gemini_base_units": gemini_base_units,
             "gemini_legacy_units": gemini_legacy_units,
+            "gemini_legacy_30m": gemini_legacy_30m,
+            "gemini_legacy_15m": gemini_legacy_15m,
+            "gemini_base_30m": gemini_base_30m,
+            "gemini_base_15m": gemini_base_15m,
+            "gemini_steps_30m": gemini_steps_30m,
+            "gemini_steps_15m": gemini_steps_15m,
             "tp_tokens": tp_tokens,
             "tp_cost": tp_cost,
             "tp_base_units": tp_base_units,
@@ -2121,6 +2269,201 @@ class MetricsEngine:
         self.cached_metrics["models_5h"] = self._build_model_rows(by_model_5h, active_model_name)
         self.cached_metrics["models_weekly"] = self._build_model_rows(by_model_w, active_model_name)
         self._update_pool_valuations()
+        self._compute_pace_windows(w5)
+
+    @staticmethod
+    def _fmt_mins(mins: float) -> str:
+        m = max(0, int(round(mins)))
+        h = m // 60
+        rem_m = m % 60
+        if h > 0:
+            return f"{h}h {rem_m:02d}m"
+        return f"{rem_m}m"
+
+    def _eval_pace_window(
+        self,
+        label: str,
+        win_used_pct: float,
+        win_mins: float,
+        rem_pct: float,
+        rem_mins: float,
+        min_used_for_warn: float = 2.0,
+    ) -> dict:
+        win_mins = max(1.0, float(win_mins))
+        rate_pct_min = win_used_pct / win_mins
+        rate_pct_hr = rate_pct_min * 60.0
+        proj_rem_burn_pct = rate_pct_min * rem_mins
+
+        depletes = (
+            rem_mins > 1.0
+            and win_used_pct >= min_used_for_warn
+            and proj_rem_burn_pct >= max(0.1, rem_pct - 0.05)
+        )
+        tight = (
+            not depletes
+            and rem_mins > 1.0
+            and win_used_pct >= min_used_for_warn
+            and proj_rem_burn_pct >= (rem_pct * 0.85)
+        )
+
+        if rate_pct_min > 0.0005:
+            runway_mins = rem_pct / rate_pct_min
+        else:
+            runway_mins = 9999.0
+
+        shortfall_mins = max(0.0, rem_mins - runway_mins) if depletes else 0.0
+
+        if depletes:
+            if shortfall_mins >= 1.0:
+                runway_label = f"⚠️ 0% in {self._fmt_mins(runway_mins)} (-{self._fmt_mins(shortfall_mins)})"
+            else:
+                runway_label = f"⚠️ Hits 0% at reset ({self._fmt_mins(runway_mins)})"
+        elif tight:
+            runway_label = f"Tight: ~{self._fmt_mins(runway_mins)} runway"
+        elif rate_pct_hr < 0.5:
+            runway_label = "Runway: Idle / Safe"
+        else:
+            end_buf = max(0, int(round(rem_pct - proj_rem_burn_pct)))
+            runway_label = f"Safe (~{end_buf}% left at reset)"
+
+        return {
+            "window": label,
+            "window_mins": round(win_mins, 1),
+            "used_pct": round(win_used_pct, 1),
+            "rate_pct_hr": round(rate_pct_hr, 1),
+            "proj_rem_burn_pct": round(proj_rem_burn_pct, 1),
+            "runway_mins": round(runway_mins, 1),
+            "shortfall_mins": round(shortfall_mins, 1),
+            "warn": bool(depletes or tight),
+            "critical": bool(depletes),
+            "runway_label": runway_label,
+        }
+
+    def _compute_pace_windows(self, w5: dict):
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        rem_pct = float(self.cached_metrics.get("gemini_5h_pct", 100))
+        used_pct = max(0.0, 100.0 - rem_pct)
+
+        if self.gemini_5h_reset_dt is None:
+            idle_w = {
+                "window": "Syncing",
+                "window_mins": 0.0,
+                "used_pct": 0.0,
+                "rate_pct_hr": 0.0,
+                "proj_rem_burn_pct": 0.0,
+                "runway_mins": 9999.0,
+                "shortfall_mins": 0.0,
+                "warn": False,
+                "critical": False,
+                "runway_label": "Syncing clock...",
+            }
+            self.cached_metrics["pace_5h"] = {
+                "updated_at": now_utc.isoformat(),
+                "updated_ts": time.time(),
+                "active_model": self.cached_metrics.get("active_model", "Gemini 4 Argon"),
+                "gemini_5h_rem_pct": int(rem_pct),
+                "gemini_5h_used_pct": int(used_pct),
+                "elapsed_mins": 0.0,
+                "rem_mins": 300.0,
+                "elapsed_str": "--",
+                "left_str": "--",
+                "any_warning": False,
+                "any_critical": False,
+                "headline": "⟳ Synchronizing 5h reset clock...",
+                "slot": dict(idle_w, window="0->Now Slot"),
+                "w30m": dict(idle_w, window="Last 30m"),
+                "w15m": dict(idle_w, window="Last 15m"),
+            }
+            return
+
+        rem_secs = max(0.0, (self.gemini_5h_reset_dt - now_utc).total_seconds())
+        rem_mins = min(300.0, rem_secs / 60.0)
+        elapsed_mins = max(1.0, 300.0 - rem_mins)
+
+        learned_5h_cap = float(
+            self.compute_learned_cap(self.history.get("samples_5h", []), default=862066)
+        )
+        slot_leg = float(w5.get("gemini_legacy_units", 0) or 0)
+        if used_pct >= 5.0 and slot_leg > 0:
+            units_per_1pct = max((learned_5h_cap / 100.0) * 0.65, slot_leg / used_pct)
+        else:
+            units_per_1pct = max(100.0, learned_5h_cap / 100.0)
+
+        leg_30m = float(w5.get("gemini_legacy_30m", 0) or 0)
+        leg_15m = float(w5.get("gemini_legacy_15m", 0) or 0)
+
+        cap_pct = used_pct if used_pct > 0 else 100.0
+        used_30m_pct = min(cap_pct, leg_30m / units_per_1pct)
+        used_15m_pct = min(used_30m_pct, leg_15m / units_per_1pct)
+
+        eff_slot_mins = max(5.0, elapsed_mins)
+        eff_30m_mins = min(30.0, eff_slot_mins)
+        eff_15m_mins = min(15.0, eff_slot_mins)
+
+        w_slot = self._eval_pace_window(
+            "0->Now Slot",
+            used_pct,
+            eff_slot_mins,
+            rem_pct,
+            rem_mins,
+            min_used_for_warn=5.0 if elapsed_mins < 15.0 else 2.0,
+        )
+        w_30m = self._eval_pace_window(
+            "Last 30m", used_30m_pct, eff_30m_mins, rem_pct, rem_mins, min_used_for_warn=2.0
+        )
+        w_15m = self._eval_pace_window(
+            "Last 15m", used_15m_pct, eff_15m_mins, rem_pct, rem_mins, min_used_for_warn=1.5
+        )
+
+        crit_windows = [w for w in (w_slot, w_30m, w_15m) if w["critical"]]
+        warn_windows = [w for w in (w_slot, w_30m, w_15m) if w["warn"]]
+
+        any_critical = bool(crit_windows)
+        any_warning = bool(warn_windows)
+
+        if crit_windows:
+            worst = min(crit_windows, key=lambda x: x["runway_mins"])
+            names_str = " + ".join(w["window"] for w in crit_windows)
+            headline = (
+                f"⚠️ PACE ALERT ({names_str}): Proj +{worst['proj_rem_burn_pct']:.0f}% >= "
+                f"{rem_pct:.0f}% left (0% in {self._fmt_mins(worst['runway_mins'])})"
+            )
+        elif warn_windows:
+            worst = min(warn_windows, key=lambda x: x["runway_mins"])
+            headline = (
+                f"⚠️ Tight 5h Pace ({worst['window']}): Proj +{worst['proj_rem_burn_pct']:.0f}% vs "
+                f"{rem_pct:.0f}% left (~{self._fmt_mins(worst['runway_mins'])} runway)"
+            )
+        else:
+            headline = f"✓ 5h Pace Safe across Slot, 30m & 15m ({rem_pct:.0f}% left)"
+
+        pace_payload = {
+            "updated_at": now_utc.isoformat(),
+            "updated_ts": time.time(),
+            "active_model": self.cached_metrics.get("active_model", "Gemini 4 Argon"),
+            "gemini_5h_rem_pct": int(rem_pct),
+            "gemini_5h_used_pct": int(used_pct),
+            "elapsed_mins": round(elapsed_mins, 1),
+            "rem_mins": round(rem_mins, 1),
+            "elapsed_str": self._fmt_mins(elapsed_mins),
+            "left_str": self._fmt_mins(rem_mins),
+            "any_warning": any_warning,
+            "any_critical": any_critical,
+            "headline": headline,
+            "slot": w_slot,
+            "w30m": w_30m,
+            "w15m": w_15m,
+        }
+        self.cached_metrics["pace_5h"] = pace_payload
+
+        try:
+            os.makedirs(os.path.dirname(QUOTA_PACE_FILE), exist_ok=True)
+            tmp_file = QUOTA_PACE_FILE + ".tmp"
+            with open(tmp_file, "w", encoding="utf-8") as f:
+                json.dump(pace_payload, f, indent=2)
+            os.replace(tmp_file, QUOTA_PACE_FILE)
+        except Exception:
+            pass
 
 
 
