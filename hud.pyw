@@ -1544,16 +1544,12 @@ class MetricsEngine:
         t_disk = threading.Thread(target=self._disk_worker_loop, daemon=True)
         t_disk.start()
 
-        t_usage = threading.Thread(target=self._usage_worker_loop, daemon=True)
-        t_usage.start()
+        # Disabled: background usage polling spawns agy.exe CLI & MCP subprocesses that flash terminal windows
+        # t_usage = threading.Thread(target=self._usage_worker_loop, daemon=True)
+        # t_usage.start()
 
     def _usage_worker_loop(self):
-        while self.running:
-            try:
-                self.query_official_usage()
-            except Exception:
-                pass
-            time.sleep(45.0)
+        return
 
     def query_official_usage(self):
         try:
