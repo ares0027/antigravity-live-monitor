@@ -19,8 +19,8 @@ QUOTA_HISTORY_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "
 HUD_CONFIG_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud_config.json")
 QUOTA_PACE_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "quota_pace_status.json")
 AGY_EXE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "agy.exe")
-
 CREATE_NO_WINDOW = 0x08000000
+DETACHED_PROCESS = 0x00000008
 
 # Base Reference Rates (Gemini 3.8 Flash & Third-Party Baseline)
 GEMINI_PRICE_IN = 0.75       # $0.75 / 1M
@@ -1544,12 +1544,16 @@ class MetricsEngine:
         t_disk = threading.Thread(target=self._disk_worker_loop, daemon=True)
         t_disk.start()
 
-        # Disabled: background usage polling spawns agy.exe CLI & MCP subprocesses that flash terminal windows
-        # t_usage = threading.Thread(target=self._usage_worker_loop, daemon=True)
-        # t_usage.start()
+        t_usage = threading.Thread(target=self._usage_worker_loop, daemon=True)
+        t_usage.start()
 
     def _usage_worker_loop(self):
-        return
+        while self.running:
+            try:
+                self.query_official_usage()
+            except Exception:
+                pass
+            time.sleep(300.0)
 
     def query_official_usage(self):
         try:
@@ -1557,16 +1561,17 @@ class MetricsEngine:
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
 
-            # IMPORTANT: Do NOT pass --disable-slash-commands so /usage executes natively in ~4s
+            # Run with USER_HOME cwd and DETACHED_PROCESS to ensure no child console/MCP windows ever flash
             cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "/usage"]
             out = subprocess.check_output(
                 cmd,
                 stdin=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                cwd=USER_HOME,
                 text=True,
-                timeout=18,
+                timeout=25,
                 startupinfo=si,
-                creationflags=CREATE_NO_WINDOW
+                creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS
             )
 
             now = datetime.datetime.now(datetime.timezone.utc)
@@ -2524,8 +2529,9 @@ class AutoPrimerWorker(threading.Thread):
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                cwd=USER_HOME,
                 startupinfo=si,
-                creationflags=CREATE_NO_WINDOW,
+                creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS,
                 timeout=20
             )
             time.sleep(3.0)
@@ -2550,8 +2556,9 @@ class AutoPrimerWorker(threading.Thread):
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                cwd=USER_HOME,
                 startupinfo=si,
-                creationflags=CREATE_NO_WINDOW,
+                creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS,
                 timeout=20
             )
             time.sleep(3.0)

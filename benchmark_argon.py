@@ -34,6 +34,7 @@ RESULTS_FILE = Path(__file__).resolve().parent / "argon_benchmark_results.json"
 REPORT_FILE = Path(__file__).resolve().parent / "BENCHMARK_REPORT.md"
 
 CREATE_NO_WINDOW = 0x08000000
+DETACHED_PROCESS = 0x00000008
 CLI_BOOT_OVERHEAD_SECS = 2.2  # Local agy.exe process init & auth handshake overhead
 
 CONFIGURED_WEIGHTS = {
@@ -75,10 +76,11 @@ def query_usage() -> dict[str, Any]:
         cmd,
         stdin=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        cwd=str(USER_HOME),
         text=True,
         timeout=25,
         startupinfo=_hidden_startupinfo(),
-        creationflags=CREATE_NO_WINDOW,
+        creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS,
     )
     now = datetime.datetime.now(datetime.timezone.utc)
     info: dict[str, Any] = {"queried_at": now.isoformat()}
@@ -267,8 +269,9 @@ def run_agy_prompt(
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            cwd=str(USER_HOME),
             startupinfo=_hidden_startupinfo(),
-            creationflags=CREATE_NO_WINDOW,
+            creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS,
             timeout=timeout,
             check=False,
         )

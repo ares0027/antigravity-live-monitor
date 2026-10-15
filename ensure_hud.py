@@ -29,27 +29,26 @@ if os.path.exists(hud_script) and os.path.exists(pythonw):
     DETACHED_PROCESS = 0x00000008
     CREATE_NEW_PROCESS_GROUP = 0x00000200
     try:
-        # Start the Interactive Scheduled Task so pythonw runs on WinSta0\Default outside any parent Job Object
-        ps_cmd = (
-            f"$t = Get-ScheduledTask -TaskName 'AntigravityHUD_Launch' -ErrorAction SilentlyContinue; "
-            f"if (-not $t) {{ "
-            f"$a = New-ScheduledTaskAction -Execute '{pythonw}' -Argument '\"{hud_script}\"' -WorkingDirectory '{os.path.dirname(hud_script)}'; "
-            f"$tr = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME; "
-            f"$p = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive; "
-            f"$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero); "
-            f"Register-ScheduledTask -TaskName 'AntigravityHUD_Launch' -Action $a -Trigger $tr -Principal $p -Settings $s -Force | Out-Null "
-            f"}}; "
-            f"Start-ScheduledTask -TaskName 'AntigravityHUD_Launch'"
-        )
-        subprocess.run(
-            ["powershell", "-NoProfile", "-WindowStyle", "Hidden", "-Command", ps_cmd],
+        # Attempt 1: Start existing interactive scheduled task via lightweight native schtasks.exe
+        res = subprocess.run(
+            ["schtasks.exe", "/Run", "/TN", "AntigravityHUD_Launch"],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            creationflags=CREATE_NO_WINDOW,
-            timeout=8,
-            check=True,
+            creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS,
+            timeout=5,
+            check=False,
         )
+        if res.returncode != 0:
+            # Attempt 2: Direct detached execution with pythonw GUI subsystem
+            subprocess.Popen(
+                [pythonw, hud_script],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+                creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW,
+            )
     except Exception:
         try:
             subprocess.Popen(
@@ -58,7 +57,7 @@ if os.path.exists(hud_script) and os.path.exists(pythonw):
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 close_fds=True,
-                creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
+                creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW,
             )
         except Exception:
             pass
