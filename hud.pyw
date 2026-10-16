@@ -1561,7 +1561,7 @@ class MetricsEngine:
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
 
-            # Run with USER_HOME cwd and DETACHED_PROCESS to ensure no child console/MCP windows ever flash
+            # Run with USER_HOME cwd and CREATE_NO_WINDOW to ensure no child console/MCP windows ever flash
             cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "/usage"]
             out = subprocess.check_output(
                 cmd,
@@ -1571,7 +1571,7 @@ class MetricsEngine:
                 text=True,
                 timeout=25,
                 startupinfo=si,
-                creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS
+                creationflags=CREATE_NO_WINDOW
             )
 
             now = datetime.datetime.now(datetime.timezone.utc)
@@ -2531,7 +2531,7 @@ class AutoPrimerWorker(threading.Thread):
                 stderr=subprocess.DEVNULL,
                 cwd=USER_HOME,
                 startupinfo=si,
-                creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS,
+                creationflags=CREATE_NO_WINDOW,
                 timeout=20
             )
             time.sleep(3.0)
@@ -2558,7 +2558,7 @@ class AutoPrimerWorker(threading.Thread):
                 stderr=subprocess.DEVNULL,
                 cwd=USER_HOME,
                 startupinfo=si,
-                creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS,
+                creationflags=CREATE_NO_WINDOW,
                 timeout=20
             )
             time.sleep(3.0)
