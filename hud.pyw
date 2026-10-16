@@ -19,6 +19,7 @@ QUOTA_HISTORY_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "
 HUD_CONFIG_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud_config.json")
 QUOTA_PACE_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "quota_pace_status.json")
 AGY_EXE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "agy.exe")
+SILENT_RUNNER_EXE = os.path.join(USER_HOME, ".gemini", "bin", "silent_mcp_runner.exe")
 CREATE_NO_WINDOW = 0x08000000
 DETACHED_PROCESS = 0x00000008
 
@@ -1561,8 +1562,11 @@ class MetricsEngine:
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
 
-            # Run with USER_HOME cwd and CREATE_NO_WINDOW to ensure no child console/MCP windows ever flash
-            cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "/usage"]
+            # Run with USER_HOME cwd and SILENT_RUNNER_EXE to ensure zero child console/MCP windows ever flash
+            if os.path.exists(SILENT_RUNNER_EXE) and os.path.exists(AGY_EXE):
+                cmd = [SILENT_RUNNER_EXE, AGY_EXE, "-p", "/usage"]
+            else:
+                cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "/usage"]
             out = subprocess.check_output(
                 cmd,
                 stdin=subprocess.DEVNULL,
@@ -2517,13 +2521,18 @@ class AutoPrimerWorker(threading.Thread):
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
-            cmd = [
-                AGY_EXE if os.path.exists(AGY_EXE) else "agy",
+            target_agy = AGY_EXE if os.path.exists(AGY_EXE) else "agy"
+            base_args = [
+                target_agy,
                 "-p", "1",
                 "--model", "Gemini 3.8 Flash (Low)",
                 "--disable-slash-commands",
                 "--dangerously-skip-permissions"
             ]
+            if os.path.exists(SILENT_RUNNER_EXE) and os.path.exists(AGY_EXE):
+                cmd = [SILENT_RUNNER_EXE] + base_args
+            else:
+                cmd = base_args
             subprocess.run(
                 cmd,
                 stdin=subprocess.DEVNULL,
@@ -2544,13 +2553,18 @@ class AutoPrimerWorker(threading.Thread):
             si = subprocess.STARTUPINFO()
             si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
-            cmd = [
-                AGY_EXE if os.path.exists(AGY_EXE) else "agy",
+            target_agy = AGY_EXE if os.path.exists(AGY_EXE) else "agy"
+            base_args = [
+                target_agy,
                 "-p", "1",
                 "--model", "GPT-OSS 120B (Medium)",
                 "--disable-slash-commands",
                 "--dangerously-skip-permissions"
             ]
+            if os.path.exists(SILENT_RUNNER_EXE) and os.path.exists(AGY_EXE):
+                cmd = [SILENT_RUNNER_EXE] + base_args
+            else:
+                cmd = base_args
             subprocess.run(
                 cmd,
                 stdin=subprocess.DEVNULL,
