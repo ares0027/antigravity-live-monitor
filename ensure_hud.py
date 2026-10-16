@@ -35,19 +35,19 @@ if os.path.exists(hud_script) and os.path.exists(pythonw):
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS,
+            creationflags=CREATE_NO_WINDOW,
             timeout=5,
             check=False,
         )
         if res.returncode != 0:
-            # Attempt 2: Direct detached execution with pythonw GUI subsystem
+            # Attempt 2: Direct execution with pythonw GUI subsystem
             subprocess.Popen(
                 [pythonw, hud_script],
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 close_fds=True,
-                creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW,
+                creationflags=CREATE_NO_WINDOW,
             )
     except Exception:
         try:
@@ -57,7 +57,7 @@ if os.path.exists(hud_script) and os.path.exists(pythonw):
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 close_fds=True,
-                creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW,
+                creationflags=CREATE_NO_WINDOW,
             )
         except Exception:
             pass
