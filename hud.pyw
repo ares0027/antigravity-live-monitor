@@ -1567,11 +1567,14 @@ class MetricsEngine:
                 cmd = [SILENT_RUNNER_EXE, AGY_EXE, "-p", "/usage"]
             else:
                 cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "/usage"]
+            env = os.environ.copy()
+            env["AGY_CLI_DISABLE_AUTO_UPDATE"] = "true"
             out = subprocess.check_output(
                 cmd,
                 stdin=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 cwd=USER_HOME,
+                env=env,
                 text=True,
                 timeout=25,
                 startupinfo=si,
@@ -2533,12 +2536,15 @@ class AutoPrimerWorker(threading.Thread):
                 cmd = [SILENT_RUNNER_EXE] + base_args
             else:
                 cmd = base_args
+            env = os.environ.copy()
+            env["AGY_CLI_DISABLE_AUTO_UPDATE"] = "true"
             subprocess.run(
                 cmd,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 cwd=USER_HOME,
+                env=env,
                 startupinfo=si,
                 creationflags=CREATE_NO_WINDOW,
                 timeout=20
@@ -2565,12 +2571,15 @@ class AutoPrimerWorker(threading.Thread):
                 cmd = [SILENT_RUNNER_EXE] + base_args
             else:
                 cmd = base_args
+            env = os.environ.copy()
+            env["AGY_CLI_DISABLE_AUTO_UPDATE"] = "true"
             subprocess.run(
                 cmd,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 cwd=USER_HOME,
+                env=env,
                 startupinfo=si,
                 creationflags=CREATE_NO_WINDOW,
                 timeout=20
