@@ -16,6 +16,7 @@ CLI_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity-cli", "brain")
 DESKTOP_BRAIN = os.path.join(USER_HOME, ".gemini", "antigravity", "brain")
 BRAIN_DIRS = [AGY_CLI_BRAIN, CLI_BRAIN, DESKTOP_BRAIN]
 QUOTA_HISTORY_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "quota_history.json")
+TRANSCRIPT_CACHE_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "transcript_cache.json")
 HUD_CONFIG_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "hud_config.json")
 QUOTA_PACE_FILE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "quota_pace_status.json")
 AGY_EXE = os.path.join(USER_HOME, "AppData", "Local", "agy", "bin", "agy.exe")
@@ -37,6 +38,29 @@ TP_PRICE_WEIGHTED = 6.00     # Blended weighted rate
 # Comprehensive Antigravity Model Catalog (Empirically Calibrated Quota Burn Multipliers, Tok/s Speeds & API Valuation Rates)
 # weight: empirical relative quota consumption multiplier against the pool's 1.0x baseline model
 MODEL_CATALOG = {
+    # Gemini 4 Carbon Family
+    "Gemini 4 Carbon (High)": {
+        "pool": "gemini", "weight": 1.75, "in": 2.50, "cache": 0.25, "out": 12.00, "weighted": 6.00, "avg_step_base": 2000, "speed_tok_s": 135.0
+    },
+    "Gemini 4 Carbon (Medium)": {
+        "pool": "gemini", "weight": 1.35, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 1650, "speed_tok_s": 142.0
+    },
+    "Gemini 4 Carbon (Low)": {
+        "pool": "gemini", "weight": 1.05, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.20, "avg_step_base": 1400, "speed_tok_s": 150.0
+    },
+    # Gemini 4 Hydrogen Family
+    "Gemini 4 Hydrogen (XHigh)": {
+        "pool": "gemini", "weight": 2.10, "in": 3.00, "cache": 0.30, "out": 15.00, "weighted": 7.50, "avg_step_base": 2200, "speed_tok_s": 115.0
+    },
+    "Gemini 4 Hydrogen (High)": {
+        "pool": "gemini", "weight": 1.55, "in": 2.00, "cache": 0.20, "out": 10.00, "weighted": 5.00, "avg_step_base": 1850, "speed_tok_s": 128.0
+    },
+    "Gemini 4 Hydrogen (Medium)": {
+        "pool": "gemini", "weight": 1.25, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.50, "avg_step_base": 1600, "speed_tok_s": 140.0
+    },
+    "Gemini 4 Hydrogen (Low)": {
+        "pool": "gemini", "weight": 0.95, "in": 0.90, "cache": 0.09, "out": 4.50, "weighted": 2.50, "avg_step_base": 1350, "speed_tok_s": 155.0
+    },
     # Gemini 4 Argon Family (Empirical: ~2.0x-2.6x relative burn, 127-138 tok/s median, 420-430 tok/s burst)
     "Gemini 4 Argon (High)": {
         "pool": "gemini", "weight": 1.70, "in": 2.50, "cache": 0.25, "out": 12.00, "weighted": 6.00, "avg_step_base": 2000, "speed_tok_s": 138.0
@@ -96,6 +120,13 @@ MODEL_CATALOG = {
 
 # Primary selectable models shown when "All Models" view is selected
 PRIMARY_SELECTABLE_MODELS = [
+    "Gemini 4 Carbon (High)",
+    "Gemini 4 Carbon (Medium)",
+    "Gemini 4 Carbon (Low)",
+    "Gemini 4 Hydrogen (XHigh)",
+    "Gemini 4 Hydrogen (High)",
+    "Gemini 4 Hydrogen (Medium)",
+    "Gemini 4 Hydrogen (Low)",
     "Gemini 4 Argon (High)",
     "Gemini 4 Argon (Medium)",
     "Gemini 4 Argon (Low)",
@@ -124,6 +155,12 @@ def get_model_spec(model_name: str) -> dict:
             return {"pool": "tp", "weight": 0.2, "in": 0.80, "cache": 0.08, "out": 3.20, "weighted": 1.80, "avg_step_base": 1400, "speed_tok_s": 105.8}
         w = 1.25 if ("high" in low or "thinking" in low) else 1.0
         return {"pool": "tp", "weight": w, "in": 3.0, "cache": 0.30, "out": 15.0, "weighted": 6.0, "avg_step_base": 1800, "speed_tok_s": 103.7}
+    if "carbon" in low:
+        w = 1.75 if "high" in low else (1.05 if "low" in low else 1.35)
+        return {"pool": "gemini", "weight": w, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 1650, "speed_tok_s": 142.0}
+    if "hydrogen" in low:
+        w = 2.10 if "xhigh" in low else (1.55 if "high" in low else (0.95 if "low" in low else 1.25))
+        return {"pool": "gemini", "weight": w, "in": 1.25, "cache": 0.125, "out": 6.00, "weighted": 3.50, "avg_step_base": 1600, "speed_tok_s": 140.0}
     if "argon" in low:
         w = 1.70 if "high" in low else (1.05 if "low" in low else 1.34)
         return {"pool": "gemini", "weight": w, "in": 1.50, "cache": 0.15, "out": 8.00, "weighted": 4.25, "avg_step_base": 1650, "speed_tok_s": 132.0}
@@ -157,10 +194,18 @@ def load_hud_config():
         "global_yolo": True,
         "tp_expanded": False,
         "models_show_all": True,
+        "view_mode": "minimal",
+        "minimal_model": "auto",
         "theme": "oled",
         "active_tab": "5h",
         "last_w": 550,
-        "last_h": 790
+        "last_h": 790,
+        "last_x": None,
+        "last_y": None,
+        "font_scale_full": 1.0,
+        "font_scale_mini": 1.0,
+        "ctx_bars_count": 4,
+        "ctx_unique_projects": False,
     }
     if os.path.exists(HUD_CONFIG_FILE):
         try:
@@ -170,6 +215,10 @@ def load_hud_config():
                     default_config.update(d)
         except Exception:
             pass
+    if default_config.get("view_mode") not in ("minimal", "verbose"):
+        default_config["view_mode"] = "minimal"
+    if not default_config.get("minimal_model"):
+        default_config["minimal_model"] = "auto"
     default_config["is_compact"] = False
     return default_config
 
@@ -179,8 +228,10 @@ def save_hud_config(config_dict):
         os.makedirs(os.path.dirname(HUD_CONFIG_FILE), exist_ok=True)
         to_save = dict(config_dict)
         to_save.pop("is_compact", None)
-        with open(HUD_CONFIG_FILE, "w", encoding="utf-8") as f:
+        tmp_path = HUD_CONFIG_FILE + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(to_save, f, indent=2)
+        os.replace(tmp_path, HUD_CONFIG_FILE)
     except Exception:
         pass
 
@@ -252,6 +303,36 @@ HTML_CONTENT = """<!DOCTYPE html>
       --accent-warn: #F59E0B;
       --accent-yolo: #EF4444;
       --ring-bg: #23272F;
+      --font-scale: 1;
+    }
+
+    .text-sm {
+      font-size: calc(14px * var(--font-scale)) !important;
+      line-height: calc(19px * var(--font-scale)) !important;
+    }
+    .text-xs {
+      font-size: calc(12px * var(--font-scale)) !important;
+      line-height: calc(16px * var(--font-scale)) !important;
+    }
+    .text-\[11px\] {
+      font-size: calc(11px * var(--font-scale)) !important;
+      line-height: calc(15px * var(--font-scale)) !important;
+    }
+    .text-\[10px\] {
+      font-size: calc(10px * var(--font-scale)) !important;
+      line-height: calc(13.5px * var(--font-scale)) !important;
+    }
+    .text-\[9px\] {
+      font-size: calc(9px * var(--font-scale)) !important;
+      line-height: calc(12px * var(--font-scale)) !important;
+    }
+    .text-\[8px\] {
+      font-size: calc(8px * var(--font-scale)) !important;
+      line-height: calc(11px * var(--font-scale)) !important;
+    }
+    .mini-ring {
+      width: calc(20px * var(--font-scale)) !important;
+      height: calc(20px * var(--font-scale)) !important;
     }
 
     [data-theme="oled"] {
@@ -438,6 +519,12 @@ HTML_CONTENT = """<!DOCTYPE html>
     </div>
 
     <div id="fullControls" class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+      <!-- View Mode Switcher (Minimal Default / Verbose) -->
+      <div class="flex items-center p-0.5 rounded-md border text-[10px] mono font-bold" style="background: var(--bg-subcard); border-color: var(--border-card);" title="Switch between Minimal View (Model + Reset Summary) and Verbose View (Full Telemetry)">
+        <button onclick="setViewMode('minimal')" id="btnModeMinimal" class="px-1.5 py-0.5 rounded cursor-pointer transition" style="background: var(--accent-gemini); color: #000000;">Min</button>
+        <button onclick="setViewMode('verbose')" id="btnModeVerbose" class="px-1.5 py-0.5 rounded cursor-pointer transition" style="color: var(--text-muted);">Verb</button>
+      </div>
+
       <!-- Force Sync Button -->
       <button onclick="triggerSync()" id="syncBtn" class="p-1 px-1.5 rounded-md transition text-xs mono cursor-pointer font-bold" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Force Refresh Official Quota">
         ↻
@@ -478,9 +565,9 @@ HTML_CONTENT = """<!DOCTYPE html>
     </div>
 
     <!-- PURE MINIMALIST COMPACT STRIP -->
-    <div id="compactBar" class="hidden w-full h-full flex items-center justify-around px-2">
+    <div id="compactBar" class="hidden w-full h-full flex items-center justify-between px-2 gap-1.5">
       <div class="flex items-center gap-1.5" title="Gemini Weekly Limit Remaining">
-        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 36 36">
+        <svg class="w-5 h-5 mini-ring flex-shrink-0" viewBox="0 0 36 36">
           <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
           <path id="miniGWRing" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
         </svg>
@@ -491,13 +578,25 @@ HTML_CONTENT = """<!DOCTYPE html>
       <div class="w-px h-3.5" style="background: var(--border-card);"></div>
 
       <div class="flex items-center gap-1.5" title="Gemini 5-Hour Limit Remaining">
-        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 36 36">
+        <svg class="w-5 h-5 mini-ring flex-shrink-0" viewBox="0 0 36 36">
           <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
           <path id="miniG5Ring" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
         </svg>
         <span class="mono text-xs font-black tracking-tight" style="color: var(--accent-warn);" id="miniG5Pct">--%</span>
         <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">5h</span>
+        <span class="text-[10px] mono font-bold" style="color: var(--text-muted);" id="miniCooldown">--</span>
         <span id="miniPaceWarn" class="hidden px-1 py-0.2 rounded text-[9px] mono font-black animate-pulse" style="background: rgba(239, 68, 68, 0.25); color: var(--accent-yolo); border: 1px solid var(--accent-yolo);" title="5h Burn Pace Depletion Alert">PACE!</span>
+      </div>
+
+      <div class="w-px h-3.5" style="background: var(--border-card);"></div>
+
+      <div class="flex items-center gap-1" title="Active Conversation Context (Backpack Weight)">
+        <span id="miniCtxWarn" class="px-1.5 py-0.5 rounded text-[10px] mono font-black" style="background: rgba(16, 185, 129, 0.18); color: var(--accent-gemini); border: 1px solid var(--accent-gemini);">🟢 0k</span>
+      </div>
+
+      <div class="flex items-center gap-0.5 flex-shrink-0" onclick="event.stopPropagation()" ondblclick="event.stopPropagation()">
+        <button onclick="adjustFontSize(-0.08)" class="px-1 py-0.2 rounded text-[9px] mono font-bold cursor-pointer" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-muted);" title="Decrease Mini-Bar Font Size (Ctrl + -)">A-</button>
+        <button onclick="adjustFontSize(0.08)" class="px-1 py-0.2 rounded text-[9px] mono font-bold cursor-pointer" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Increase Mini-Bar Font Size (Ctrl + +)">A+</button>
       </div>
     </div>
 
@@ -506,12 +605,117 @@ HTML_CONTENT = """<!DOCTYPE html>
   <!-- MAIN SCROLLABLE CONTENT -->
   <div id="mainContent" class="p-3.5 space-y-3 flex-1 overflow-y-auto">
 
+    <!-- MINIMAL VIEW (DEFAULT): CURRENT MODEL ONLY · CURRENT / LAST 3 / ALL RESETS -->
+    <div id="minimalView" class="space-y-2.5">
+      <!-- Active Conversation & Model Selector Card -->
+      <div class="card rounded-2xl p-3 shadow-lg space-y-2">
+        <div class="flex items-center justify-between gap-2 text-[10px] mono">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span id="minModeBadge" class="px-1.5 py-0.5 rounded font-black flex-shrink-0" style="background: rgba(16, 185, 129, 0.18); color: var(--accent-gemini); border: 1px solid var(--accent-gemini);">AUTO</span>
+            <span id="minConvContext" class="truncate font-semibold" style="color: var(--text-muted);" title="Auto-detected active conversation">Detecting active conversation...</span>
+          </div>
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <button id="minResetAutoBtn" onclick="onMinimalModelChange('auto')" class="hidden px-1.5 py-0.5 rounded border text-[9px] mono font-bold cursor-pointer transition" style="background: rgba(245, 158, 11, 0.18); border-color: var(--accent-warn); color: var(--accent-warn);" title="Return to automatic current-conversation model detection">↺ Auto</button>
+            <span id="minPoolBadge" class="px-1.5 py-0.5 rounded font-bold" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--accent-gemini);">Gemini · 1.0x</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-2">
+          <select id="minimalModelSelect" onchange="onMinimalModelChange(this.value)" class="w-full border rounded-xl px-2.5 py-1.5 text-xs mono cursor-pointer outline-none font-bold" style="background: var(--bg-subcard); border-color: var(--border-card); color: var(--text-main);" title="Auto tracks your current conversation model; choose another model manually to simulate its token & $ capacity">
+            <option value="auto">Auto (Detecting...)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between text-[10px] mono px-0.5" style="color: var(--text-dim);">
+          <span id="minRateSpec">Rates: In $-- · Out $-- · Cache $-- /1M</span>
+          <span id="minArchiveNote">Archive ready</span>
+        </div>
+      </div>
+
+      <!-- 5-HOUR WINDOW CARD (MINIMAL) -->
+      <div class="card rounded-2xl p-3 shadow-lg space-y-2">
+        <div class="flex items-center justify-between gap-2 pb-1.5 border-b" style="border-color: var(--border-card);">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background: var(--accent-warn);"></span>
+            <span class="text-xs font-bold uppercase tracking-tight" style="color: var(--text-main);">5-Hour Reset Window</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="min5hCooldown" class="px-2 py-0.5 rounded-md text-[10px] mono font-bold" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--accent-warn);" title="Live countdown until next 5h quota reset">⏳ --</span>
+            <span class="mono text-xs font-black" style="color: var(--text-main);" id="min5hPct">--%</span>
+            <svg class="w-6 h-6 flex-shrink-0" viewBox="0 0 36 36">
+              <path class="ring-bg" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path id="min5hRing" class="ring-progress-emerald" stroke-width="4" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-1.5 px-1 text-[9px] mono font-bold uppercase" style="color: var(--text-dim);">
+          <div class="col-span-3">Scope</div>
+          <div class="col-span-4 text-right">Used (Tok / $)</div>
+          <div class="col-span-5 text-right">Can Use Left (Tok / $)</div>
+        </div>
+        <div id="min5hRows" class="space-y-1.5"></div>
+      </div>
+
+      <!-- WEEKLY WINDOW CARD (MINIMAL) -->
+      <div class="card rounded-2xl p-3 shadow-lg space-y-2">
+        <div class="flex items-center justify-between gap-2 pb-1.5 border-b" style="border-color: var(--border-card);">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background: var(--accent-gemini);"></span>
+            <span class="text-xs font-bold uppercase tracking-tight" style="color: var(--text-main);">Weekly Reset Window</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="minWkCooldown" class="px-2 py-0.5 rounded-md text-[10px] mono font-bold" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--accent-gemini);" title="Live countdown until next Weekly quota reset">⏳ --</span>
+            <span class="mono text-xs font-black" style="color: var(--text-main);" id="minWkPct">--%</span>
+            <svg class="w-6 h-6 flex-shrink-0" viewBox="0 0 36 36">
+              <path class="ring-bg" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path id="minWkRing" class="ring-progress-emerald" stroke-width="4" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-1.5 px-1 text-[9px] mono font-bold uppercase" style="color: var(--text-dim);">
+          <div class="col-span-3">Scope</div>
+          <div class="col-span-4 text-right">Used (Tok / $)</div>
+          <div class="col-span-5 text-right">Can Use Left (Tok / $)</div>
+        </div>
+        <div id="minWkRows" class="space-y-1.5"></div>
+      </div>
+    </div>
+
+    <!-- VERBOSE VIEW: FULL TELEMETRY DASHBOARD -->
+    <div id="verboseView" class="space-y-3 hidden">
+
+    <!-- 0. MULTI-CONVERSATION CONTEXT & BACKPACK METER (VERY TOP) -->
+    <div id="ctxMeterCard" class="card rounded-xl p-2.5 shadow-md space-y-2">
+      <div class="flex items-center justify-between text-[10px] mono">
+        <div class="flex items-center gap-1.5 font-bold uppercase tracking-tight" style="color: var(--text-muted);">
+          <span>🎒 Active & Recent Backpacks</span>
+          <span style="color: var(--text-dim);" class="text-[9px] font-normal">(Click row to pin to Mini-HUD)</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button onclick="toggleCtxUniqueMode()" id="ctxUniqueBtn" class="px-1.5 py-0.5 rounded border text-[9px] mono font-bold cursor-pointer transition" style="background: var(--bg-subcard); border-color: var(--border-card); color: var(--accent-gemini);" title="Toggle between showing all recent conversations vs 1 latest conversation per project">All Chats</button>
+          <button onclick="adjustCtxBarsCount(-1)" class="px-1.5 py-0.5 rounded border text-[9px] mono font-bold cursor-pointer transition" style="background: var(--bg-subcard); border-color: var(--border-card); color: var(--text-muted);" title="Show Fewer Conversation Bars">−</button>
+          <span id="ctxBarsCountLabel" class="px-1 text-[9px] mono font-bold" style="color: var(--text-main);" title="Number of simultaneous conversation context bars">4 Bars</span>
+          <button onclick="adjustCtxBarsCount(1)" class="px-1.5 py-0.5 rounded border text-[9px] mono font-bold cursor-pointer transition" style="background: var(--bg-subcard); border-color: var(--border-card); color: var(--text-main);" title="Show More Conversation Bars">+</button>
+        </div>
+      </div>
+
+      <div id="ctxBarsContainer" class="space-y-1.5">
+        <!-- Populated dynamically with N simultaneous conversation context bars -->
+      </div>
+
+      <div class="w-full h-[2px] rounded-full overflow-hidden" style="background: var(--bg-subcard);" title="Next Context Bar Refresh (2s cycle)">
+        <div id="ctxReloadBar" class="h-full" style="width: 0%; background: var(--text-muted); opacity: 0.65;"></div>
+      </div>
+    </div>
+
     <!-- 1. GEMINI MODELS SECTION -->
     <div>
       <div class="flex items-center justify-between mb-1.5 px-1">
         <h2 class="text-xs font-bold tracking-tight uppercase flex items-center gap-1.5" style="color: var(--accent-gemini);">
           <span class="w-2.5 h-2.5 rounded-full inline-block" style="background: var(--accent-gemini);"></span>
-          Gemini Quota Pool (Argon · Pro · Flash)
+          Gemini Quota Pool (Carbon · Argon · Hydrogen · Flash)
         </h2>
         <span class="text-[11px] mono font-semibold" style="color: var(--text-muted);" id="activeModelHeaderBadge">Active: Gemini 4 Argon</span>
       </div>
@@ -652,6 +856,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span class="font-bold text-xs" style="color: var(--text-main);" id="tpSummary">Claude & GPT: 100% Weekly · 100% 5h</span>
         </div>
         <div class="flex items-center gap-2 text-xs font-semibold" style="color: var(--text-muted);">
+          <span id="tpHeaderCooldown" class="text-[10px] mono font-bold" style="color: var(--accent-tp);"></span>
           <span id="tpDetail">Details</span>
           <span id="tpArrow" class="text-xs transition-transform duration-200">▼</span>
         </div>
@@ -805,13 +1010,9 @@ HTML_CONTENT = """<!DOCTYPE html>
           <!-- Populated dynamically by refreshData() -->
         </div>
       </div>
-
-      <!-- Current Session Context Sub-pill -->
-      <div class="pt-1.5 border-t flex justify-between items-center text-[11px] mono font-medium" style="border-color: var(--border-card); color: var(--text-muted);">
-        <span id="wsName">Active: Workspace</span>
-        <span id="sessionTokens">Current Chat: 0 tokens (0 turns)</span>
-      </div>
     </div>
+
+    </div><!-- end #verboseView -->
 
   </div>
 
@@ -833,6 +1034,13 @@ HTML_CONTENT = """<!DOCTYPE html>
           <option value="light">Paper Light</option>
         </select>
       </div>
+
+      <!-- Font Size Adjuster (Full View) -->
+      <div class="flex items-center gap-1" title="Adjust HUD Font Scale (or use Ctrl + MouseWheel / Ctrl + +/-)">
+        <button onclick="adjustFontSize(-0.08)" class="px-1.5 py-0.5 rounded border text-[10px] mono font-bold cursor-pointer transition" style="background: var(--bg-subcard); border-color: var(--border-card); color: var(--text-muted);" title="Smaller Font (Ctrl + -)">A-</button>
+        <button onclick="resetFontSize()" id="fontScaleLabel" class="px-1.5 py-0.5 rounded border text-[10px] mono font-bold cursor-pointer transition" style="background: var(--bg-subcard); border-color: var(--border-card); color: var(--accent-gemini);" title="Click to Reset Font Size to 100% (Ctrl + 0)">100%</button>
+        <button onclick="adjustFontSize(0.08)" class="px-1.5 py-0.5 rounded border text-[10px] mono font-bold cursor-pointer transition" style="background: var(--bg-subcard); border-color: var(--border-card); color: var(--text-main);" title="Larger Font (Ctrl + +)">A+</button>
+      </div>
     </div>
 
     <span id="timestamp" style="color: var(--text-dim);">--:--:--</span>
@@ -840,6 +1048,9 @@ HTML_CONTENT = """<!DOCTYPE html>
 
   <script>
     let activeTab = '5h';
+    let viewMode = 'minimal';
+    let minimalModelPref = 'auto';
+    let lastMetrics = null;
     let isPinned = true;
     let isAutoPrime = true;
     let isGlobalYolo = true;
@@ -847,6 +1058,12 @@ HTML_CONTENT = """<!DOCTYPE html>
     let modelsShowAll = true;
     let isCompact = false;
     let currentTheme = 'oled';
+    let fontScaleFull = 1.0;
+    let fontScaleMini = 1.0;
+    let ctxBarsCount = 4;
+    let ctxUniqueProjects = false;
+    let pinnedSessionId = null;
+    let lastTopSessionMtime = 0;
     let isDragging = false;
     let startX = 0, startY = 0;
 
@@ -914,13 +1131,254 @@ HTML_CONTENT = """<!DOCTYPE html>
       });
 
       window.addEventListener('mouseup', () => {
+        if (isDragging && window.pywebview && window.pywebview.api && window.pywebview.api.save_window_pos) {
+          window.pywebview.api.save_window_pos();
+        }
         isDragging = false;
         isResizing = false;
       });
+
+      window.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          const delta = e.deltaY < 0 ? 0.06 : -0.06;
+          adjustFontSize(delta);
+        }
+      }, { passive: false });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey) {
+          if (e.key === '=' || e.key === '+') {
+            e.preventDefault();
+            adjustFontSize(0.08);
+          } else if (e.key === '-' || e.key === '_') {
+            e.preventDefault();
+            adjustFontSize(-0.08);
+          } else if (e.key === '0') {
+            e.preventDefault();
+            resetFontSize();
+          }
+        }
+      });
+    }
+
+    function applyFontScaleVisual() {
+      const activeScale = isCompact ? fontScaleMini : fontScaleFull;
+      document.documentElement.style.setProperty('--font-scale', activeScale.toFixed(3));
+      const lbl = document.getElementById('fontScaleLabel');
+      if (lbl) {
+        lbl.textContent = Math.round(fontScaleFull * 100) + '%';
+      }
+    }
+
+    async function adjustFontSize(delta) {
+      if (isCompact) {
+        fontScaleMini = Math.min(1.65, Math.max(0.75, Math.round((fontScaleMini + delta) * 100) / 100));
+        applyFontScaleVisual();
+        if (window.pywebview && window.pywebview.api) {
+          await window.pywebview.api.set_font_scale('mini', fontScaleMini);
+        }
+      } else {
+        fontScaleFull = Math.min(1.65, Math.max(0.75, Math.round((fontScaleFull + delta) * 100) / 100));
+        applyFontScaleVisual();
+        if (window.pywebview && window.pywebview.api) {
+          await window.pywebview.api.set_font_scale('full', fontScaleFull);
+        }
+      }
+    }
+
+    async function resetFontSize() {
+      if (isCompact) {
+        fontScaleMini = 1.0;
+        applyFontScaleVisual();
+        if (window.pywebview && window.pywebview.api) {
+          await window.pywebview.api.set_font_scale('mini', 1.0);
+        }
+      } else {
+        fontScaleFull = 1.0;
+        applyFontScaleVisual();
+        if (window.pywebview && window.pywebview.api) {
+          await window.pywebview.api.set_font_scale('full', 1.0);
+        }
+      }
+    }
+
+    function applyCtxBarPrefsVisual() {
+      const cntLbl = document.getElementById('ctxBarsCountLabel');
+      if (cntLbl) {
+        cntLbl.textContent = ctxBarsCount + (ctxBarsCount === 1 ? ' Bar' : ' Bars');
+      }
+      const uBtn = document.getElementById('ctxUniqueBtn');
+      if (uBtn) {
+        uBtn.textContent = ctxUniqueProjects ? '1 / Project' : 'All Chats';
+        uBtn.style.color = ctxUniqueProjects ? 'var(--accent-warn)' : 'var(--accent-gemini)';
+      }
+    }
+
+    async function adjustCtxBarsCount(delta) {
+      ctxBarsCount = Math.min(8, Math.max(1, ctxBarsCount + delta));
+      applyCtxBarPrefsVisual();
+      if (window.pywebview && window.pywebview.api) {
+        await window.pywebview.api.set_ctx_bars_prefs(ctxBarsCount, ctxUniqueProjects);
+      }
+      refreshData();
+    }
+
+    async function toggleCtxUniqueMode() {
+      ctxUniqueProjects = !ctxUniqueProjects;
+      applyCtxBarPrefsVisual();
+      if (window.pywebview && window.pywebview.api) {
+        await window.pywebview.api.set_ctx_bars_prefs(ctxBarsCount, ctxUniqueProjects);
+      }
+      refreshData();
+    }
+
+    function selectPinnedSession(cid) {
+      pinnedSessionId = (pinnedSessionId === cid) ? null : cid;
+      refreshData();
+    }
+
+    function renderContextBars(d) {
+      const container = document.getElementById('ctxBarsContainer');
+      const miniCtx = document.getElementById('miniCtxWarn');
+      const allSessions = d.recent_sessions || [];
+      if (!container) return;
+
+      if (allSessions.length > 0) {
+        const newestMtime = allSessions[0].mtime || 0;
+        if (lastTopSessionMtime > 0 && newestMtime > lastTopSessionMtime + 0.5) {
+          pinnedSessionId = null;
+        }
+        lastTopSessionMtime = newestMtime;
+      }
+
+      let filtered = [];
+      if (ctxUniqueProjects) {
+        const seenProj = new Set();
+        for (const s of allSessions) {
+          const key = s.project || s.id;
+          if (!seenProj.has(key)) {
+            seenProj.add(key);
+            filtered.push(s);
+          }
+        }
+      } else {
+        filtered = allSessions.slice();
+      }
+
+      const shown = filtered.slice(0, ctxBarsCount);
+      if (!shown.length) {
+        container.innerHTML = '<div class="subcard p-2 rounded-lg text-center text-[10px] mono" style="color: var(--text-dim);">No active conversations detected yet.</div>';
+        return;
+      }
+
+      const targetMini = (pinnedSessionId && allSessions.find(s => s.id === pinnedSessionId)) || shown[0];
+      if (miniCtx && targetMini) {
+        const st = targetMini.status || 'safe';
+        const tokStr = fmtTok(targetMini.ctx_tokens || 0);
+        const mult = (targetMini.mult || 1.0).toFixed(1);
+        if (st === 'cold') {
+          miniCtx.classList.remove('hidden');
+          miniCtx.classList.add('animate-pulse');
+          miniCtx.style.background = 'rgba(56, 189, 248, 0.22)';
+          miniCtx.style.color = '#38BDF8';
+          miniCtx.style.borderColor = '#38BDF8';
+          miniCtx.textContent = '❄️ ' + tokStr;
+          miniCtx.title = targetMini.project + ' — COLD CACHE (' + tokStr + ' ctx · ' + targetMini.idle_str + '): Start new chat with resume!';
+        } else if (st === 'critical') {
+          miniCtx.classList.remove('hidden');
+          miniCtx.classList.add('animate-pulse');
+          miniCtx.style.background = 'rgba(239, 68, 68, 0.25)';
+          miniCtx.style.color = 'var(--accent-yolo)';
+          miniCtx.style.borderColor = 'var(--accent-yolo)';
+          miniCtx.textContent = '🔴 ' + tokStr + '!';
+          miniCtx.title = targetMini.project + ' — HEAVY (' + tokStr + ' · ' + mult + 'x/step): Run /compact or handoff!';
+        } else if (st === 'warn') {
+          miniCtx.classList.remove('hidden', 'animate-pulse');
+          miniCtx.style.background = 'rgba(245, 158, 11, 0.22)';
+          miniCtx.style.color = 'var(--accent-warn)';
+          miniCtx.style.borderColor = 'var(--accent-warn)';
+          miniCtx.textContent = '🟡 ' + tokStr;
+          miniCtx.title = targetMini.project + ' — WARM (' + tokStr + ' · ' + mult + 'x/step): /compact after current task.';
+        } else {
+          miniCtx.classList.remove('hidden', 'animate-pulse');
+          miniCtx.style.background = 'rgba(16, 185, 129, 0.18)';
+          miniCtx.style.color = 'var(--accent-gemini)';
+          miniCtx.style.borderColor = 'var(--accent-gemini)';
+          miniCtx.textContent = '🟢 ' + tokStr;
+          miniCtx.title = targetMini.project + ' — LIGHT (' + tokStr + ' · ' + mult + 'x/step): Optimal efficiency.';
+        }
+      }
+
+      let html = '';
+      for (let i = 0; i < shown.length; i++) {
+        const s = shown[i];
+        const st = s.status || 'safe';
+        const ctxTok = s.ctx_tokens || 0;
+        const mult = (s.mult || 1.0).toFixed(1);
+        const pct = Math.min(100, Math.max(4, Math.round((ctxTok / 170000) * 100)));
+        const isPinnedRow = (pinnedSessionId === s.id) || (!pinnedSessionId && i === 0);
+
+        let barColor = 'var(--accent-gemini)';
+        let badgeBg = 'rgba(16, 185, 129, 0.18)';
+        let badgeCol = 'var(--accent-gemini)';
+        let badgeTxt = '🟢 LIGHT ' + mult + 'x';
+        let tipTxt = 'Fresh context (' + fmtTok(ctxTok) + ' tokens). Safe to continue.';
+
+        if (st === 'cold') {
+          barColor = '#38BDF8';
+          badgeBg = 'rgba(56, 189, 248, 0.22)';
+          badgeCol = '#38BDF8';
+          badgeTxt = '❄️ COLD ' + mult + 'x · NEW CHAT!';
+          tipTxt = 'Idle ' + s.idle_str + ' with ' + fmtTok(ctxTok) + ' context! Server cache expired — start a new chat and type "resume" instead of waking this chat.';
+        } else if (st === 'critical') {
+          barColor = 'var(--accent-yolo)';
+          badgeBg = 'rgba(239, 68, 68, 0.24)';
+          badgeCol = 'var(--accent-yolo)';
+          badgeTxt = '🔴 HEAVY ' + mult + 'x · COMPACT!';
+          tipTxt = 'Near 170k ceiling (' + mult + 'x quota cost per step). Run /compact or "handoff time" now!';
+        } else if (st === 'warn') {
+          barColor = 'var(--accent-warn)';
+          badgeBg = 'rgba(245, 158, 11, 0.22)';
+          badgeCol = 'var(--accent-warn)';
+          badgeTxt = '🟡 WARM ' + mult + 'x · /compact';
+          tipTxt = 'Warm context (' + fmtTok(ctxTok) + ' = ' + mult + 'x/step). Finish current task then run /compact.';
+        }
+
+        const borderStyle = isPinnedRow
+          ? `border: 1px solid ${barColor};`
+          : 'border: 1px solid var(--border-card);';
+
+        const convTitle = s.title || s.topic || '';
+        const topicHtml = convTitle
+          ? `<span class="truncate" style="color: var(--text-muted); max-width: 175px;">${convTitle}</span><span style="color: var(--text-dim);">·</span>`
+          : '';
+        const fullTip = (convTitle ? `[${s.project}] ${convTitle} — ` : '') + tipTxt;
+
+        html += `
+          <div onclick="selectPinnedSession('${s.id}')" class="subcard px-2 py-1.5 rounded-lg space-y-1 cursor-pointer transition" style="${borderStyle}" title="${fullTip.replace(/"/g, '&quot;')}">
+            <div class="flex items-center justify-between text-[10px] mono gap-1.5">
+              <div class="flex items-center gap-1.5 truncate">
+                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background: ${barColor};"></span>
+                <span class="font-bold flex-shrink-0" style="color: var(--text-main);">${s.project}</span>
+                <span style="color: var(--text-dim);">·</span>
+                ${topicHtml}
+                <span class="flex-shrink-0" style="color: var(--text-dim);">${fmtTok(ctxTok)} (${s.steps} stp · ${s.idle_str})</span>
+              </div>
+              <span class="px-1.5 py-0.2 rounded text-[9px] mono font-black flex-shrink-0" style="background: ${badgeBg}; color: ${badgeCol};">${badgeTxt}</span>
+            </div>
+            <div class="w-full h-1 rounded-full overflow-hidden" style="background: var(--bg-card);">
+              <div class="h-full transition-all duration-300" style="width: ${pct}%; background: ${barColor};"></div>
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
     }
 
     function applyCompactVisual(compact) {
       isCompact = compact;
+      applyFontScaleVisual();
       const fullHeaderLeft = document.getElementById('fullHeaderLeft');
       const fullControls = document.getElementById('fullControls');
       const compactBar = document.getElementById('compactBar');
@@ -1086,12 +1544,13 @@ HTML_CONTENT = """<!DOCTYPE html>
       }
     }
 
-    function switchTab(tab) {
-      activeTab = tab;
+    function applyTabVisual(tab) {
+      activeTab = (tab === 'weekly') ? 'weekly' : '5h';
       const t5 = document.getElementById('tab5h');
       const tw = document.getElementById('tabWeekly');
       const lbl = document.getElementById('modelSlotLabel');
-      if (tab === '5h') {
+      if (!t5 || !tw) return;
+      if (activeTab === '5h') {
         t5.style.background = 'var(--border-card)';
         t5.style.color = 'var(--text-main)';
         tw.style.background = 'transparent';
@@ -1104,7 +1563,258 @@ HTML_CONTENT = """<!DOCTYPE html>
         t5.style.color = 'var(--text-muted)';
         if (lbl) lbl.textContent = '7-Day Weekly';
       }
+    }
+
+    async function switchTab(tab) {
+      applyTabVisual(tab);
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.set_active_tab) {
+        try { await window.pywebview.api.set_active_tab(activeTab); } catch (e) {}
+      }
       refreshData();
+    }
+
+    function applyViewModeVisual(mode) {
+      viewMode = (mode === 'verbose') ? 'verbose' : 'minimal';
+      const minV = document.getElementById('minimalView');
+      const verbV = document.getElementById('verboseView');
+      const bMin = document.getElementById('btnModeMinimal');
+      const bVerb = document.getElementById('btnModeVerbose');
+      if (viewMode === 'minimal') {
+        if (minV) minV.classList.remove('hidden');
+        if (verbV) verbV.classList.add('hidden');
+        if (bMin) { bMin.style.background = 'var(--accent-gemini)'; bMin.style.color = '#000000'; }
+        if (bVerb) { bVerb.style.background = 'transparent'; bVerb.style.color = 'var(--text-muted)'; }
+      } else {
+        if (minV) minV.classList.add('hidden');
+        if (verbV) verbV.classList.remove('hidden');
+        if (bVerb) { bVerb.style.background = 'var(--accent-gemini)'; bVerb.style.color = '#000000'; }
+        if (bMin) { bMin.style.background = 'transparent'; bMin.style.color = 'var(--text-muted)'; }
+      }
+    }
+
+    async function setViewMode(mode) {
+      applyViewModeVisual(mode);
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.set_view_mode) {
+        try { await window.pywebview.api.set_view_mode(viewMode); } catch (e) {}
+      }
+    }
+
+    async function onMinimalModelChange(val) {
+      minimalModelPref = val || 'auto';
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.set_minimal_model) {
+        try { await window.pywebview.api.set_minimal_model(minimalModelPref); } catch (e) {}
+      }
+      refreshData();
+    }
+
+    let lastAvailModelsSig = '';
+    function fmtUsd(v) {
+      const n = Number(v || 0);
+      if (n >= 100) return '$' + n.toFixed(0);
+      if (n >= 10) return '$' + n.toFixed(1);
+      return '$' + n.toFixed(2);
+    }
+
+    function fmtCountdownParts(resetTs) {
+      if (!resetTs) return null;
+      const diff = Math.max(0, Math.floor(resetTs - Date.now() / 1000));
+      const d = Math.floor(diff / 86400);
+      const h = Math.floor((diff % 86400) / 3600);
+      const m = Math.floor((diff % 3600) / 60);
+      const s = diff % 60;
+      const pad = (x) => String(x).padStart(2, '0');
+      const dt = new Date(resetTs * 1000);
+      const hhmm = pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+      const monDay = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const clock = (d > 0) ? (monDay + ' ' + hhmm) : hhmm;
+      if (diff <= 0) {
+        return { full: 'Resetting now · ' + clock, compact: '0m', verbose: 'Resetting now · (' + clock + ')' };
+      }
+      if (d > 0) {
+        return {
+          full: `⏳ ${d}d ${pad(h)}h ${pad(m)}m · ${clock}`,
+          compact: `${d}d${pad(h)}h`,
+          verbose: `Resets in ${d}d ${pad(h)}h ${pad(m)}m · ${clock}`
+        };
+      }
+      if (h > 0) {
+        return {
+          full: `⏳ ${h}h ${pad(m)}m ${pad(s)}s · ${clock}`,
+          compact: `${h}h${pad(m)}m`,
+          verbose: `Resets in ${h}h ${pad(m)}m ${pad(s)}s · ${clock}`
+        };
+      }
+      return {
+        full: `⏳ ${m}m ${pad(s)}s · ${clock}`,
+        compact: `${m}m${pad(s)}s`,
+        verbose: `Resets in ${m}m ${pad(s)}s · ${clock}`
+      };
+    }
+
+    function updateLiveCooldowns() {
+      if (!lastMetrics) return;
+      const d = lastMetrics;
+      const gw = fmtCountdownParts(d.gemini_weekly_reset_ts);
+      const g5 = fmtCountdownParts(d.gemini_5h_reset_ts);
+      const tpw = fmtCountdownParts(d.tp_weekly_reset_ts);
+      const tp5 = fmtCountdownParts(d.tp_5h_reset_ts);
+
+      if (gw) {
+        const el = document.getElementById('geminiWeeklyDesc');
+        if (el) el.textContent = gw.verbose;
+      }
+      if (g5) {
+        const el = document.getElementById('gemini5hDesc');
+        if (el) el.textContent = g5.verbose;
+        const mc = document.getElementById('miniCooldown');
+        if (mc) mc.textContent = g5.compact;
+      }
+      if (tpw) {
+        const el = document.getElementById('tpWeeklyDesc');
+        if (el) el.textContent = tpw.verbose;
+      }
+      if (tp5) {
+        const el = document.getElementById('tp5hDesc');
+        if (el) el.textContent = tp5.verbose;
+        const hEl = document.getElementById('tpHeaderCooldown');
+        if (hEl) hEl.textContent = tp5.compact ? ('⏳ ' + tp5.compact) : '';
+      }
+
+      const mm = d.minimal;
+      if (mm) {
+        const m5 = mm.h5 && mm.h5.reset_ts ? fmtCountdownParts(mm.h5.reset_ts) : null;
+        const mw = mm.weekly && mm.weekly.reset_ts ? fmtCountdownParts(mm.weekly.reset_ts) : null;
+        const el5 = document.getElementById('min5hCooldown');
+        const elw = document.getElementById('minWkCooldown');
+        if (el5 && m5) el5.textContent = m5.full;
+        if (elw && mw) elw.textContent = mw.full;
+      }
+    }
+
+    function renderMinimalScopeRows(containerId, scopes, isTpPool) {
+      const el = document.getElementById(containerId);
+      if (!el || !scopes) return;
+      const accentUsed = isTpPool ? 'var(--accent-tp)' : 'var(--accent-warn)';
+      const accentRem = isTpPool ? 'var(--accent-tp)' : 'var(--accent-gemini)';
+      const defs = [
+        { key: 'current', title: 'Current' },
+        { key: 'last3', title: 'Last 3 Resets' },
+        { key: 'all', title: 'All Resets' },
+      ];
+      let html = '';
+      for (const item of defs) {
+        const sc = scopes[item.key];
+        if (!sc) continue;
+        const nRes = sc.resets_count || 0;
+        let usedSub = '';
+        if (item.key === 'current') {
+          usedSub = `${sc.steps || 0} stp · +${fmtTok(sc.used_cache_tokens || 0)} cache`;
+        } else {
+          usedSub = `avg ${fmtTok(sc.used_avg_tokens || 0)} · ${fmtUsd(sc.used_avg_usd || 0)} (${nRes}r)`;
+        }
+        const remSub = (item.key === 'current')
+          ? `~${sc.rem_steps || 0} stp · cap ${fmtTok(sc.cap_tokens || 0)} (${fmtUsd(sc.cap_usd || 0)})`
+          : `cap ${fmtTok(sc.cap_tokens || 0)} (${fmtUsd(sc.cap_usd || 0)}) · ${sc.cap_source || ''}`;
+
+        html += `
+          <div class="subcard px-2 py-1.5 rounded-xl grid grid-cols-12 gap-1.5 items-center text-[11px] mono">
+            <div class="col-span-3">
+              <div class="font-bold text-[11px]" style="color: var(--text-main);">${item.title}</div>
+              <div class="text-[9px]" style="color: var(--text-dim);">${item.key === 'current' ? 'Active cycle' : (nRes + ' cycles')}</div>
+            </div>
+            <div class="col-span-4 text-right">
+              <div class="font-bold" style="color: var(--text-main);">${fmtTok(sc.used_tokens || 0)} <span style="color: ${accentUsed};">· ${fmtUsd(sc.used_usd || 0)}</span></div>
+              <div class="text-[9px] truncate" style="color: var(--text-muted);">${usedSub}</div>
+            </div>
+            <div class="col-span-5 text-right">
+              <div class="font-bold" style="color: var(--text-main);">~${fmtTok(sc.rem_tokens || 0)} <span style="color: ${accentRem};">· ~${fmtUsd(sc.rem_usd || 0)}</span></div>
+              <div class="text-[9px] truncate" style="color: var(--text-muted);">${remSub}</div>
+            </div>
+          </div>
+        `;
+      }
+      el.innerHTML = html;
+    }
+
+    function renderMinimalView(d) {
+      const m = d.minimal;
+      if (!m) return;
+
+      const sel = document.getElementById('minimalModelSelect');
+      const avail = d.available_models || [];
+      const sig = avail.join('|');
+      if (sel && sig !== lastAvailModelsSig) {
+        lastAvailModelsSig = sig;
+        let opts = `<option value="auto">Auto (Detected: ${m.detected_model})</option>`;
+        for (const nm of avail) {
+          opts += `<option value="${nm.replace(/"/g, '&quot;')}">${nm}</option>`;
+        }
+        sel.innerHTML = opts;
+      }
+      if (sel) {
+        if (sel.options && sel.options.length > 0) {
+          sel.options[0].textContent = 'Auto (Detected: ' + (m.detected_model || '...') + ')';
+        }
+        const desiredVal = m.is_manual ? m.target_model : 'auto';
+        if (document.activeElement !== sel && sel.value !== desiredVal) {
+          sel.value = desiredVal;
+        }
+      }
+
+      const modeBadge = document.getElementById('minModeBadge');
+      const resetAutoBtn = document.getElementById('minResetAutoBtn');
+      const convCtx = document.getElementById('minConvContext');
+      const poolBadge = document.getElementById('minPoolBadge');
+      const rateSpec = document.getElementById('minRateSpec');
+      const archNote = document.getElementById('minArchiveNote');
+
+      if (m.is_manual) {
+        if (modeBadge) {
+          modeBadge.textContent = 'MANUAL';
+          modeBadge.style.background = 'rgba(245, 158, 11, 0.20)';
+          modeBadge.style.color = 'var(--accent-warn)';
+          modeBadge.style.borderColor = 'var(--accent-warn)';
+        }
+        if (resetAutoBtn) resetAutoBtn.classList.remove('hidden');
+        if (convCtx) convCtx.textContent = 'Viewing: ' + m.target_model + ' (Detected: ' + m.detected_model + ')';
+      } else {
+        if (modeBadge) {
+          modeBadge.textContent = 'AUTO';
+          modeBadge.style.background = 'rgba(16, 185, 129, 0.18)';
+          modeBadge.style.color = 'var(--accent-gemini)';
+          modeBadge.style.borderColor = 'var(--accent-gemini)';
+        }
+        if (resetAutoBtn) resetAutoBtn.classList.add('hidden');
+        const cTitle = m.conv_title ? (' · ' + m.conv_title) : '';
+        if (convCtx) convCtx.textContent = (m.conv_project || 'Active Chat') + cTitle;
+      }
+
+      const isTp = (m.pool === 'tp');
+      if (poolBadge) {
+        poolBadge.textContent = (isTp ? 'Claude/GPT · ' : 'Gemini · ') + Number(m.weight || 1.0).toFixed(2) + 'x';
+        poolBadge.style.color = isTp ? 'var(--accent-tp)' : 'var(--accent-gemini)';
+      }
+      if (rateSpec) {
+        rateSpec.textContent = `Rates: In $${Number(m.price_in || 0).toFixed(2)} · Out $${Number(m.price_out || 0).toFixed(2)} · Cache $${Number(m.price_cache || 0).toFixed(3)} /1M`;
+      }
+      if (archNote) {
+        archNote.textContent = m.archive_hydrated
+          ? `${m.archive_total_files || 0} logs cached`
+          : `Indexing ${m.archive_cached_files || 0}/${m.archive_total_files || 0} logs...`;
+      }
+
+      if (m.h5) {
+        const p5 = document.getElementById('min5hPct');
+        if (p5) p5.textContent = (m.h5.pct_rem ?? '--') + '% left';
+        updateRing('min5hRing', m.h5.pct_rem ?? 100);
+        renderMinimalScopeRows('min5hRows', m.h5.scopes, isTp);
+      }
+      if (m.weekly) {
+        const pw = document.getElementById('minWkPct');
+        if (pw) pw.textContent = (m.weekly.pct_rem ?? '--') + '% left';
+        updateRing('minWkRing', m.weekly.pct_rem ?? 100);
+        renderMinimalScopeRows('minWkRows', m.weekly.scopes, isTp);
+      }
     }
 
     async function toggleYolo() {
@@ -1306,6 +2016,9 @@ HTML_CONTENT = """<!DOCTYPE html>
         try {
           const d = await window.pywebview.api.get_metrics();
           if (!d) return;
+          lastMetrics = d;
+
+          renderMinimalView(d);
 
           if (d.active_model) {
             const hdr = document.getElementById('activeModelHeaderBadge');
@@ -1396,9 +2109,9 @@ HTML_CONTENT = """<!DOCTYPE html>
           document.getElementById('statCacheCost').textContent = '($' + cache_c.toFixed(4) + ')';
 
           renderPerModelTable(d);
+          renderContextBars(d);
+          updateLiveCooldowns();
 
-          document.getElementById('wsName').textContent = 'Active: ' + d.workspace;
-          document.getElementById('sessionTokens').textContent = 'Chat: ' + fmtTok(d.session_total_tokens) + ' tok (' + d.turns + ' turns)';
           document.getElementById('syncPoints').textContent = 'Synced · ' + d.sample_count + ' cal pts';
 
           const now = new Date();
@@ -1409,7 +2122,39 @@ HTML_CONTENT = """<!DOCTYPE html>
       }
     }
 
+    let hudInitDone = false;
+    const RELOAD_INTERVAL_MS = 2000;
+    let lastReloadTs = performance.now();
+    let lastCooldownTickTs = 0;
+    let isRefreshing = false;
+
+    function tickReloadBar(now) {
+      const bar = document.getElementById('ctxReloadBar');
+      const elapsed = now - lastReloadTs;
+      const pct = Math.min(100, Math.max(0, (elapsed / RELOAD_INTERVAL_MS) * 100));
+      if (bar) {
+        bar.style.width = pct.toFixed(1) + '%';
+        bar.style.background = pct >= 96 ? 'var(--accent-gemini)' : 'var(--text-muted)';
+        bar.style.opacity = pct >= 96 ? '1' : '0.65';
+      }
+      if (now - lastCooldownTickTs >= 1000) {
+        lastCooldownTickTs = now;
+        updateLiveCooldowns();
+      }
+      if (elapsed >= RELOAD_INTERVAL_MS && !isRefreshing) {
+        isRefreshing = true;
+        lastReloadTs = now;
+        refreshData().finally(() => {
+          isRefreshing = false;
+          lastReloadTs = performance.now();
+        });
+      }
+      requestAnimationFrame(tickReloadBar);
+    }
+
     async function init() {
+      if (hudInitDone) return;
+      hudInitDone = true;
       setupDragAndResize();
       if (window.pywebview && window.pywebview.api) {
         try {
@@ -1421,11 +2166,21 @@ HTML_CONTENT = """<!DOCTYPE html>
             if (typeof cfg.global_yolo === 'boolean') applyYoloVisual(cfg.global_yolo);
             if (typeof cfg.tp_expanded === 'boolean') applyTpExpanded(cfg.tp_expanded);
             if (typeof cfg.models_show_all === 'boolean') applyModelsShowAll(cfg.models_show_all);
+            if (cfg.active_tab) applyTabVisual(cfg.active_tab);
+            if (cfg.minimal_model) minimalModelPref = cfg.minimal_model;
+            applyViewModeVisual(cfg.view_mode || 'minimal');
+            if (typeof cfg.font_scale_full === 'number') fontScaleFull = cfg.font_scale_full;
+            if (typeof cfg.font_scale_mini === 'number') fontScaleMini = cfg.font_scale_mini;
+            if (typeof cfg.ctx_bars_count === 'number') ctxBarsCount = cfg.ctx_bars_count;
+            if (typeof cfg.ctx_unique_projects === 'boolean') ctxUniqueProjects = cfg.ctx_unique_projects;
+            applyFontScaleVisual();
+            applyCtxBarPrefsVisual();
           }
         } catch(e) {}
       }
-      refreshData();
-      setInterval(refreshData, 1000);
+      await refreshData();
+      lastReloadTs = performance.now();
+      requestAnimationFrame(tickReloadBar);
     }
 
     window.addEventListener('pywebviewready', init);
@@ -1437,19 +2192,40 @@ HTML_CONTENT = """<!DOCTYPE html>
 
 
 class MetricsEngine:
-    def __init__(self):
+    def __init__(self, config=None):
+        self.config = config if isinstance(config, dict) else {}
         self.history = self.load_history()
+        self._step_cache_lock = threading.Lock()
+        self._step_cache = self.load_step_cache()
+        self._archive_hydrated = False
+        self._archive_total_files = 0
+        self._archive_cached_files = 0
+        self._last_w5 = {}
+        self._last_wWeek = {}
+        self._last_by_model_5h = {}
+        self._last_by_model_w = {}
+
         now_utc = datetime.datetime.now(datetime.timezone.utc)
         self.five_h_start_dt = now_utc - datetime.timedelta(hours=5)
         self.weekly_start_dt = now_utc - datetime.timedelta(days=7)
         self.tp_five_h_start_dt = now_utc - datetime.timedelta(hours=5)
         self.tp_weekly_start_dt = now_utc - datetime.timedelta(days=7)
         self.gemini_5h_reset_dt = None
+        self.gemini_weekly_reset_dt = None
         self.tp_5h_reset_dt = None
+        self.tp_weekly_reset_dt = None
         self.last_cal_save_ts = 0.0
 
         self.cached_metrics = {
             "active_model": "Gemini 4 Argon (Medium)",
+            "active_conv_title": "",
+            "active_conv_project": "Active Workspace",
+            "available_models": list(PRIMARY_SELECTABLE_MODELS),
+            "gemini_5h_reset_ts": None,
+            "gemini_weekly_reset_ts": None,
+            "tp_5h_reset_ts": None,
+            "tp_weekly_reset_ts": None,
+            "minimal": {},
             # Gemini Models
             "gemini_weekly_pct": 30,
             "gemini_weekly_desc": "Synchronizing...",
@@ -1486,6 +2262,12 @@ class MetricsEngine:
             "workspace": "Active Workspace",
             "turns": 0,
             "session_total_tokens": 0,
+            "session_context_tokens": 0,
+            "session_steps": 0,
+            "session_step_mult": 1.0,
+            "session_idle_mins": 0.0,
+            "session_ctx_status": "safe",
+            "recent_sessions": [],
 
             # Exact Slot Breakdown
             "slot5_in": 0,
@@ -1517,6 +2299,9 @@ class MetricsEngine:
             "models_weekly": []
         }
         self.running = True
+        self._conv_parse_cache = {}
+        self._seed_reset_caps_from_samples()
+        self._hydrate_from_last_usage()
         self.start_worker()
 
     def load_history(self):
@@ -1529,17 +2314,195 @@ class MetricsEngine:
                         d.setdefault("samples_weekly", [])
                         d.setdefault("samples_tp_5h", [])
                         d.setdefault("samples_tp_weekly", [])
+                        d.setdefault("reset_caps", {"g_5h": {}, "g_weekly": {}, "tp_5h": {}, "tp_weekly": {}})
+                        d.setdefault("last_usage", {})
                         return d
             except Exception:
                 pass
-        return {"samples_5h": [], "samples_weekly": [], "samples_tp_5h": [], "samples_tp_weekly": []}
+        return {
+            "samples_5h": [],
+            "samples_weekly": [],
+            "samples_tp_5h": [],
+            "samples_tp_weekly": [],
+            "reset_caps": {"g_5h": {}, "g_weekly": {}, "tp_5h": {}, "tp_weekly": {}},
+            "last_usage": {},
+        }
 
     def save_history(self):
         try:
-            with open(QUOTA_HISTORY_FILE, "w", encoding="utf-8") as f:
+            os.makedirs(os.path.dirname(QUOTA_HISTORY_FILE), exist_ok=True)
+            tmp_path = QUOTA_HISTORY_FILE + ".tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(self.history, f, indent=2)
+            os.replace(tmp_path, QUOTA_HISTORY_FILE)
         except Exception:
             pass
+
+    def load_step_cache(self):
+        if os.path.exists(TRANSCRIPT_CACHE_FILE):
+            try:
+                with open(TRANSCRIPT_CACHE_FILE, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                    if isinstance(d, dict):
+                        return d
+            except Exception:
+                pass
+        return {}
+
+    def save_step_cache(self):
+        try:
+            with self._step_cache_lock:
+                os.makedirs(os.path.dirname(TRANSCRIPT_CACHE_FILE), exist_ok=True)
+                tmp_path = TRANSCRIPT_CACHE_FILE + ".tmp"
+                with open(tmp_path, "w", encoding="utf-8") as f:
+                    json.dump(self._step_cache, f)
+                os.replace(tmp_path, TRANSCRIPT_CACHE_FILE)
+        except Exception:
+            pass
+
+    @staticmethod
+    def _median_num(vals, default=0.0):
+        clean = sorted(v for v in vals if v is not None and v > 0)
+        if not clean:
+            return default
+        return clean[len(clean) // 2]
+
+    def _seed_reset_caps_from_samples(self):
+        rcaps = self.history.setdefault("reset_caps", {})
+        mapping = [
+            ("samples_5h", "g_5h", 5),
+            ("samples_weekly", "g_weekly", 2),
+            ("samples_tp_5h", "tp_5h", 5),
+            ("samples_tp_weekly", "tp_weekly", 2),
+        ]
+        changed = False
+        for samp_key, cap_key, min_pct in mapping:
+            bucket_map = rcaps.setdefault(cap_key, {})
+            samples = self.history.get(samp_key, [])
+            if not samples:
+                continue
+            clusters = []
+            cur = []
+            prev_used = None
+            for s in samples:
+                u = float(s.get("used", 0) or 0)
+                if prev_used is not None and u + 0.05 < prev_used and cur:
+                    clusters.append(cur)
+                    cur = []
+                cur.append(s)
+                prev_used = u
+            if cur:
+                clusters.append(cur)
+
+            for cl in clusters:
+                valid = [x for x in cl if int(x.get("pct_used", 0) or 0) >= min_pct]
+                if not valid:
+                    continue
+                slot_id = "legacy:" + str(int(cl[0].get("ts", 0)))
+                if slot_id in bucket_map:
+                    continue
+                base_caps = []
+                raw_caps = []
+                usd_caps = []
+                leg_caps = []
+                raw_effs = []
+                for x in valid:
+                    frac = int(x.get("pct_used", 0)) / 100.0
+                    if frac <= 0:
+                        continue
+                    leg_caps.append(float(x.get("used", 0)) / frac)
+                    sb = float(x.get("server_base_units", 0) or 0)
+                    rt = float(x.get("raw_tokens", 0) or 0)
+                    ct = float(x.get("cache_tokens", 0) or 0)
+                    cu = float(x.get("cost_usd", 0) or 0)
+                    if sb > 0:
+                        base_caps.append(sb / frac)
+                    if rt > 0:
+                        raw_caps.append(rt / frac)
+                        eff_approx = rt + 0.1 * ct
+                        if eff_approx > 0:
+                            raw_effs.append(rt / eff_approx)
+                    if cu > 0:
+                        usd_caps.append(cu / frac)
+                if not leg_caps and not base_caps:
+                    continue
+                bucket_map[slot_id] = {
+                    "first_ts": float(cl[0].get("ts", 0)),
+                    "last_ts": float(cl[-1].get("ts", 0)),
+                    "cap_leg": int(self._median_num(leg_caps, 0)),
+                    "cap_base": int(self._median_num(base_caps, 0)),
+                    "cap_raw": int(self._median_num(raw_caps, 0)),
+                    "cap_usd": round(self._median_num(usd_caps, 0.0), 4),
+                    "raw_eff": round(self._median_num(raw_effs, 0.45), 4),
+                    "samples": len(valid),
+                }
+                changed = True
+        if changed:
+            self.save_history()
+
+    @staticmethod
+    def _fmt_cooldown_desc(reset_dt, now_utc=None) -> str:
+        if reset_dt is None:
+            return "Synchronizing..."
+        if now_utc is None:
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+        diff_secs = max(0, int((reset_dt - now_utc).total_seconds()))
+        days = diff_secs // 86400
+        hours = (diff_secs % 86400) // 3600
+        mins = (diff_secs % 3600) // 60
+        secs = diff_secs % 60
+        local_dt = reset_dt.astimezone()
+        clock_str = local_dt.strftime("%H:%M") if days == 0 else local_dt.strftime("%b %d %H:%M")
+        if diff_secs <= 0:
+            return f"Resetting now · ({clock_str})"
+        if days > 0:
+            return f"Resets in {days}d {hours:02d}h {mins:02d}m · {clock_str}"
+        if hours > 0:
+            return f"Resets in {hours}h {mins:02d}m {secs:02d}s · {clock_str}"
+        return f"Resets in {mins}m {secs:02d}s · {clock_str}"
+
+    def _hydrate_from_last_usage(self):
+        lu = self.history.get("last_usage") or {}
+        if not isinstance(lu, dict) or not lu:
+            return
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        for key, attr_reset, attr_start, delta, pct_key in [
+            ("gemini_weekly", "gemini_weekly_reset_dt", "weekly_start_dt", datetime.timedelta(days=7), "gemini_weekly_pct"),
+            ("gemini_5h", "gemini_5h_reset_dt", "five_h_start_dt", datetime.timedelta(hours=5), "gemini_5h_pct"),
+            ("tp_weekly", "tp_weekly_reset_dt", "tp_weekly_start_dt", datetime.timedelta(days=7), "tp_weekly_pct"),
+            ("tp_5h", "tp_5h_reset_dt", "tp_five_h_start_dt", datetime.timedelta(hours=5), "tp_5h_pct"),
+        ]:
+            item = lu.get(key)
+            if not isinstance(item, dict):
+                continue
+            try:
+                pct = item.get("pct")
+                iso = item.get("reset_iso")
+                if iso:
+                    rdt = datetime.datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+                    if rdt > now_utc - datetime.timedelta(hours=1):
+                        setattr(self, attr_reset, rdt)
+                        setattr(self, attr_start, rdt - delta)
+                if pct is not None:
+                    self.cached_metrics[pct_key] = int(pct)
+            except Exception:
+                pass
+        self._refresh_cooldown_fields()
+
+    def _refresh_cooldown_fields(self):
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        for attr_dt, ts_key, desc_key in [
+            ("gemini_weekly_reset_dt", "gemini_weekly_reset_ts", "gemini_weekly_desc"),
+            ("gemini_5h_reset_dt", "gemini_5h_reset_ts", "gemini_5h_desc"),
+            ("tp_weekly_reset_dt", "tp_weekly_reset_ts", "tp_weekly_desc"),
+            ("tp_5h_reset_dt", "tp_5h_reset_ts", "tp_5h_desc"),
+        ]:
+            rdt = getattr(self, attr_dt, None)
+            if rdt is not None:
+                self.cached_metrics[ts_key] = rdt.timestamp()
+                self.cached_metrics[desc_key] = self._fmt_cooldown_desc(rdt, now_utc)
+            else:
+                self.cached_metrics[ts_key] = None
 
     def start_worker(self):
         t_disk = threading.Thread(target=self._disk_worker_loop, daemon=True)
@@ -1582,55 +2545,45 @@ class MetricsEngine:
             )
 
             now = datetime.datetime.now(datetime.timezone.utc)
+            lu = self.history.setdefault("last_usage", {})
             for line in out.strip().split("\n"):
                 parts = line.split("\t")
                 if len(parts) >= 4:
                     group, metric, pct_str, reset_iso = parts[0].strip(), parts[1].strip(), parts[2].strip(), parts[3].strip()
                     pct = int(pct_str.replace("%", "").strip())
                     reset_dt = datetime.datetime.fromisoformat(reset_iso.replace("Z", "+00:00"))
-                    diff_secs = max(0, int((reset_dt - now).total_seconds()))
-
-                    days = diff_secs // 86400
-                    hours = (diff_secs % 86400) // 3600
-                    mins = (diff_secs % 3600) // 60
-
-                    if days > 0:
-                        d_txt = f"{days} day" if days == 1 else f"{days} days"
-                        h_txt = f"{hours} hour" if hours == 1 else f"{hours} hours"
-                        m_txt = f"{mins} min" if mins == 1 else f"{mins} mins"
-                        time_txt = f"{d_txt}, {h_txt}, {m_txt}"
-                    elif hours > 0:
-                        h_txt = f"{hours} hour" if hours == 1 else f"{hours} hours"
-                        m_txt = f"{mins} min" if mins == 1 else f"{mins} mins"
-                        time_txt = f"{h_txt}, {m_txt}"
-                    else:
-                        m_txt = f"{mins} min" if mins == 1 else f"{mins} mins"
-                        time_txt = f"{m_txt}"
-
-                    short_desc = f"Resets in {time_txt}"
+                    short_desc = self._fmt_cooldown_desc(reset_dt, now)
 
                     if "Gemini" in group:
                         if "Weekly" in metric:
                             self.cached_metrics["gemini_weekly_pct"] = pct
                             self.cached_metrics["gemini_weekly_desc"] = short_desc
                             self.weekly_start_dt = reset_dt - datetime.timedelta(days=7)
+                            self.gemini_weekly_reset_dt = reset_dt
+                            lu["gemini_weekly"] = {"pct": pct, "reset_iso": reset_iso}
                         elif "Five Hour" in metric:
                             self.cached_metrics["gemini_5h_pct"] = pct
                             self.cached_metrics["gemini_5h_desc"] = short_desc
                             self.five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
                             self.gemini_5h_reset_dt = reset_dt
+                            lu["gemini_5h"] = {"pct": pct, "reset_iso": reset_iso}
                     elif "Claude" in group or "GPT" in group:
                         if "Weekly" in metric:
                             self.cached_metrics["tp_weekly_pct"] = pct
                             self.cached_metrics["tp_weekly_desc"] = short_desc
                             self.tp_weekly_start_dt = reset_dt - datetime.timedelta(days=7)
+                            self.tp_weekly_reset_dt = reset_dt
+                            lu["tp_weekly"] = {"pct": pct, "reset_iso": reset_iso}
                         elif "Five Hour" in metric:
                             self.cached_metrics["tp_5h_pct"] = pct
                             self.cached_metrics["tp_5h_desc"] = short_desc
                             self.tp_five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
                             self.tp_5h_reset_dt = reset_dt
+                            lu["tp_5h"] = {"pct": pct, "reset_iso": reset_iso}
 
+            self._refresh_cooldown_fields()
             self._update_pool_valuations()
+            self.save_history()
         except Exception:
             pass
 
@@ -1704,7 +2657,7 @@ class MetricsEngine:
                             continue
                         c = str(d.get("content", ""))
                         if d.get("type") == "USER_INPUT" and "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
-                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\.\n`]+)\.\s+No need", c)
+                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\n`]+?)\.\s+No need", c)
                             if m:
                                 cur_model = m.group(1).strip()
                         for tc in d.get("tool_calls") or []:
@@ -1822,7 +2775,7 @@ class MetricsEngine:
                         c = str(data.get("content", ""))
                         if t == "USER_INPUT":
                             if "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
-                                m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\.\n`]+)\.\s+No need", c)
+                                m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\n`]+?)\.\s+No need", c)
                                 if m:
                                     cur_model = m.group(1).strip()
                             elif "BENCH_" in c:
@@ -1986,6 +2939,58 @@ class MetricsEngine:
             del samples[:-600]
         return True
 
+    def _update_reset_cap_slot(self, rcap_key: str, reset_dt, pct_used: int, min_pct: int, base_units: int, raw_tokens: int, cache_tokens: int, leg_units: int, cost_usd: float):
+        if reset_dt is None or pct_used < min_pct or pct_used > 98 or base_units <= 0:
+            return
+        frac = pct_used / 100.0
+        rcaps = self.history.setdefault("reset_caps", {}).setdefault(rcap_key, {})
+        slot_id = "reset:" + reset_dt.isoformat()
+        eff_approx = raw_tokens + 0.1 * cache_tokens
+        raw_eff = (raw_tokens / eff_approx) if eff_approx > 0 else 0.45
+        cap_base = int(base_units / frac)
+        cap_raw = int(raw_tokens / frac)
+        cap_leg = int(leg_units / frac) if leg_units > 0 else 0
+        cap_usd = round(cost_usd / frac, 4) if cost_usd > 0 else 0.0
+        now_ts = time.time()
+
+        cur = rcaps.get(slot_id)
+        if not cur:
+            rcaps[slot_id] = {
+                "first_ts": now_ts,
+                "last_ts": now_ts,
+                "reset_ts": reset_dt.timestamp(),
+                "cap_leg": cap_leg,
+                "cap_base": cap_base,
+                "cap_raw": cap_raw,
+                "cap_usd": cap_usd,
+                "raw_eff": round(raw_eff, 4),
+                "samples": 1,
+                "base_hist": [cap_base],
+                "usd_hist": [cap_usd] if cap_usd > 0 else [],
+            }
+        else:
+            bh = cur.setdefault("base_hist", [cur.get("cap_base", cap_base)])
+            bh.append(cap_base)
+            if len(bh) > 60:
+                del bh[:-60]
+            uh = cur.setdefault("usd_hist", [])
+            if cap_usd > 0:
+                uh.append(cap_usd)
+                if len(uh) > 60:
+                    del uh[:-60]
+            cur["last_ts"] = now_ts
+            cur["cap_base"] = int(self._median_num(bh, cap_base))
+            cur["cap_raw"] = cap_raw if cur.get("cap_raw", 0) <= 0 else int((cur["cap_raw"] + cap_raw) / 2)
+            cur["cap_leg"] = cap_leg or cur.get("cap_leg", 0)
+            cur["cap_usd"] = round(self._median_num(uh, cap_usd), 4)
+            cur["raw_eff"] = round(raw_eff, 4)
+            cur["samples"] = int(cur.get("samples", 0)) + 1
+
+        if len(rcaps) > 120:
+            sorted_keys = sorted(rcaps.keys(), key=lambda k: rcaps[k].get("first_ts", 0))
+            for old_k in sorted_keys[:-120]:
+                rcaps.pop(old_k, None)
+
     def _record_calibration_samples(self, w5, wWeek, w5_tp, wWeek_tp):
         if self.gemini_5h_reset_dt is None:
             return
@@ -2018,6 +3023,10 @@ class MetricsEngine:
                 "cost_usd": round(w5["gemini_cost"], 4),
             },
         ):
+            self._update_reset_cap_slot(
+                "g_5h", self.gemini_5h_reset_dt, g5_pct_used, 5,
+                w5["gemini_base_units"], w5["gemini_tokens"], w5["cache"], w5["gemini_legacy_units"], w5["gemini_cost"]
+            )
             changed = True
 
         if self._append_cal_sample(
@@ -2032,6 +3041,10 @@ class MetricsEngine:
                 "cost_usd": round(wWeek["gemini_cost"], 4),
             },
         ):
+            self._update_reset_cap_slot(
+                "g_weekly", self.gemini_weekly_reset_dt, gw_pct_used, 2,
+                wWeek["gemini_base_units"], wWeek["gemini_tokens"], wWeek["cache"], wWeek["gemini_legacy_units"], wWeek["gemini_cost"]
+            )
             changed = True
 
         if self._append_cal_sample(
@@ -2046,6 +3059,10 @@ class MetricsEngine:
                 "cost_usd": round(w5_tp["tp_cost"], 4),
             },
         ):
+            self._update_reset_cap_slot(
+                "tp_5h", self.tp_5h_reset_dt, tp5_pct_used, 5,
+                w5_tp["tp_base_units"], w5_tp["tp_tokens"], w5_tp["cache"], w5_tp["tp_legacy_units"], w5_tp["tp_cost"]
+            )
             changed = True
 
         if self._append_cal_sample(
@@ -2060,6 +3077,10 @@ class MetricsEngine:
                 "cost_usd": round(wWeek_tp["tp_cost"], 4),
             },
         ):
+            self._update_reset_cap_slot(
+                "tp_weekly", self.tp_weekly_reset_dt, tpw_pct_used, 2,
+                wWeek_tp["tp_base_units"], wWeek_tp["tp_tokens"], wWeek_tp["cache"], wWeek_tp["tp_legacy_units"], wWeek_tp["tp_cost"]
+            )
             changed = True
 
         if changed:
@@ -2139,7 +3160,202 @@ class MetricsEngine:
                 self._compute_disk_metrics()
             except Exception:
                 pass
-            time.sleep(1.5)
+            time.sleep(1.0)
+
+    def _resolve_project_label(self, raw_paths, first_user_text):
+        m_ws = re.search(r"The user's active workspace is at\s+([^\r\n]+)", first_user_text or "")
+        if m_ws:
+            ws_p = m_ws.group(1).strip().rstrip("\\/")
+            low_ws = ws_p.lower()
+            if "storycrafter" in low_ws:
+                return "Storycrafter"
+            if "witcher3mod" in low_ws:
+                for p in raw_paths:
+                    lp = p.lower()
+                    if "modlevelinggear" in lp:
+                        return "Witcher3 · LevelingGear"
+                    if "modautoapplyoils" in lp:
+                        return "Witcher3 · AutoOils"
+                return "Witcher3 Mod"
+            if "sepetdedektifi" in low_ws:
+                return "SepetDedektifi"
+            return os.path.basename(ws_p) or ws_p
+
+        for p in raw_paths:
+            lp = p.lower()
+            if "modlevelinggear" in lp:
+                return "Witcher3 · LevelingGear"
+            if "modautoapplyoils" in lp:
+                return "Witcher3 · AutoOils"
+            if "witcher3mod" in lp:
+                return "Witcher3 Mod"
+            if "storycrafter" in lp:
+                return "Storycrafter"
+            if "sepetdedektifi" in lp:
+                return "SepetDedektifi"
+            if "hud.pyw" in lp or "cohort_chat.py" in lp or "\\agy\\" in lp or "\\.gemini\\config" in lp:
+                return "HUD & Global"
+
+        for p in raw_paths:
+            lp = p.lower()
+            if not (".gemini\\" in lp or "brain\\" in lp):
+                m_apps = re.search(r"ai generated stuff\\(?:apps\\)?([^\\]+)", lp)
+                if m_apps:
+                    return m_apps.group(1)
+                d = p if os.path.isdir(p) else os.path.dirname(p)
+                if d and len(d) > 3:
+                    return os.path.basename(d) or d
+        return "HUD & Global"
+
+    def _fmt_idle_age(self, mins: float) -> str:
+        if mins < 1.0:
+            return "now"
+        if mins < 60.0:
+            return f"{int(round(mins))}m ago"
+        hrs = mins / 60.0
+        if hrs < 24.0:
+            return f"{hrs:.1f}h ago" if hrs < 10 else f"{int(round(hrs))}h ago"
+        days = hrs / 24.0
+        return f"{int(round(days))}d ago"
+
+    def _read_conversation_annotation(self, conv_id: str):
+        ann_path = os.path.join(os.path.dirname(DESKTOP_BRAIN), "annotations", f"{conv_id}.pbtxt")
+        if not os.path.exists(ann_path):
+            return None, 0.0
+        try:
+            with open(ann_path, "r", encoding="utf-8", errors="ignore") as fp:
+                txt = fp.read()
+            m_title = re.search(r'title:\s*"((?:[^"\\]|\\.)*)"', txt)
+            title = m_title.group(1).replace('\\"', '"').replace("\\\\", "\\").strip() if m_title else None
+            m_view = re.search(r"last_user_view_time:\s*\{\s*seconds:\s*(\d+)", txt)
+            view_ts = float(m_view.group(1)) if m_view else os.path.getmtime(ann_path)
+            return title, view_ts
+        except Exception:
+            return None, 0.0
+
+    def _parse_single_session(self, cand_log, mtime):
+        try:
+            fsize = os.path.getsize(cand_log)
+        except Exception:
+            fsize = 0
+        conv_full_id = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(cand_log))))
+        ann_title, ann_view_ts = self._read_conversation_annotation(conv_full_id)
+        cached = self._conv_parse_cache.get(cand_log)
+        if cached and cached[0] == mtime and cached[1] == fsize:
+            res_cached = dict(cached[2])
+            if not res_cached.get("skip"):
+                if ann_title:
+                    res_cached["title"] = ann_title
+                res_cached["view_ts"] = ann_view_ts
+                res_cached["sort_ts"] = max(mtime, ann_view_ts)
+            return res_cached
+
+        in_tokens = 0
+        out_tokens = 0
+        turns = 0
+        steps_count = 0
+        last_ctx_tokens = 0
+        last_step_dt = None
+        raw_paths = []
+        first_user_text = ""
+        first_topic = ""
+        last_topic = ""
+        session_model = None
+        is_ping = False
+
+        try:
+            with open(cand_log, "r", encoding="utf-8", errors="ignore") as fp:
+                for line in fp:
+                    if not line.strip():
+                        continue
+                    try:
+                        data = json.loads(line)
+                    except Exception:
+                        continue
+
+                    t = data.get("type", "")
+                    c = str(data.get("content", ""))
+                    if turns == 0 and t == "USER_INPUT":
+                        first_user_text = c
+                        if (
+                            "<USER_REQUEST>\n/usage\n</USER_REQUEST>" in c
+                            or "<USER_REQUEST>\n1\n</USER_REQUEST>" in c
+                            or "Benchmark Nonce " in c
+                            or "[Benchmark ID:" in c
+                            or ".cohort_sandbox" in c
+                            or "ROUND 1 JURY DIRECTIVE" in c
+                        ):
+                            is_ping = True
+                            break
+
+                    if t == "USER_INPUT" and "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
+                        m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\n`]+?)\.\s+No need", c)
+                        if m:
+                            session_model = m.group(1).strip()
+
+                    if t == "USER_INPUT":
+                        turns += 1
+                        m_req = re.search(r"<USER_REQUEST>\s*(.*?)\s*</USER_REQUEST>", c, re.DOTALL)
+                        if m_req:
+                            req_txt = " ".join(m_req.group(1).strip().split())
+                            if req_txt and not req_txt.startswith("/"):
+                                clean_snip = req_txt[:42] + ("…" if len(req_txt) > 42 else "")
+                                if not first_topic:
+                                    first_topic = clean_snip
+                                last_topic = clean_snip
+                    elif t in ["PLANNER_RESPONSE", "MODEL"]:
+                        steps_count += 1
+                        if "created_at" in data:
+                            try:
+                                last_step_dt = datetime.datetime.fromisoformat(str(data["created_at"]).replace("Z", "+00:00"))
+                            except Exception:
+                                pass
+                        if "input_tokens" in data or "output_tokens" in data:
+                            step_in = int(data.get("input_tokens", 0) or 0)
+                            step_cache = int(data.get("cache_read_tokens", 0) or data.get("cached_content_token_count", 0) or 0)
+                            step_out = int(data.get("output_tokens", 0) or 0)
+                            in_tokens += step_in
+                            out_tokens += step_out
+                            if (step_in + step_cache) > 0:
+                                last_ctx_tokens = step_in + step_cache
+                        else:
+                            out_tokens += estimate_tokens(c) + estimate_tokens(str(data.get("thinking", "")))
+
+                    if len(raw_paths) < 15 and data.get("tool_calls"):
+                        for tc in data["tool_calls"]:
+                            args = tc.get("args") or tc.get("arguments") or {}
+                            for _, v in args.items():
+                                if isinstance(v, str) and (":\\" in v or ":/" in v):
+                                    raw_paths.append(v.replace("/", "\\").strip('"\''))
+        except Exception:
+            return None
+
+        if is_ping or turns == 0 or steps_count == 0:
+            res = {"skip": True}
+            self._conv_parse_cache[cand_log] = (mtime, fsize, res)
+            return res
+
+        proj_label = self._resolve_project_label(raw_paths, first_user_text)
+        resolved_title = ann_title or first_topic or last_topic
+        res = {
+            "skip": False,
+            "id": conv_full_id[:8],
+            "project": proj_label,
+            "title": resolved_title,
+            "topic": last_topic,
+            "turns": turns,
+            "steps": steps_count,
+            "in_tokens": in_tokens,
+            "out_tokens": out_tokens,
+            "ctx_tokens": last_ctx_tokens,
+            "last_step_dt": last_step_dt,
+            "session_model": session_model,
+            "mtime": mtime,
+            "view_ts": ann_view_ts,
+            "sort_ts": max(mtime, ann_view_ts),
+        }
+        self._conv_parse_cache[cand_log] = (mtime, fsize, res)
+        return res
 
     def _compute_disk_metrics(self):
         # Gather all transcript logs modified within the last 8 days
@@ -2158,83 +3374,105 @@ class MetricsEngine:
         all_logs.sort(key=lambda x: x[0], reverse=True)
         subagent_map = self._build_subagent_map(all_logs)
 
-        # Active Session Context & Active Model Detection (skip subagents and /usage or auto-prime pings)
+        # Active & Recent Desktop Conversations (skip subagents and /usage or Cohort sandbox pings)
         active_model_name = self.cached_metrics.get("active_model", "Gemini 4 Argon (Medium)")
-        for _, cand_log in all_logs:
+        recent_sessions = []
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+
+        # Merge recent Desktop transcript logs with recently viewed conversations from annotations/*.pbtxt
+        cand_map = {}
+        for mtime, cand_log in all_logs:
+            if DESKTOP_BRAIN.lower() in cand_log.lower():
+                cand_map[os.path.normcase(cand_log)] = (mtime, cand_log)
+
+        ann_dir = os.path.join(os.path.dirname(DESKTOP_BRAIN), "annotations")
+        if os.path.exists(ann_dir):
+            try:
+                ann_files = sorted(glob.glob(os.path.join(ann_dir, "*.pbtxt")), key=os.path.getmtime, reverse=True)[:16]
+                for af in ann_files:
+                    cid = os.path.splitext(os.path.basename(af))[0]
+                    tlog = os.path.join(DESKTOP_BRAIN, cid, ".system_generated", "logs", "transcript.jsonl")
+                    norm_t = os.path.normcase(tlog)
+                    if norm_t not in cand_map and os.path.exists(tlog):
+                        cand_map[norm_t] = (os.path.getmtime(tlog), tlog)
+            except Exception:
+                pass
+
+        desktop_cands = sorted(cand_map.values(), key=lambda x: x[0], reverse=True)
+
+        for mtime, cand_log in desktop_cands:
             cand_id = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(cand_log))))
             if cand_id in subagent_map:
                 continue
-            in_tokens = 0
-            out_tokens = 0
-            turns = 0
-            ws_name = None
-            session_model = None
-            is_ping = False
 
-            try:
-                with open(cand_log, "r", encoding="utf-8", errors="ignore") as fp:
-                    for line in fp:
-                        if not line.strip():
-                            continue
-                        try:
-                            data = json.loads(line)
-                        except Exception:
-                            continue
-
-                        t = data.get("type", "")
-                        c = str(data.get("content", ""))
-                        if turns == 0 and t == "USER_INPUT":
-                            if (
-                                "<USER_REQUEST>\n/usage\n</USER_REQUEST>" in c
-                                or "<USER_REQUEST>\n1\n</USER_REQUEST>" in c
-                                or "Benchmark Nonce " in c
-                                or "[Benchmark ID:" in c
-                            ):
-                                is_ping = True
-                                break
-
-                        if t == "USER_INPUT" and "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
-                            m = re.search(r"Model Selection`?\s+from\s+.*?\s+to\s+([^\.\n`]+)\.\s+No need", c)
-                            if m:
-                                session_model = m.group(1).strip()
-
-
-                        t = data.get("type", "")
-                        if t == "USER_INPUT":
-                            turns += 1
-                        elif t in ["PLANNER_RESPONSE", "MODEL"]:
-                            if "input_tokens" in data or "output_tokens" in data:
-                                in_tokens += int(data.get("input_tokens", 0) or 0)
-                                out_tokens += int(data.get("output_tokens", 0) or 0)
-                            else:
-                                out_tokens += estimate_tokens(c) + estimate_tokens(str(data.get("thinking", "")))
-
-                        if not ws_name and data.get("tool_calls"):
-                            for tc in data["tool_calls"]:
-                                args = tc.get("args") or tc.get("arguments") or {}
-                                for _, v in args.items():
-                                    if isinstance(v, str):
-                                        val = v.replace("/", "\\").strip('"\'')
-                                        if not (".gemini\\" in val.lower() or "brain\\" in val.lower()):
-                                            p = val if os.path.isdir(val) else os.path.dirname(val)
-                                            if p and len(p) > 3:
-                                                ws_name = os.path.basename(p) or p
-                                                break
-                                if ws_name:
-                                    break
-            except Exception:
+            parsed = self._parse_single_session(cand_log, mtime)
+            if not parsed or parsed.get("skip"):
                 continue
 
-            if is_ping or turns == 0:
-                continue
+            last_step_dt = parsed.get("last_step_dt")
+            last_ctx_tokens = parsed.get("ctx_tokens", 0)
+            steps_count = parsed.get("steps", 0)
+            idle_mins = max(0.0, (now_utc - last_step_dt).total_seconds() / 60.0) if last_step_dt else max(0.0, (time.time() - mtime) / 60.0)
+            step_mult = round(max(1.0, (3500.0 + last_ctx_tokens * 0.10) / 6000.0), 1)
+            if last_ctx_tokens >= 80000 and idle_mins >= 25.0:
+                ctx_status = "cold"
+            elif last_ctx_tokens >= 140000 or steps_count >= 400:
+                ctx_status = "critical"
+            elif last_ctx_tokens >= 95000 or steps_count >= 220:
+                ctx_status = "warn"
+            else:
+                ctx_status = "safe"
 
-            if session_model:
-                active_model_name = session_model
+            sess_item = {
+                "id": parsed["id"],
+                "project": parsed["project"],
+                "title": parsed.get("title", ""),
+                "topic": parsed["topic"],
+                "turns": parsed["turns"],
+                "steps": steps_count,
+                "ctx_tokens": last_ctx_tokens,
+                "mult": step_mult,
+                "idle_mins": round(idle_mins, 1),
+                "idle_str": self._fmt_idle_age(idle_mins),
+                "status": ctx_status,
+                "mtime": mtime,
+                "sort_ts": parsed.get("sort_ts", mtime),
+                "session_model": parsed.get("session_model"),
+                "in_tokens": parsed.get("in_tokens", 0),
+                "out_tokens": parsed.get("out_tokens", 0),
+            }
+            recent_sessions.append(sess_item)
+            if len(recent_sessions) >= 18:
+                break
+
+        recent_sessions.sort(key=lambda s: s.get("sort_ts", s["mtime"]), reverse=True)
+        recent_sessions = recent_sessions[:12]
+
+        if recent_sessions:
+            top_s = recent_sessions[0]
+            # Auto-detect active conversation model (prefer focused/newest chat with detected model, else most recently modified)
+            by_mtime = sorted(recent_sessions, key=lambda s: s["mtime"], reverse=True)
+            if top_s.get("session_model"):
+                active_model_name = top_s["session_model"]
+            else:
+                for s_m in by_mtime:
+                    if s_m.get("session_model"):
+                        active_model_name = s_m["session_model"]
+                        break
             self.cached_metrics["active_model"] = active_model_name
-            self.cached_metrics["workspace"] = ws_name or "Active Workspace"
-            self.cached_metrics["turns"] = turns
-            self.cached_metrics["session_total_tokens"] = in_tokens + out_tokens
-            break
+            self.cached_metrics["active_conv_title"] = top_s.get("title") or top_s.get("topic") or ""
+            self.cached_metrics["active_conv_project"] = top_s.get("project") or "Active Workspace"
+            self.cached_metrics["workspace"] = top_s["project"]
+            self.cached_metrics["turns"] = top_s["turns"]
+            self.cached_metrics["session_total_tokens"] = top_s["in_tokens"] + top_s["out_tokens"]
+            self.cached_metrics["session_context_tokens"] = top_s["ctx_tokens"]
+            self.cached_metrics["session_steps"] = top_s["steps"]
+            self.cached_metrics["session_step_mult"] = top_s["mult"]
+            self.cached_metrics["session_idle_mins"] = top_s["idle_mins"]
+            self.cached_metrics["session_ctx_status"] = top_s["status"]
+
+        self.cached_metrics["recent_sessions"] = recent_sessions
+        self._refresh_cooldown_fields()
 
         # 1. 5-Hour Slot Metrics (Gemini & Third-Party anchored to their respective reset timestamps)
         w5 = self.calculate_slot(self.five_h_start_dt, subagent_map=subagent_map, all_logs=all_logs)
@@ -2285,12 +3523,526 @@ class MetricsEngine:
             if v.get("pool") == "tp":
                 by_model_w[k] = v
 
-        # 3. Record empirical calibration samples & build model rows
+        self._last_w5 = w5
+        self._last_w5_tp = w5_tp
+        self._last_wWeek = wWeek
+        self._last_wWeek_tp = wWeek_tp
+        self._last_by_model_5h = by_model_5h
+        self._last_by_model_w = by_model_w
+
+        # 3. Record empirical calibration samples, update incremental archive cache & build model rows
         self._record_calibration_samples(w5, wWeek, w5_tp, wWeek_tp)
+        self._update_step_cache_tick()
         self.cached_metrics["models_5h"] = self._build_model_rows(by_model_5h, active_model_name)
         self.cached_metrics["models_weekly"] = self._build_model_rows(by_model_w, active_model_name)
         self._update_pool_valuations()
         self._compute_pace_windows(w5)
+        self._recompute_minimal_metrics()
+
+    def _parse_transcript_bins(self, log_path: str, mtime: float, fsize: int, subagent_map: dict):
+        conv_id = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(log_path))))
+        cur_model = None
+        if conv_id in subagent_map:
+            sm, parent_m = subagent_map[conv_id]
+            if sm == "flash":
+                cur_model = "Gemini 3.8 Flash (Subagent)"
+            elif sm == "flash_lite":
+                cur_model = "Gemini 3.8 Flash (Low)"
+            elif sm == "pro":
+                cur_model = "Gemini 4 Argon (High)"
+            else:
+                cur_model = parent_m
+
+        bench_tag_models = {
+            "BENCH_phase1_flash_low": "Gemini 3.8 Flash (Low)",
+            "BENCH_phase2_flash_medium": "Gemini 3.8 Flash (Medium)",
+            "BENCH_phase3_flash_high": "Gemini 3.8 Flash (High)",
+            "BENCH_phase4_argon_low": "Gemini 4 Argon (Low)",
+            "BENCH_phase5_argon_medium": "Gemini 4 Argon (Medium)",
+            "BENCH_phase6_argon_medium": "Gemini 4 Argon (Medium)",
+            "BENCH_phase7_argon_high": "Gemini 4 Argon (High)",
+            "BENCH_tp1_gpt_oss_120b": "GPT-OSS 120B (Medium)",
+            "BENCH_tp2_claude_sonnet_55_low": "Claude Sonnet 5.5 (Low)",
+            "BENCH_tp3_claude_sonnet_55_medium": "Claude Sonnet 5.5 (Medium)",
+            "BENCH_tp4_claude_sonnet_55_high": "Claude Sonnet 5.5 (High)",
+            "BENCH_tp5_claude_opus_55_low": "Claude Opus 5.5 (Low)",
+            "BENCH_tp6_claude_opus_55_medium": "Claude Opus 5.5 (Medium)",
+            "BENCH_tp7_claude_opus_55_high": "Claude Opus 5.5 (High)",
+        }
+
+        spawns = []
+        pending_subagents = []
+        bins_map = {}  # (bucket_ts, model_key) -> [steps, in, cache, out, leg, cost]
+        unassigned_steps = []  # indexes of earlier bins if initial model revealed via "from X to Y"
+        saw_switch = False
+
+        try:
+            with open(log_path, "r", encoding="utf-8", errors="ignore") as fp:
+                for line in fp:
+                    if not line.strip():
+                        continue
+                    try:
+                        data = json.loads(line)
+                    except Exception:
+                        continue
+
+                    t = data.get("type", "")
+                    c = str(data.get("content", ""))
+                    if t == "USER_INPUT":
+                        if "<USER_SETTINGS_CHANGE>" in c and "Model Selection" in c:
+                            m = re.search(r"Model Selection`?\s+from\s+([^\n`]+?)\s+to\s+([^\n`]+?)\.\s+No need", c)
+                            if m:
+                                from_m = m.group(1).strip()
+                                to_m = m.group(2).strip()
+                                if not saw_switch and cur_model is None and from_m not in ("None", "Orchestrator", "Orchestrator (Carbon)") and ("(" in from_m or "Gemini" in from_m or "Claude" in from_m or "GPT" in from_m):
+                                    for old_key in unassigned_steps:
+                                        if old_key in bins_map:
+                                            new_k = (old_key[0], from_m)
+                                            prev_v = bins_map.pop(old_key)
+                                            dst = bins_map.setdefault(new_k, [0, 0, 0, 0, 0, 0.0])
+                                            for idx_v in range(6):
+                                                dst[idx_v] += prev_v[idx_v]
+                                    unassigned_steps.clear()
+                                saw_switch = True
+                                cur_model = to_m
+                        elif "BENCH_" in c:
+                            for btag, bmod in bench_tag_models.items():
+                                if btag in c:
+                                    cur_model = bmod
+                                    break
+
+                    for tc in data.get("tool_calls") or []:
+                        if tc.get("name") == "invoke_subagent":
+                            raw_subs = (tc.get("args") or {}).get("Subagents", "")
+                            try:
+                                subs = raw_subs if isinstance(raw_subs, list) else json.loads(str(raw_subs))
+                                if isinstance(subs, list):
+                                    for s in subs:
+                                        if isinstance(s, dict):
+                                            pending_subagents.append(s.get("Model", "inherit"))
+                            except Exception:
+                                pass
+                    if "Created the following subagents:" in c:
+                        cids = re.findall(r'"conversationId":\s*"([a-f0-9\-]+)"', c)
+                        for idx, cid in enumerate(cids):
+                            sm = pending_subagents[idx] if idx < len(pending_subagents) else "inherit"
+                            spawns.append([cid, sm, cur_model or "Gemini 4 Argon (Medium)"])
+                        pending_subagents = []
+
+                    if data.get("modelName"):
+                        cur_model = str(data.get("modelName")).strip()
+                    elif data.get("model"):
+                        cur_model = str(data.get("model")).strip()
+
+                    if t not in ("PLANNER_RESPONSE", "MODEL") or "created_at" not in data:
+                        continue
+                    try:
+                        dt = datetime.datetime.fromisoformat(str(data["created_at"]).replace("Z", "+00:00"))
+                    except Exception:
+                        continue
+
+                    was_default = (cur_model is None)
+                    model_key = cur_model or "Gemini 3.8 Flash (High)"
+                    spec = get_model_spec(model_key)
+
+                    legacy_tok = estimate_tokens(c) + estimate_tokens(str(data.get("thinking", "")))
+                    lw = int(legacy_tok * spec["weight"])
+                    if "input_tokens" in data or "output_tokens" in data:
+                        in_tok = int(data.get("input_tokens", 0) or 0)
+                        cache_tok = int(data.get("cache_read_tokens", 0) or data.get("cached_content_token_count", 0) or 0)
+                        out_tok = int(data.get("output_tokens", 0) or 0)
+                    else:
+                        in_tok = estimate_tokens(c)
+                        cache_tok = 0
+                        out_tok = legacy_tok
+
+                    cost_usd = (
+                        (in_tok / 1_000_000.0) * spec["in"]
+                        + (cache_tok / 1_000_000.0) * spec["cache"]
+                        + (out_tok / 1_000_000.0) * spec["out"]
+                    )
+
+                    bucket_ts = int(dt.timestamp() // 300) * 300
+                    bkey = (bucket_ts, model_key)
+                    if was_default and not saw_switch and bkey not in bins_map:
+                        unassigned_steps.append(bkey)
+                    acc = bins_map.setdefault(bkey, [0, 0, 0, 0, 0, 0.0])
+                    acc[0] += 1
+                    acc[1] += in_tok
+                    acc[2] += cache_tok
+                    acc[3] += out_tok
+                    acc[4] += lw
+                    acc[5] += cost_usd
+        except Exception:
+            pass
+
+        bins = [
+            [bts, mkey, v[0], v[1], v[2], v[3], v[4], round(v[5], 6)]
+            for (bts, mkey), v in bins_map.items()
+        ]
+        bins.sort(key=lambda x: x[0])
+        return {"mtime": mtime, "size": fsize, "spawns": spawns, "bins": bins}
+
+    def _get_cached_subagent_map(self, all_archive_logs):
+        smap = {}
+        with self._step_cache_lock:
+            for _, p in all_archive_logs:
+                entry = self._step_cache.get(os.path.normcase(p))
+                if entry:
+                    for cid, sm, pm in entry.get("spawns") or []:
+                        smap[cid] = (sm, pm)
+        return smap
+
+    def _update_step_cache_tick(self):
+        all_archive = []
+        for b in BRAIN_DIRS:
+            if os.path.exists(b):
+                for f in glob.glob(os.path.join(b, "*", ".system_generated", "logs", "transcript.jsonl")):
+                    try:
+                        st = os.stat(f)
+                        all_archive.append((st.st_mtime, st.st_size, f))
+                    except Exception:
+                        pass
+        all_archive.sort(key=lambda x: x[0], reverse=True)
+        self._archive_total_files = len(all_archive)
+
+        now_ts = time.time()
+        recent_cut = now_ts - 8 * 86400
+        to_parse = []
+        old_pending = []
+        cached_count = 0
+
+        with self._step_cache_lock:
+            for mt, sz, p in all_archive:
+                np = os.path.normcase(p)
+                cur = self._step_cache.get(np)
+                if cur and cur.get("mtime") == mt and cur.get("size") == sz:
+                    cached_count += 1
+                    continue
+                if mt >= recent_cut:
+                    to_parse.append((mt, sz, p))
+                else:
+                    old_pending.append((mt, sz, p))
+
+        # Hydrate recent changed files plus up to 35 uncached historical logs per 1s tick
+        batch = to_parse + old_pending[:35]
+        if batch:
+            smap = self._get_cached_subagent_map([(mt, p) for mt, _, p in all_archive])
+            new_entries = {}
+            for mt, sz, p in batch:
+                parsed_entry = self._parse_transcript_bins(p, mt, sz, smap)
+                new_entries[os.path.normcase(p)] = parsed_entry
+                for cid, sm, pm in parsed_entry.get("spawns") or []:
+                    smap[cid] = (sm, pm)
+            with self._step_cache_lock:
+                self._step_cache.update(new_entries)
+            cached_count += len(batch)
+
+        self._archive_cached_files = min(len(all_archive), cached_count)
+        was_hydrated = self._archive_hydrated
+        self._archive_hydrated = (len(old_pending) <= 35)
+        if batch and (self._archive_hydrated and not was_hydrated or len(batch) >= 12):
+            self.save_step_cache()
+
+    def _compute_scope_usage_and_caps(
+        self,
+        pool: str,
+        target_model: str,
+        spec: dict,
+        period_secs: float,
+        cur_start_dt,
+        cur_reset_dt,
+        pct_rem: int,
+        w_cur: dict,
+        by_model_cur: dict,
+        samp_key: str,
+        rcap_key: str,
+        fallback_base_cap: int,
+    ) -> dict:
+        now_ts = time.time()
+        cur_start_ts = cur_start_dt.timestamp() if cur_start_dt else (now_ts - period_secs)
+        w_m = max(0.1, float(spec.get("weight", 1.0)))
+
+        # 1. Exact Current Reset Usage for Target Model (matches Verbose identically)
+        cur_m = by_model_cur.get(target_model) or {}
+        cur_m_in = int(cur_m.get("in_tokens", 0) or 0)
+        cur_m_out = int(cur_m.get("out_tokens", 0) or 0)
+        cur_m_cache = int(cur_m.get("cache_tokens", 0) or 0)
+        cur_m_tokens = cur_m_in + cur_m_out
+        cur_m_usd = float(cur_m.get("cost", 0.0) or 0.0)
+        cur_m_steps = int(cur_m.get("steps", 0) or 0)
+
+        # 2. Pool empirical token mix (r_in, r_out, r_cache_per_raw, raw_per_eff)
+        # Prefer target model's own recent ratio if enough steps exist, else pool historical mix
+        pool_in = pool_out = pool_cache = 0
+        m_hist_in = m_hist_out = m_hist_cache = 0
+        pool_active_slots = {}   # slot_idx (0=cur, 1=prev1, ...) -> True if pool steps > 0
+        model_slot_stats = {}    # slot_idx -> [tokens, cache, usd, steps]
+        seen_models = set(PRIMARY_SELECTABLE_MODELS)
+
+        with self._step_cache_lock:
+            cache_vals = list(self._step_cache.values())
+
+        for entry in cache_vals:
+            for bts, mkey, steps, in_t, cache_t, out_t, _leg, cost_u in entry.get("bins") or []:
+                seen_models.add(mkey)
+                mspec = get_model_spec(mkey)
+                if mspec["pool"] != pool:
+                    continue
+                pool_in += in_t
+                pool_out += out_t
+                pool_cache += cache_t
+                if mkey == target_model:
+                    m_hist_in += in_t
+                    m_hist_out += out_t
+                    m_hist_cache += cache_t
+
+                if bts >= cur_start_ts:
+                    sidx = 0
+                else:
+                    sidx = int((cur_start_ts - bts) // period_secs) + 1
+                if steps > 0:
+                    pool_active_slots[sidx] = True
+                if mkey == target_model:
+                    st = model_slot_stats.setdefault(sidx, [0, 0, 0.0, 0])
+                    st[0] += (in_t + out_t)
+                    st[1] += cache_t
+                    st[2] += cost_u
+                    st[3] += steps
+
+        # Determine realistic agent token mix for cost & raw-token projection
+        # Require substantial cached agent traffic on the model before overriding pool-wide agent cache mix
+        if (m_hist_in + m_hist_out) >= 500000 and m_hist_cache >= 1000000:
+            mix_in, mix_out, mix_cache = m_hist_in, m_hist_out, m_hist_cache
+        else:
+            mix_in, mix_out, mix_cache = pool_in, pool_out, pool_cache
+        mix_raw = mix_in + mix_out
+        if mix_raw > 0:
+            r_in = mix_in / mix_raw
+            r_out = mix_out / mix_raw
+            r_cache_per_raw = min(30.0, mix_cache / mix_raw)
+            mix_eff = mix_raw + 0.1 * mix_cache
+            raw_per_eff = max(0.30, min(0.85, mix_raw / mix_eff)) if mix_eff > 0 else 0.45
+        else:
+            r_in, r_out, r_cache_per_raw, raw_per_eff = 0.90, 0.10, 12.0, 0.45
+
+        usd_per_1m_raw = r_in * spec["in"] + r_out * spec["out"] + r_cache_per_raw * spec["cache"]
+
+        # 3. Completed historical reset slots for Last 3 & All Resets usage
+        past_active_indices = sorted(idx for idx in pool_active_slots.keys() if idx >= 1)
+        last3_indices = past_active_indices[:3]
+        if not last3_indices and 0 in pool_active_slots:
+            last3_indices = [0]
+
+        all_indices = sorted(pool_active_slots.keys())
+        if 0 not in all_indices and (cur_m_steps > 0 or w_cur):
+            all_indices = [0] + all_indices
+
+        def _sum_slots(indices, include_exact_cur: bool):
+            tok_sum = cache_sum = steps_sum = 0
+            usd_sum = 0.0
+            active_for_model = 0
+            for idx in indices:
+                if idx == 0 and include_exact_cur:
+                    st_tok, st_cache, st_usd, st_steps = cur_m_tokens, cur_m_cache, cur_m_usd, cur_m_steps
+                else:
+                    st = model_slot_stats.get(idx, [0, 0, 0.0, 0])
+                    st_tok, st_cache, st_usd, st_steps = st[0], st[1], st[2], st[3]
+                tok_sum += st_tok
+                cache_sum += st_cache
+                usd_sum += st_usd
+                steps_sum += st_steps
+                if st_steps > 0:
+                    active_for_model += 1
+            n_res = max(0, len(indices))
+            return {
+                "resets_count": n_res,
+                "model_active_resets": active_for_model,
+                "used_tokens": int(tok_sum),
+                "used_cache_tokens": int(cache_sum),
+                "used_usd": round(usd_sum, 4),
+                "used_avg_tokens": int(tok_sum / n_res) if n_res > 0 else 0,
+                "used_avg_usd": round(usd_sum / n_res, 4) if n_res > 0 else 0.0,
+                "steps": int(steps_sum),
+            }
+
+        u_cur = {
+            "resets_count": 1,
+            "model_active_resets": 1 if cur_m_steps > 0 else 0,
+            "used_tokens": cur_m_tokens,
+            "used_cache_tokens": cur_m_cache,
+            "used_usd": round(cur_m_usd, 4),
+            "used_avg_tokens": cur_m_tokens,
+            "used_avg_usd": round(cur_m_usd, 4),
+            "steps": cur_m_steps,
+        }
+        u_last3 = _sum_slots(last3_indices, include_exact_cur=(0 in last3_indices and len(past_active_indices) == 0))
+        u_all = _sum_slots(all_indices, include_exact_cur=True)
+
+        # 4. Calibrated Capacity (cap_base) per Scope (Current / Last 3 Resets / All Resets)
+        rcaps = self.history.get("reset_caps", {}).get(rcap_key, {})
+        ordered_rcaps = sorted(rcaps.values(), key=lambda x: x.get("first_ts", 0))
+
+        def _cap_from_rcap_list(items):
+            vals = [int(it.get("cap_base", 0) or 0) for it in items if (it.get("cap_base", 0) or 0) > 0]
+            if vals:
+                return int(self._median_num(vals, 0))
+            return 0
+
+        # Pool fallback cap from raw samples (in base units) if reset_caps missing
+        samp_arr = self.history.get(samp_key, [])
+        samp_base_caps = []
+        for s in samp_arr:
+            p = int(s.get("pct_used", 0) or 0)
+            sb = float(s.get("server_base_units", 0) or 0)
+            if p >= 2 and sb > 0:
+                samp_base_caps.append(sb / (p / 100.0))
+        all_cap_base = _cap_from_rcap_list(ordered_rcaps) or int(self._median_num(samp_base_caps, fallback_base_cap))
+        last3_cap_base = _cap_from_rcap_list(ordered_rcaps[-3:]) or all_cap_base
+
+        # Current slot live calibration
+        cur_pct_used = max(0, 100 - int(pct_rem))
+        cur_base_used = float(w_cur.get("gemini_base_units" if pool == "gemini" else "tp_base_units", 0) or 0)
+        cur_cap_base = 0
+        cur_slot_key = ("reset:" + cur_reset_dt.isoformat()) if cur_reset_dt else None
+        if cur_slot_key and cur_slot_key in rcaps and (rcaps[cur_slot_key].get("cap_base", 0) or 0) > 0:
+            cur_cap_base = int(rcaps[cur_slot_key]["cap_base"])
+            cur_source = "live slot"
+        elif cur_pct_used >= 3 and cur_base_used > 0:
+            cur_cap_base = int(cur_base_used / (cur_pct_used / 100.0))
+            cur_source = "live est"
+        else:
+            cur_cap_base = last3_cap_base or all_cap_base
+            cur_source = "hist fallback"
+
+        def _calc_remain(cap_base_val: int, src_label: str, cal_slots_n: int):
+            rem_base = max(0.0, cap_base_val * (max(0, min(100, int(pct_rem))) / 100.0))
+            rem_eff = rem_base / w_m
+            cap_eff = cap_base_val / w_m
+            rem_tok = int(rem_eff * raw_per_eff)
+            cap_tok = int(cap_eff * raw_per_eff)
+            rem_usd = round((rem_tok / 1_000_000.0) * usd_per_1m_raw, 2)
+            cap_usd = round((cap_tok / 1_000_000.0) * usd_per_1m_raw, 2)
+            avg_step = max(200, int(spec.get("avg_step_base", 1800)))
+            rem_steps = max(0, int(rem_eff / avg_step))
+            return {
+                "rem_tokens": rem_tok,
+                "rem_usd": rem_usd,
+                "cap_tokens": cap_tok,
+                "cap_usd": cap_usd,
+                "rem_steps": rem_steps,
+                "cap_source": src_label,
+                "cal_slots": cal_slots_n,
+            }
+
+        scopes = {
+            "current": {**u_cur, **_calc_remain(cur_cap_base, cur_source, 1 if cur_source.startswith("live") else 0)},
+            "last3": {**u_last3, **_calc_remain(last3_cap_base, f"{min(3, len(ordered_rcaps))} cal slots" if ordered_rcaps else "est", len(ordered_rcaps[-3:]))},
+            "all": {**u_all, **_calc_remain(all_cap_base, f"{len(ordered_rcaps)} cal slots" if ordered_rcaps else "est", len(ordered_rcaps))},
+        }
+        return {
+            "pct_rem": int(pct_rem),
+            "pct_used": cur_pct_used,
+            "reset_ts": cur_reset_dt.timestamp() if cur_reset_dt else None,
+            "reset_desc": self._fmt_cooldown_desc(cur_reset_dt),
+            "scopes": scopes,
+            "seen_models": seen_models,
+        }
+
+    def _recompute_minimal_metrics(self):
+        detected_model = self.cached_metrics.get("active_model") or "Gemini 4 Argon (Medium)"
+        pref_model = (self.config or {}).get("minimal_model", "auto") or "auto"
+        is_manual = (pref_model != "auto")
+        target_model = pref_model if is_manual else detected_model
+        spec = get_model_spec(target_model)
+        pool = spec["pool"]
+
+        if pool == "gemini":
+            g5 = self._compute_scope_usage_and_caps(
+                pool="gemini",
+                target_model=target_model,
+                spec=spec,
+                period_secs=18000.0,
+                cur_start_dt=self.five_h_start_dt,
+                cur_reset_dt=self.gemini_5h_reset_dt,
+                pct_rem=int(self.cached_metrics.get("gemini_5h_pct", 100)),
+                w_cur=self._last_w5,
+                by_model_cur=self._last_by_model_5h,
+                samp_key="samples_5h",
+                rcap_key="g_5h",
+                fallback_base_cap=47_000_000,
+            )
+            gw = self._compute_scope_usage_and_caps(
+                pool="gemini",
+                target_model=target_model,
+                spec=spec,
+                period_secs=604800.0,
+                cur_start_dt=self.weekly_start_dt,
+                cur_reset_dt=self.gemini_weekly_reset_dt,
+                pct_rem=int(self.cached_metrics.get("gemini_weekly_pct", 100)),
+                w_cur=self._last_wWeek,
+                by_model_cur=self._last_by_model_w,
+                samp_key="samples_weekly",
+                rcap_key="g_weekly",
+                fallback_base_cap=180_000_000,
+            )
+        else:
+            g5 = self._compute_scope_usage_and_caps(
+                pool="tp",
+                target_model=target_model,
+                spec=spec,
+                period_secs=18000.0,
+                cur_start_dt=self.tp_five_h_start_dt,
+                cur_reset_dt=self.tp_5h_reset_dt,
+                pct_rem=int(self.cached_metrics.get("tp_5h_pct", 100)),
+                w_cur=getattr(self, "_last_w5_tp", self._last_w5),
+                by_model_cur=self._last_by_model_5h,
+                samp_key="samples_tp_5h",
+                rcap_key="tp_5h",
+                fallback_base_cap=5_000_000,
+            )
+            gw = self._compute_scope_usage_and_caps(
+                pool="tp",
+                target_model=target_model,
+                spec=spec,
+                period_secs=604800.0,
+                cur_start_dt=self.tp_weekly_start_dt,
+                cur_reset_dt=self.tp_weekly_reset_dt,
+                pct_rem=int(self.cached_metrics.get("tp_weekly_pct", 100)),
+                w_cur=getattr(self, "_last_wWeek_tp", self._last_wWeek),
+                by_model_cur=self._last_by_model_w,
+                samp_key="samples_tp_weekly",
+                rcap_key="tp_weekly",
+                fallback_base_cap=10_000_000,
+            )
+
+        avail = list(PRIMARY_SELECTABLE_MODELS)
+        for m in sorted((g5.get("seen_models") or set()) | (gw.get("seen_models") or set()) | {detected_model, target_model}):
+            if m and m not in avail and m != "Gemini 3.8 Flash (Subagent)":
+                avail.append(m)
+        self.cached_metrics["available_models"] = avail
+        self.cached_metrics["minimal"] = {
+            "target_model": target_model,
+            "detected_model": detected_model,
+            "is_manual": is_manual,
+            "pool": pool,
+            "pool_label": "Gemini Pool" if pool == "gemini" else "Claude & GPT Pool",
+            "weight": spec["weight"],
+            "price_in": spec["in"],
+            "price_out": spec["out"],
+            "price_cache": spec["cache"],
+            "conv_project": self.cached_metrics.get("active_conv_project", "Active Workspace"),
+            "conv_title": self.cached_metrics.get("active_conv_title", ""),
+            "archive_hydrated": self._archive_hydrated,
+            "archive_cached_files": self._archive_cached_files,
+            "archive_total_files": self._archive_total_files,
+            "h5": {k: v for k, v in g5.items() if k != "seen_models"},
+            "weekly": {k: v for k, v in gw.items() if k != "seen_models"},
+        }
+
+    def refresh_minimal_view(self):
+        self._recompute_minimal_metrics()
+        return self.cached_metrics.get("minimal", {})
 
     @staticmethod
     def _fmt_mins(mins: float) -> str:
@@ -2602,9 +4354,14 @@ class Api:
         self._models_show_all = config.get("models_show_all", True)
         self._is_compact = False
         self._current_theme = config.get("theme", "oled")
+        self._font_scale_full = float(config.get("font_scale_full", 1.0))
+        self._font_scale_mini = float(config.get("font_scale_mini", 1.0))
 
         self._last_expanded_w = config.get("last_w", 550)
         self._last_expanded_h = config.get("last_h", 820 if self._is_tp_expanded else 790)
+        self._view_mode = config.get("view_mode", "minimal")
+        self._minimal_model = config.get("minimal_model", "auto")
+        self._active_tab = config.get("active_tab", "5h")
 
     def _set_window(self, window):
         self._window = window
@@ -2652,6 +4409,10 @@ class Api:
             user32.GetWindowRect(hwnd, rect)
             cur_x = rect[0]
             cur_y = rect[1]
+            if not self._is_compact:
+                self._config["last_x"] = int(cur_x)
+                self._config["last_y"] = int(cur_y)
+                save_hud_config(self._config)
             user32.SetWindowPos(hwnd, 0, cur_x, cur_y, target_w, target_h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
         elif self._window:
             try:
@@ -2659,6 +4420,17 @@ class Api:
             except Exception:
                 pass
         return True
+
+    def save_window_pos(self):
+        hwnd = get_hud_hwnd()
+        if hwnd and not self._is_compact:
+            rect = (ctypes.c_long * 4)()
+            if user32.GetWindowRect(hwnd, rect):
+                self._config["last_x"] = int(rect[0])
+                self._config["last_y"] = int(rect[1])
+                save_hud_config(self._config)
+                return {"x": int(rect[0]), "y": int(rect[1])}
+        return None
 
     def set_compact_mode(self, is_compact):
         hwnd = get_hud_hwnd()
@@ -2679,24 +4451,60 @@ class Api:
             cur_x = rect[0]
             cur_y = rect[1]
             if is_compact:
-                w, h = 205, 34
+                w = int(round(325 * self._font_scale_mini))
+                h = int(round(36 * self._font_scale_mini))
             else:
                 w = max(520, self._last_expanded_w)
-                min_safe_h = 820 if self._is_tp_expanded else 760
+                min_safe_h = (820 if self._is_tp_expanded else 760) if self._view_mode == "verbose" else 420
                 h = max(min_safe_h, self._last_expanded_h)
             user32.SetWindowPos(hwnd, 0, cur_x, cur_y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
         elif self._window:
             try:
                 if is_compact:
-                    self._window.resize(205, 34)
+                    w = int(round(325 * self._font_scale_mini))
+                    h = int(round(36 * self._font_scale_mini))
+                    self._window.resize(w, h)
                 else:
                     w = max(520, self._last_expanded_w)
-                    min_safe_h = 820 if self._is_tp_expanded else 760
+                    min_safe_h = (820 if self._is_tp_expanded else 760) if self._view_mode == "verbose" else 420
                     h = max(min_safe_h, self._last_expanded_h)
                     self._window.resize(w, h)
             except Exception:
                 pass
         return self._is_compact
+
+    def set_font_scale(self, mode, scale):
+        val = max(0.75, min(1.65, float(scale)))
+        if mode == "mini":
+            self._font_scale_mini = val
+            self._config["font_scale_mini"] = val
+            save_hud_config(self._config)
+            if self._is_compact:
+                hwnd = get_hud_hwnd()
+                w = int(round(325 * self._font_scale_mini))
+                h = int(round(36 * self._font_scale_mini))
+                if hwnd:
+                    rect = (ctypes.c_long * 4)()
+                    user32.GetWindowRect(hwnd, rect)
+                    user32.SetWindowPos(hwnd, 0, rect[0], rect[1], w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW)
+                elif self._window:
+                    try:
+                        self._window.resize(w, h)
+                    except Exception:
+                        pass
+        else:
+            self._font_scale_full = val
+            self._config["font_scale_full"] = val
+            save_hud_config(self._config)
+        return val
+
+    def set_ctx_bars_prefs(self, count, unique_projects):
+        c = max(1, min(8, int(count)))
+        u = bool(unique_projects)
+        self._config["ctx_bars_count"] = c
+        self._config["ctx_unique_projects"] = u
+        save_hud_config(self._config)
+        return {"ctx_bars_count": c, "ctx_unique_projects": u}
 
     def set_tp_expanded(self, expanded):
         self._is_tp_expanded = expanded
@@ -2715,6 +4523,29 @@ class Api:
         self._config["theme"] = theme_name
         save_hud_config(self._config)
         return self._current_theme
+
+    def set_view_mode(self, mode):
+        m = "verbose" if mode == "verbose" else "minimal"
+        self._view_mode = m
+        self._config["view_mode"] = m
+        save_hud_config(self._config)
+        return self._view_mode
+
+    def set_minimal_model(self, model_name):
+        val = (model_name or "auto").strip() or "auto"
+        self._minimal_model = val
+        self._config["minimal_model"] = val
+        save_hud_config(self._config)
+        if hasattr(self._engine, "refresh_minimal_view"):
+            self._engine.refresh_minimal_view()
+        return self._minimal_model
+
+    def set_active_tab(self, tab):
+        t = "weekly" if tab == "weekly" else "5h"
+        self._active_tab = t
+        self._config["active_tab"] = t
+        save_hud_config(self._config)
+        return self._active_tab
 
     def toggle_global_yolo(self):
         self._is_global_yolo = not self._is_global_yolo
@@ -2776,7 +4607,7 @@ def main():
     start_minimized = ("--minimized" in sys.argv) or ("-m" in sys.argv)
     config = load_hud_config()
 
-    engine = MetricsEngine()
+    engine = MetricsEngine(config)
     primer = AutoPrimerWorker(engine, config)
     primer.start()
 
@@ -2786,7 +4617,23 @@ def main():
     init_w = config.get("last_w", 550)
     init_h = config.get("last_h", 820 if is_tp else 790)
 
-    _hud_trace(f"creating window {init_w}x{init_h} minimized={start_minimized}")
+    init_x = config.get("last_x")
+    init_y = config.get("last_y")
+    win_kwargs = {}
+    if isinstance(init_x, (int, float)) and isinstance(init_y, (int, float)):
+        try:
+            vx = user32.GetSystemMetrics(76)
+            vy = user32.GetSystemMetrics(77)
+            vw = user32.GetSystemMetrics(78) or 1920
+            vh = user32.GetSystemMetrics(79) or 1080
+            ix, iy = int(init_x), int(init_y)
+            if vx - 100 <= ix <= vx + vw - 120 and vy - 40 <= iy <= vy + vh - 80:
+                win_kwargs["x"] = ix
+                win_kwargs["y"] = iy
+        except Exception:
+            pass
+
+    _hud_trace(f"creating window {init_w}x{init_h} pos={win_kwargs} minimized={start_minimized}")
     window = webview.create_window(
         title="Antigravity Live Monitor",
         html=HTML_CONTENT,
@@ -2797,7 +4644,8 @@ def main():
         on_top=config.get("pinned", True),
         minimized=start_minimized,
         resizable=True,
-        background_color="#000000"
+        background_color="#000000",
+        **win_kwargs,
     )
     _ACTIVE_WEBVIEW_WINDOW = window
     api._set_window(window)
