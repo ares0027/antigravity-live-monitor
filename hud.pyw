@@ -455,6 +455,12 @@ HTML_CONTENT = """<!DOCTYPE html>
       transform: rotate(-90deg);
       transform-origin: 50% 50%;
     }
+    .ring-progress-timer {
+      stroke: var(--accent-warn);
+      transition: stroke-dashoffset 0.4s ease;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
     .drag-handle {
       cursor: grab;
     }
@@ -525,9 +531,9 @@ HTML_CONTENT = """<!DOCTYPE html>
         <button onclick="setViewMode('verbose')" id="btnModeVerbose" class="px-1.5 py-0.5 rounded cursor-pointer transition" style="color: var(--text-muted);">Verb</button>
       </div>
 
-      <!-- Force Sync Button -->
-      <button onclick="triggerSync()" id="syncBtn" class="p-1 px-1.5 rounded-md transition text-xs mono cursor-pointer font-bold" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Force Refresh Official Quota">
-        ↻
+      <!-- Force Refresh UI & Quota Button -->
+      <button onclick="triggerSync()" id="syncBtn" class="p-1 px-2 rounded-md transition text-[11px] mono cursor-pointer font-bold flex items-center gap-1" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--accent-gemini);" title="Force Refresh UI & Re-query Official Antigravity Quota">
+        ↻ Refresh
       </button>
 
       <!-- Collapse Button -->
@@ -564,40 +570,65 @@ HTML_CONTENT = """<!DOCTYPE html>
       </button>
     </div>
 
-    <!-- PURE MINIMALIST COMPACT STRIP -->
-    <div id="compactBar" class="hidden w-full h-full flex items-center justify-between px-2 gap-1.5">
-      <div class="flex items-center gap-1.5" title="Gemini Weekly Limit Remaining">
-        <svg class="w-5 h-5 mini-ring flex-shrink-0" viewBox="0 0 36 36">
-          <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-          <path id="miniGWRing" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-        </svg>
-        <span class="mono text-xs font-black tracking-tight" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
-        <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">W</span>
-        <span class="text-[10px] mono font-bold" style="color: var(--text-muted);" id="miniWeeklyCooldown">--</span>
+    <!-- PURE MINIMALIST COMPACT STRIP (DUAL CIRCLES: QUOTA + RESET TIMER, TIME BELOW) -->
+    <div id="compactBar" class="hidden w-full h-full flex items-center justify-between px-1.5 gap-1">
+      <!-- Weekly Pair: Usage Circle + Reset Timer Circle -->
+      <div class="flex items-center gap-1.5 flex-shrink-0" title="Gemini Weekly Quota % Remaining & Reset Countdown">
+        <div class="flex flex-col items-center leading-none">
+          <svg class="mini-ring flex-shrink-0" style="color: var(--accent-gemini);" viewBox="0 0 36 36">
+            <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path id="miniGWRing" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <text x="18" y="21.5" text-anchor="middle" font-size="11" font-weight="800" fill="currentColor" class="mono">W</text>
+          </svg>
+          <span class="mono text-[9px] font-black tracking-tight mt-0.5 whitespace-nowrap" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
+        </div>
+        <div class="flex flex-col items-center leading-none">
+          <svg class="mini-ring flex-shrink-0" style="color: var(--accent-warn);" viewBox="0 0 36 36">
+            <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path id="miniGWTimerRing" class="ring-progress-timer" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <text x="18" y="21" text-anchor="middle" font-size="9.5" font-weight="800" fill="currentColor" class="mono">⟲</text>
+          </svg>
+          <span class="mono text-[9px] font-bold tracking-tight mt-0.5 whitespace-nowrap" style="color: var(--text-muted);" id="miniWeeklyCooldown">--</span>
+        </div>
       </div>
 
-      <div class="w-px h-3.5" style="background: var(--border-card);"></div>
+      <div class="w-px h-6 flex-shrink-0" style="background: var(--border-card);"></div>
 
-      <div class="flex items-center gap-1.5" title="Gemini 5-Hour Limit Remaining">
-        <svg class="w-5 h-5 mini-ring flex-shrink-0" viewBox="0 0 36 36">
-          <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-          <path id="miniG5Ring" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-        </svg>
-        <span class="mono text-xs font-black tracking-tight" style="color: var(--accent-warn);" id="miniG5Pct">--%</span>
-        <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">5h</span>
-        <span class="text-[10px] mono font-bold" style="color: var(--text-muted);" id="miniCooldown">--</span>
-        <span id="miniPaceWarn" class="hidden px-1 py-0.2 rounded text-[9px] mono font-black animate-pulse" style="background: rgba(239, 68, 68, 0.25); color: var(--accent-yolo); border: 1px solid var(--accent-yolo);" title="5h Burn Pace Depletion Alert">PACE!</span>
+      <!-- 5-Hour Pair: Usage Circle + Reset Timer Circle -->
+      <div class="flex items-center gap-1.5 flex-shrink-0" title="Gemini 5-Hour Quota % Remaining & Reset Countdown">
+        <div class="flex flex-col items-center leading-none">
+          <svg class="mini-ring flex-shrink-0" style="color: var(--accent-warn);" viewBox="0 0 36 36">
+            <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path id="miniG5Ring" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <text x="18" y="21.5" text-anchor="middle" font-size="10.5" font-weight="800" fill="currentColor" class="mono">5h</text>
+          </svg>
+          <span class="mono text-[9px] font-black tracking-tight mt-0.5 whitespace-nowrap" style="color: var(--accent-warn);" id="miniG5Pct">--%</span>
+        </div>
+        <div class="flex flex-col items-center leading-none">
+          <svg class="mini-ring flex-shrink-0" style="color: var(--accent-warn);" viewBox="0 0 36 36">
+            <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path id="miniG5TimerRing" class="ring-progress-timer" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <text x="18" y="21" text-anchor="middle" font-size="9.5" font-weight="800" fill="currentColor" class="mono">⟲</text>
+          </svg>
+          <span class="mono text-[9px] font-bold tracking-tight mt-0.5 whitespace-nowrap" style="color: var(--text-muted);" id="miniCooldown">--</span>
+        </div>
       </div>
 
-      <div class="w-px h-3.5" style="background: var(--border-card);"></div>
+      <div class="w-px h-6 flex-shrink-0" style="background: var(--border-card);"></div>
 
-      <div class="flex items-center gap-1" title="Active Conversation Context (Backpack Weight)">
-        <span id="miniCtxWarn" class="px-1.5 py-0.5 rounded text-[10px] mono font-black" style="background: rgba(16, 185, 129, 0.18); color: var(--accent-gemini); border: 1px solid var(--accent-gemini);">🟢 0k</span>
+      <!-- Context & Pace Status (Stacked for Minimum Width) -->
+      <div class="flex flex-col items-center justify-center gap-0.5 flex-shrink-0" title="Active Conversation Context (Backpack Weight)">
+        <span id="miniCtxWarn" class="px-1.5 py-0.2 rounded text-[9px] mono font-black whitespace-nowrap" style="background: rgba(16, 185, 129, 0.18); color: var(--accent-gemini); border: 1px solid var(--accent-gemini);">🟢 0k</span>
+        <span id="miniPaceWarn" class="hidden px-1 py-0 rounded text-[8px] mono font-black animate-pulse whitespace-nowrap" style="background: rgba(239, 68, 68, 0.25); color: var(--accent-yolo); border: 1px solid var(--accent-yolo);" title="5h Burn Pace Depletion Alert">PACE!</span>
       </div>
 
+      <!-- Stacked Font Scale + Force Refresh Controls -->
       <div class="flex items-center gap-0.5 flex-shrink-0" onclick="event.stopPropagation()" ondblclick="event.stopPropagation()">
-        <button onclick="adjustFontSize(-0.08)" class="px-1 py-0.2 rounded text-[9px] mono font-bold cursor-pointer" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-muted);" title="Decrease Mini-Bar Font Size (Ctrl + -)">A-</button>
-        <button onclick="adjustFontSize(0.08)" class="px-1 py-0.2 rounded text-[9px] mono font-bold cursor-pointer" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Increase Mini-Bar Font Size (Ctrl + +)">A+</button>
+        <button onclick="triggerSync()" id="miniSyncBtn" class="px-1 py-0.5 rounded text-[9px] mono font-bold cursor-pointer leading-none h-full" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--accent-gemini);" title="Force Refresh UI & Re-query Quota">↻</button>
+        <div class="flex flex-col items-center justify-center gap-0.5">
+          <button onclick="adjustFontSize(0.08)" class="px-1 py-0 rounded text-[8px] mono font-bold cursor-pointer leading-tight" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Increase Mini-Bar Font Size (Ctrl + +)">A+</button>
+          <button onclick="adjustFontSize(-0.08)" class="px-1 py-0 rounded text-[8px] mono font-bold cursor-pointer leading-tight" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-muted);" title="Decrease Mini-Bar Font Size (Ctrl + -)">A-</button>
+        </div>
       </div>
     </div>
 
@@ -1665,12 +1696,18 @@ HTML_CONTENT = """<!DOCTYPE html>
         if (el) el.textContent = gw.verbose;
         const mwc = document.getElementById('miniWeeklyCooldown');
         if (mwc) mwc.textContent = gw.compact;
+        const wkRemSecs = Math.max(0, d.gemini_weekly_reset_ts - Date.now() / 1000);
+        const wkTimerPct = Math.min(100, Math.max(0, (wkRemSecs / 604800) * 100));
+        updateRing('miniGWTimerRing', wkTimerPct);
       }
       if (g5) {
         const el = document.getElementById('gemini5hDesc');
         if (el) el.textContent = g5.verbose;
         const mc = document.getElementById('miniCooldown');
         if (mc) mc.textContent = g5.compact;
+        const h5RemSecs = Math.max(0, d.gemini_5h_reset_ts - Date.now() / 1000);
+        const h5TimerPct = Math.min(100, Math.max(0, (h5RemSecs / 18000) * 100));
+        updateRing('miniG5TimerRing', h5TimerPct);
       }
       if (tpw) {
         const el = document.getElementById('tpWeeklyDesc');
@@ -1883,12 +1920,25 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     async function triggerSync() {
       const btn = document.getElementById('syncBtn');
-      if (btn) btn.textContent = '...';
-      if (window.pywebview && window.pywebview.api) {
-        await window.pywebview.api.force_sync();
-        await refreshData();
+      const mBtn = document.getElementById('miniSyncBtn');
+      if (btn) btn.textContent = '↻ ...';
+      if (mBtn) mBtn.textContent = '…';
+      try {
+        lastAvailModelsSig = '';
+        if (window.pywebview && window.pywebview.api) {
+          const fresh = await window.pywebview.api.force_sync();
+          if (fresh && typeof fresh === 'object') {
+            lastMetrics = fresh;
+          }
+          await refreshData();
+        }
+      } catch (e) {
+        console.error(e);
       }
-      setTimeout(() => { if (btn) btn.textContent = '↻'; }, 800);
+      setTimeout(() => {
+        if (btn) btn.textContent = '↻ Refresh';
+        if (mBtn) mBtn.textContent = '↻';
+      }, 650);
     }
 
     function renderPerModelTable(d) {
@@ -2516,11 +2566,20 @@ class MetricsEngine:
 
     def _usage_worker_loop(self):
         while self.running:
+            prev_5h = self.cached_metrics.get("gemini_5h_pct")
+            prev_wk = self.cached_metrics.get("gemini_weekly_pct")
             try:
                 self.query_official_usage()
             except Exception:
                 pass
-            time.sleep(300.0)
+            # If /usage suddenly jumped to 100% from <95% (transient server glitch), re-verify in 15s instead of waiting
+            cur_5h = self.cached_metrics.get("gemini_5h_pct")
+            cur_wk = self.cached_metrics.get("gemini_weekly_pct")
+            suspicious_jump = (
+                (prev_5h is not None and prev_5h < 95 and cur_5h == 100)
+                or (prev_wk is not None and prev_wk < 95 and cur_wk == 100)
+            )
+            time.sleep(15.0 if suspicious_jump else 90.0)
 
     def query_official_usage(self):
         try:
@@ -2586,6 +2645,7 @@ class MetricsEngine:
 
             self._refresh_cooldown_fields()
             self._update_pool_valuations()
+            self._recompute_minimal_metrics()
             self.save_history()
         except Exception:
             pass
@@ -4376,8 +4436,10 @@ class Api:
         return self._engine.cached_metrics
 
     def force_sync(self):
+        self._engine._conv_parse_cache.clear()
         self._engine.query_official_usage()
-        return True
+        self._engine._compute_disk_metrics()
+        return self._engine.cached_metrics
 
     def move_by(self, dx, dy):
         hwnd = get_hud_hwnd()
@@ -4454,8 +4516,8 @@ class Api:
             cur_x = rect[0]
             cur_y = rect[1]
             if is_compact:
-                w = int(round(380 * self._font_scale_mini))
-                h = int(round(36 * self._font_scale_mini))
+                w = int(round(272 * self._font_scale_mini))
+                h = int(round(46 * self._font_scale_mini))
             else:
                 w = max(520, self._last_expanded_w)
                 min_safe_h = (820 if self._is_tp_expanded else 760) if self._view_mode == "verbose" else 420
@@ -4464,8 +4526,8 @@ class Api:
         elif self._window:
             try:
                 if is_compact:
-                    w = int(round(380 * self._font_scale_mini))
-                    h = int(round(36 * self._font_scale_mini))
+                    w = int(round(272 * self._font_scale_mini))
+                    h = int(round(46 * self._font_scale_mini))
                     self._window.resize(w, h)
                 else:
                     w = max(520, self._last_expanded_w)
@@ -4484,8 +4546,8 @@ class Api:
             save_hud_config(self._config)
             if self._is_compact:
                 hwnd = get_hud_hwnd()
-                w = int(round(380 * self._font_scale_mini))
-                h = int(round(36 * self._font_scale_mini))
+                w = int(round(272 * self._font_scale_mini))
+                h = int(round(46 * self._font_scale_mini))
                 if hwnd:
                     rect = (ctypes.c_long * 4)()
                     user32.GetWindowRect(hwnd, rect)
