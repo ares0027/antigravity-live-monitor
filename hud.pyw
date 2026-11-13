@@ -573,6 +573,7 @@ HTML_CONTENT = """<!DOCTYPE html>
         </svg>
         <span class="mono text-xs font-black tracking-tight" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
         <span class="text-[10px] mono font-bold" style="color: var(--text-dim);">W</span>
+        <span class="text-[10px] mono font-bold" style="color: var(--text-muted);" id="miniWeeklyCooldown">--</span>
       </div>
 
       <div class="w-px h-3.5" style="background: var(--border-card);"></div>
@@ -1662,6 +1663,8 @@ HTML_CONTENT = """<!DOCTYPE html>
       if (gw) {
         const el = document.getElementById('geminiWeeklyDesc');
         if (el) el.textContent = gw.verbose;
+        const mwc = document.getElementById('miniWeeklyCooldown');
+        if (mwc) mwc.textContent = gw.compact;
       }
       if (g5) {
         const el = document.getElementById('gemini5hDesc');
@@ -4451,7 +4454,7 @@ class Api:
             cur_x = rect[0]
             cur_y = rect[1]
             if is_compact:
-                w = int(round(325 * self._font_scale_mini))
+                w = int(round(380 * self._font_scale_mini))
                 h = int(round(36 * self._font_scale_mini))
             else:
                 w = max(520, self._last_expanded_w)
@@ -4461,7 +4464,7 @@ class Api:
         elif self._window:
             try:
                 if is_compact:
-                    w = int(round(325 * self._font_scale_mini))
+                    w = int(round(380 * self._font_scale_mini))
                     h = int(round(36 * self._font_scale_mini))
                     self._window.resize(w, h)
                 else:
@@ -4481,7 +4484,7 @@ class Api:
             save_hud_config(self._config)
             if self._is_compact:
                 hwnd = get_hud_hwnd()
-                w = int(round(325 * self._font_scale_mini))
+                w = int(round(380 * self._font_scale_mini))
                 h = int(round(36 * self._font_scale_mini))
                 if hwnd:
                     rect = (ctypes.c_long * 4)()
