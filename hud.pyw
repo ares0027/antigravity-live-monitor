@@ -322,6 +322,10 @@ HTML_CONTENT = """<!DOCTYPE html>
       font-size: calc(10px * var(--font-scale)) !important;
       line-height: calc(13.5px * var(--font-scale)) !important;
     }
+    .text-\[9\.5px\] {
+      font-size: calc(9.5px * var(--font-scale)) !important;
+      line-height: calc(12px * var(--font-scale)) !important;
+    }
     .text-\[9px\] {
       font-size: calc(9px * var(--font-scale)) !important;
       line-height: calc(12px * var(--font-scale)) !important;
@@ -335,8 +339,11 @@ HTML_CONTENT = """<!DOCTYPE html>
       height: calc(20px * var(--font-scale)) !important;
     }
     .mini-ring-dual {
-      width: calc(32px * var(--font-scale)) !important;
-      height: calc(32px * var(--font-scale)) !important;
+      width: calc(34px * var(--font-scale)) !important;
+      height: calc(34px * var(--font-scale)) !important;
+    }
+    .mini-divider {
+      height: calc(28px * var(--font-scale)) !important;
     }
 
     [data-theme="oled"] {
@@ -575,53 +582,53 @@ HTML_CONTENT = """<!DOCTYPE html>
     </div>
 
     <!-- PURE MINIMALIST COMPACT STRIP (CONCENTRIC CIRCLES: OUTER BLUE = QUOTA LEFT, INNER YELLOW = RESET TIMER) -->
-    <div id="compactBar" class="hidden w-full h-full flex items-center justify-between px-1.5 gap-1">
+    <div id="compactBar" class="hidden w-full h-full flex items-center justify-between px-2 py-1 gap-1.5">
       <!-- Weekly Concentric Circle: Outer Blue = Quota Left, Inner Yellow = Time Left -->
-      <div class="flex flex-col items-center flex-shrink-0 leading-none" title="Weekly: Blue Outer = Quota Left · Yellow Inner = Time Left Until Reset">
+      <div class="flex flex-col items-center justify-center flex-shrink-0 leading-none" title="Weekly: Blue Outer = Quota Left · Yellow Inner = Time Left Until Reset">
         <svg class="mini-ring-dual flex-shrink-0" viewBox="0 0 48 48">
           <circle cx="24" cy="24" r="20.5" class="ring-bg" stroke-width="4.2" fill="none" />
           <circle id="miniGWRing" data-circ="128.81" class="ring-progress-emerald" cx="24" cy="24" r="20.5" stroke-width="4.2" stroke-dasharray="128.81, 128.81" stroke-dashoffset="0" stroke-linecap="round" fill="none" />
           <circle cx="24" cy="24" r="14.0" class="ring-bg" stroke-width="3.6" fill="none" />
           <circle id="miniGWTimerRing" data-circ="87.96" class="ring-progress-timer" cx="24" cy="24" r="14.0" stroke-width="3.6" stroke-dasharray="87.96, 87.96" stroke-dashoffset="0" stroke-linecap="round" fill="none" />
-          <text x="24" y="27.5" text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--text-main)" class="mono">W</text>
+          <text x="24" y="24.5" dominant-baseline="central" text-anchor="middle" font-size="11" font-weight="800" fill="var(--text-main)" class="mono">W</text>
         </svg>
-        <div class="flex items-center justify-center gap-1 mt-0.5 leading-none whitespace-nowrap">
-          <span class="mono text-[9px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
-          <span class="mono text-[8px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniWeeklyCooldown">--</span>
+        <div class="flex items-baseline justify-center gap-1 mt-0.5 leading-none whitespace-nowrap">
+          <span class="mono text-[9.5px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
+          <span class="mono text-[9.5px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniWeeklyCooldown">--</span>
         </div>
       </div>
 
-      <div class="w-px h-7 flex-shrink-0" style="background: var(--border-card);"></div>
+      <div class="w-px mini-divider flex-shrink-0" style="background: var(--border-card);"></div>
 
       <!-- 5-Hour Concentric Circle: Outer Blue = Quota Left, Inner Yellow = Time Left -->
-      <div class="flex flex-col items-center flex-shrink-0 leading-none" title="5-Hour: Blue Outer = Quota Left · Yellow Inner = Time Left Until Reset">
+      <div class="flex flex-col items-center justify-center flex-shrink-0 leading-none" title="5-Hour: Blue Outer = Quota Left · Yellow Inner = Time Left Until Reset">
         <svg class="mini-ring-dual flex-shrink-0" viewBox="0 0 48 48">
           <circle cx="24" cy="24" r="20.5" class="ring-bg" stroke-width="4.2" fill="none" />
           <circle id="miniG5Ring" data-circ="128.81" class="ring-progress-emerald" cx="24" cy="24" r="20.5" stroke-width="4.2" stroke-dasharray="128.81, 128.81" stroke-dashoffset="0" stroke-linecap="round" fill="none" />
           <circle cx="24" cy="24" r="14.0" class="ring-bg" stroke-width="3.6" fill="none" />
           <circle id="miniG5TimerRing" data-circ="87.96" class="ring-progress-timer" cx="24" cy="24" r="14.0" stroke-width="3.6" stroke-dasharray="87.96, 87.96" stroke-dashoffset="0" stroke-linecap="round" fill="none" />
-          <text x="24" y="27.5" text-anchor="middle" font-size="10" font-weight="800" fill="var(--text-main)" class="mono">5h</text>
+          <text x="24" y="24.5" dominant-baseline="central" text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--text-main)" class="mono">5h</text>
         </svg>
-        <div class="flex items-center justify-center gap-1 mt-0.5 leading-none whitespace-nowrap">
-          <span class="mono text-[9px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniG5Pct">--%</span>
-          <span class="mono text-[8px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniCooldown">--</span>
+        <div class="flex items-baseline justify-center gap-1 mt-0.5 leading-none whitespace-nowrap">
+          <span class="mono text-[9.5px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniG5Pct">--%</span>
+          <span class="mono text-[9.5px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniCooldown">--</span>
         </div>
       </div>
 
-      <div class="w-px h-7 flex-shrink-0" style="background: var(--border-card);"></div>
+      <div class="w-px mini-divider flex-shrink-0" style="background: var(--border-card);"></div>
 
-      <!-- Context & Pace Status (Stacked for Minimum Width) -->
+      <!-- Context & Pace Status (Stacked & Centered) -->
       <div class="flex flex-col items-center justify-center gap-0.5 flex-shrink-0" title="Active Conversation Context (Backpack Weight)">
-        <span id="miniCtxWarn" class="px-1.5 py-0.2 rounded text-[9px] mono font-black whitespace-nowrap" style="background: rgba(16, 185, 129, 0.18); color: var(--accent-gemini); border: 1px solid var(--accent-gemini);">🟢 0k</span>
-        <span id="miniPaceWarn" class="hidden px-1 py-0 rounded text-[8px] mono font-black animate-pulse whitespace-nowrap" style="background: rgba(239, 68, 68, 0.25); color: var(--accent-yolo); border: 1px solid var(--accent-yolo);" title="5h Burn Pace Depletion Alert">PACE!</span>
+        <span id="miniCtxWarn" class="px-1.5 py-0.2 rounded text-[9.5px] mono font-black whitespace-nowrap text-center" style="background: rgba(16, 185, 129, 0.18); color: var(--accent-gemini); border: 1px solid var(--accent-gemini);">🟢 0k</span>
+        <span id="miniPaceWarn" class="hidden px-1.5 py-0 rounded text-[8px] mono font-black animate-pulse whitespace-nowrap text-center" style="background: rgba(239, 68, 68, 0.25); color: var(--accent-yolo); border: 1px solid var(--accent-yolo);" title="5h Burn Pace Depletion Alert">PACE!</span>
       </div>
 
-      <!-- Stacked Font Scale + Force Refresh Controls -->
-      <div class="flex items-center gap-0.5 flex-shrink-0" onclick="event.stopPropagation()" ondblclick="event.stopPropagation()">
-        <button onclick="triggerSync()" id="miniSyncBtn" class="px-1 py-0.5 rounded text-[9px] mono font-bold cursor-pointer leading-none h-full" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--accent-gemini);" title="Force Refresh UI & Re-query Quota">↻</button>
+      <!-- Aligned Force Refresh + Font Scale Controls (Up to 300%) -->
+      <div class="flex items-stretch gap-1 flex-shrink-0" onclick="event.stopPropagation()" ondblclick="event.stopPropagation()">
+        <button onclick="triggerSync()" id="miniSyncBtn" class="px-1.5 rounded text-[10px] mono font-bold cursor-pointer leading-none flex items-center justify-center" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--accent-gemini);" title="Force Refresh UI & Re-query Quota">↻</button>
         <div class="flex flex-col items-center justify-center gap-0.5">
-          <button onclick="adjustFontSize(0.08)" class="px-1 py-0 rounded text-[8px] mono font-bold cursor-pointer leading-tight" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Increase Mini-Bar Font Size (Ctrl + +)">A+</button>
-          <button onclick="adjustFontSize(-0.08)" class="px-1 py-0 rounded text-[8px] mono font-bold cursor-pointer leading-tight" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-muted);" title="Decrease Mini-Bar Font Size (Ctrl + -)">A-</button>
+          <button onclick="adjustFontSize(0.10)" class="px-1.5 py-0 rounded text-[9px] mono font-bold cursor-pointer leading-tight w-full text-center" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Increase Mini-Bar Icon & Font Size up to 300% (Ctrl + +)">A+</button>
+          <button onclick="adjustFontSize(-0.10)" class="px-1.5 py-0 rounded text-[9px] mono font-bold cursor-pointer leading-tight w-full text-center" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-muted);" title="Decrease Mini-Bar Icon & Font Size (Ctrl + -)">A-</button>
         </div>
       </div>
     </div>
@@ -1199,13 +1206,13 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     async function adjustFontSize(delta) {
       if (isCompact) {
-        fontScaleMini = Math.min(1.65, Math.max(0.75, Math.round((fontScaleMini + delta) * 100) / 100));
+        fontScaleMini = Math.min(3.0, Math.max(0.75, Math.round((fontScaleMini + delta) * 100) / 100));
         applyFontScaleVisual();
         if (window.pywebview && window.pywebview.api) {
           await window.pywebview.api.set_font_scale('mini', fontScaleMini);
         }
       } else {
-        fontScaleFull = Math.min(1.65, Math.max(0.75, Math.round((fontScaleFull + delta) * 100) / 100));
+        fontScaleFull = Math.min(3.0, Math.max(0.75, Math.round((fontScaleFull + delta) * 100) / 100));
         applyFontScaleVisual();
         if (window.pywebview && window.pywebview.api) {
           await window.pywebview.api.set_font_scale('full', fontScaleFull);
@@ -4512,8 +4519,8 @@ class Api:
             cur_x = rect[0]
             cur_y = rect[1]
             if is_compact:
-                w = int(round(238 * self._font_scale_mini))
-                h = int(round(56 * self._font_scale_mini))
+                w = int(round(256 * self._font_scale_mini))
+                h = int(round(62 * self._font_scale_mini))
             else:
                 w = max(520, self._last_expanded_w)
                 min_safe_h = (820 if self._is_tp_expanded else 760) if self._view_mode == "verbose" else 420
@@ -4522,8 +4529,8 @@ class Api:
         elif self._window:
             try:
                 if is_compact:
-                    w = int(round(238 * self._font_scale_mini))
-                    h = int(round(56 * self._font_scale_mini))
+                    w = int(round(256 * self._font_scale_mini))
+                    h = int(round(62 * self._font_scale_mini))
                     self._window.resize(w, h)
                 else:
                     w = max(520, self._last_expanded_w)
@@ -4535,15 +4542,15 @@ class Api:
         return self._is_compact
 
     def set_font_scale(self, mode, scale):
-        val = max(0.75, min(1.65, float(scale)))
+        val = max(0.75, min(3.0, float(scale)))
         if mode == "mini":
             self._font_scale_mini = val
             self._config["font_scale_mini"] = val
             save_hud_config(self._config)
             if self._is_compact:
                 hwnd = get_hud_hwnd()
-                w = int(round(238 * self._font_scale_mini))
-                h = int(round(56 * self._font_scale_mini))
+                w = int(round(256 * self._font_scale_mini))
+                h = int(round(62 * self._font_scale_mini))
                 if hwnd:
                     rect = (ctypes.c_long * 4)()
                     user32.GetWindowRect(hwnd, rect)
