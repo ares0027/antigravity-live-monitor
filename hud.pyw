@@ -581,8 +581,19 @@ HTML_CONTENT = """<!DOCTYPE html>
       </button>
     </div>
 
-    <!-- PURE MINIMALIST COMPACT STRIP (CONCENTRIC CIRCLES: OUTER BLUE = QUOTA LEFT, INNER YELLOW = RESET TIMER) -->
-    <div id="compactBar" class="hidden w-full h-full flex items-center justify-between px-2 py-1 gap-1.5">
+    <!-- PURE MINIMALIST COMPACT STRIP (META HEADER + CONCENTRIC CIRCLES: OUTER BLUE = QUOTA LEFT, INNER YELLOW = RESET TIMER) -->
+    <div id="compactBar" class="hidden w-full h-full flex flex-col justify-center px-1.5 py-1 gap-1 min-w-0">
+      <!-- Top Identity Row: Active Conversation Name + Active Model -->
+      <div class="w-full flex items-center justify-between gap-1.5 pb-0.5 border-b leading-none min-w-0" style="border-color: var(--border-card);">
+        <div class="flex items-center gap-1 min-w-0 flex-1">
+          <span id="miniPoolDot" class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background: var(--accent-gemini);"></span>
+          <span id="miniConvName" class="mono text-[9.5px] font-bold truncate min-w-0" style="color: var(--text-main);" title="Active Conversation">Detecting chat...</span>
+        </div>
+        <span id="miniModelName" class="mono text-[9px] font-bold flex-shrink-0 px-1.5 py-0 rounded whitespace-nowrap" style="background: var(--bg-subcard); color: var(--accent-gemini); border: 1px solid var(--border-card);" title="Active Model">--</span>
+      </div>
+
+      <!-- Bottom Metrics Row: Concentric Circles + Context/Pace + Refresh & Zoom -->
+      <div class="w-full flex items-center justify-between gap-1.5 min-w-0">
       <!-- Weekly Concentric Circle: Outer Blue = Quota Left, Inner Yellow = Time Left -->
       <div class="flex flex-col items-center justify-center flex-shrink-0 leading-none" title="Weekly: Blue Outer = Quota Left · Yellow Inner = Time Left Until Reset">
         <svg class="mini-ring-dual flex-shrink-0" viewBox="0 0 48 48">
@@ -630,6 +641,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           <button onclick="adjustFontSize(0.10)" class="px-1.5 py-0 rounded text-[9px] mono font-bold cursor-pointer leading-tight w-full text-center" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-main);" title="Increase Mini-Bar Icon & Font Size up to 300% (Ctrl + +)">A+</button>
           <button onclick="adjustFontSize(-0.10)" class="px-1.5 py-0 rounded text-[9px] mono font-bold cursor-pointer leading-tight w-full text-center" style="background: var(--bg-subcard); border: 1px solid var(--border-card); color: var(--text-muted);" title="Decrease Mini-Bar Icon & Font Size (Ctrl + -)">A-</button>
         </div>
+      </div>
       </div>
     </div>
 
@@ -1271,6 +1283,37 @@ HTML_CONTENT = """<!DOCTYPE html>
       refreshData();
     }
 
+    function updateCompactMeta(d, targetMini) {
+      const convEl = document.getElementById('miniConvName');
+      const modelEl = document.getElementById('miniModelName');
+      const dotEl = document.getElementById('miniPoolDot');
+      const m = (d && d.minimal) || {};
+
+      const convProject = (targetMini && targetMini.project) || m.conv_project || '';
+      const rawTitle = (targetMini && (targetMini.title || targetMini.topic)) || m.conv_title || '';
+      const convDisplay = rawTitle || convProject || 'Active Chat';
+      const convTip = (convProject && rawTitle && rawTitle !== convProject)
+        ? `[${convProject}] ${rawTitle}`
+        : convDisplay;
+
+      const modelName = (targetMini && targetMini.session_model) || m.detected_model || (d && d.active_model) || 'Gemini';
+      const isTp = /claude|gpt|opus|sonnet|oss/i.test(modelName);
+      const poolAccent = isTp ? 'var(--accent-tp)' : 'var(--accent-gemini)';
+
+      if (convEl) {
+        convEl.textContent = convDisplay;
+        convEl.title = 'Conversation: ' + convTip;
+      }
+      if (modelEl) {
+        modelEl.textContent = modelName;
+        modelEl.style.color = poolAccent;
+        modelEl.title = 'Active Model: ' + modelName;
+      }
+      if (dotEl) {
+        dotEl.style.background = poolAccent;
+      }
+    }
+
     function renderContextBars(d) {
       const container = document.getElementById('ctxBarsContainer');
       const miniCtx = document.getElementById('miniCtxWarn');
@@ -1300,12 +1343,14 @@ HTML_CONTENT = """<!DOCTYPE html>
       }
 
       const shown = filtered.slice(0, ctxBarsCount);
+      const targetMini = (pinnedSessionId && allSessions.find(s => s.id === pinnedSessionId)) || shown[0] || allSessions[0] || null;
+      updateCompactMeta(d, targetMini);
+
       if (!shown.length) {
         container.innerHTML = '<div class="subcard p-2 rounded-lg text-center text-[10px] mono" style="color: var(--text-dim);">No active conversations detected yet.</div>';
         return;
       }
 
-      const targetMini = (pinnedSessionId && allSessions.find(s => s.id === pinnedSessionId)) || shown[0];
       if (miniCtx && targetMini) {
         const st = targetMini.status || 'safe';
         const tokStr = fmtTok(targetMini.ctx_tokens || 0);
@@ -1428,6 +1473,8 @@ HTML_CONTENT = """<!DOCTYPE html>
         if (titlebar) {
           titlebar.style.borderBottom = 'none';
           titlebar.style.height = '100%';
+          titlebar.style.paddingLeft = '6px';
+          titlebar.style.paddingRight = '6px';
         }
       } else {
         if (fullHeaderLeft) fullHeaderLeft.classList.remove('hidden');
@@ -1438,6 +1485,8 @@ HTML_CONTENT = """<!DOCTYPE html>
         if (titlebar) {
           titlebar.style.borderBottom = '1px solid var(--border-card)';
           titlebar.style.height = '42px';
+          titlebar.style.paddingLeft = '';
+          titlebar.style.paddingRight = '';
         }
       }
     }
@@ -4500,6 +4549,12 @@ class Api:
                 return {"x": int(rect[0]), "y": int(rect[1])}
         return None
 
+    def _compact_dimensions(self):
+        return (
+            int(round(272 * self._font_scale_mini)),
+            int(round(82 * self._font_scale_mini)),
+        )
+
     def set_compact_mode(self, is_compact):
         hwnd = get_hud_hwnd()
         if hwnd and not self._is_compact:
@@ -4519,8 +4574,7 @@ class Api:
             cur_x = rect[0]
             cur_y = rect[1]
             if is_compact:
-                w = int(round(256 * self._font_scale_mini))
-                h = int(round(62 * self._font_scale_mini))
+                w, h = self._compact_dimensions()
             else:
                 w = max(520, self._last_expanded_w)
                 min_safe_h = (820 if self._is_tp_expanded else 760) if self._view_mode == "verbose" else 420
@@ -4529,8 +4583,7 @@ class Api:
         elif self._window:
             try:
                 if is_compact:
-                    w = int(round(256 * self._font_scale_mini))
-                    h = int(round(62 * self._font_scale_mini))
+                    w, h = self._compact_dimensions()
                     self._window.resize(w, h)
                 else:
                     w = max(520, self._last_expanded_w)
@@ -4549,8 +4602,7 @@ class Api:
             save_hud_config(self._config)
             if self._is_compact:
                 hwnd = get_hud_hwnd()
-                w = int(round(256 * self._font_scale_mini))
-                h = int(round(62 * self._font_scale_mini))
+                w, h = self._compact_dimensions()
                 if hwnd:
                     rect = (ctypes.c_long * 4)()
                     user32.GetWindowRect(hwnd, rect)
