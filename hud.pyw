@@ -334,6 +334,10 @@ HTML_CONTENT = """<!DOCTYPE html>
       width: calc(20px * var(--font-scale)) !important;
       height: calc(20px * var(--font-scale)) !important;
     }
+    .mini-ring-dual {
+      width: calc(32px * var(--font-scale)) !important;
+      height: calc(32px * var(--font-scale)) !important;
+    }
 
     [data-theme="oled"] {
       --bg-main: #000000;
@@ -570,51 +574,41 @@ HTML_CONTENT = """<!DOCTYPE html>
       </button>
     </div>
 
-    <!-- PURE MINIMALIST COMPACT STRIP (DUAL CIRCLES: QUOTA + RESET TIMER, TIME BELOW) -->
+    <!-- PURE MINIMALIST COMPACT STRIP (CONCENTRIC CIRCLES: OUTER BLUE = QUOTA LEFT, INNER YELLOW = RESET TIMER) -->
     <div id="compactBar" class="hidden w-full h-full flex items-center justify-between px-1.5 gap-1">
-      <!-- Weekly Pair: Usage Circle + Reset Timer Circle -->
-      <div class="flex items-center gap-1.5 flex-shrink-0" title="Gemini Weekly Quota % Remaining & Reset Countdown">
-        <div class="flex flex-col items-center leading-none">
-          <svg class="mini-ring flex-shrink-0" style="color: var(--accent-gemini);" viewBox="0 0 36 36">
-            <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <path id="miniGWRing" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <text x="18" y="21.5" text-anchor="middle" font-size="11" font-weight="800" fill="currentColor" class="mono">W</text>
-          </svg>
-          <span class="mono text-[9px] font-black tracking-tight mt-0.5 whitespace-nowrap" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
-        </div>
-        <div class="flex flex-col items-center leading-none">
-          <svg class="mini-ring flex-shrink-0" style="color: var(--accent-warn);" viewBox="0 0 36 36">
-            <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <path id="miniGWTimerRing" class="ring-progress-timer" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <text x="18" y="21" text-anchor="middle" font-size="9.5" font-weight="800" fill="currentColor" class="mono">⟲</text>
-          </svg>
-          <span class="mono text-[9px] font-bold tracking-tight mt-0.5 whitespace-nowrap" style="color: var(--text-muted);" id="miniWeeklyCooldown">--</span>
+      <!-- Weekly Concentric Circle: Outer Blue = Quota Left, Inner Yellow = Time Left -->
+      <div class="flex flex-col items-center flex-shrink-0 leading-none" title="Weekly: Blue Outer = Quota Left · Yellow Inner = Time Left Until Reset">
+        <svg class="mini-ring-dual flex-shrink-0" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="20.5" class="ring-bg" stroke-width="4.2" fill="none" />
+          <circle id="miniGWRing" data-circ="128.81" class="ring-progress-emerald" cx="24" cy="24" r="20.5" stroke-width="4.2" stroke-dasharray="128.81, 128.81" stroke-dashoffset="0" stroke-linecap="round" fill="none" />
+          <circle cx="24" cy="24" r="14.0" class="ring-bg" stroke-width="3.6" fill="none" />
+          <circle id="miniGWTimerRing" data-circ="87.96" class="ring-progress-timer" cx="24" cy="24" r="14.0" stroke-width="3.6" stroke-dasharray="87.96, 87.96" stroke-dashoffset="0" stroke-linecap="round" fill="none" />
+          <text x="24" y="27.5" text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--text-main)" class="mono">W</text>
+        </svg>
+        <div class="flex items-center justify-center gap-1 mt-0.5 leading-none whitespace-nowrap">
+          <span class="mono text-[9px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
+          <span class="mono text-[8px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniWeeklyCooldown">--</span>
         </div>
       </div>
 
-      <div class="w-px h-6 flex-shrink-0" style="background: var(--border-card);"></div>
+      <div class="w-px h-7 flex-shrink-0" style="background: var(--border-card);"></div>
 
-      <!-- 5-Hour Pair: Usage Circle + Reset Timer Circle -->
-      <div class="flex items-center gap-1.5 flex-shrink-0" title="Gemini 5-Hour Quota % Remaining & Reset Countdown">
-        <div class="flex flex-col items-center leading-none">
-          <svg class="mini-ring flex-shrink-0" style="color: var(--accent-warn);" viewBox="0 0 36 36">
-            <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <path id="miniG5Ring" class="ring-progress-emerald" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <text x="18" y="21.5" text-anchor="middle" font-size="10.5" font-weight="800" fill="currentColor" class="mono">5h</text>
-          </svg>
-          <span class="mono text-[9px] font-black tracking-tight mt-0.5 whitespace-nowrap" style="color: var(--accent-warn);" id="miniG5Pct">--%</span>
-        </div>
-        <div class="flex flex-col items-center leading-none">
-          <svg class="mini-ring flex-shrink-0" style="color: var(--accent-warn);" viewBox="0 0 36 36">
-            <path class="ring-bg" stroke-width="4.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <path id="miniG5TimerRing" class="ring-progress-timer" stroke-width="4.5" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <text x="18" y="21" text-anchor="middle" font-size="9.5" font-weight="800" fill="currentColor" class="mono">⟲</text>
-          </svg>
-          <span class="mono text-[9px] font-bold tracking-tight mt-0.5 whitespace-nowrap" style="color: var(--text-muted);" id="miniCooldown">--</span>
+      <!-- 5-Hour Concentric Circle: Outer Blue = Quota Left, Inner Yellow = Time Left -->
+      <div class="flex flex-col items-center flex-shrink-0 leading-none" title="5-Hour: Blue Outer = Quota Left · Yellow Inner = Time Left Until Reset">
+        <svg class="mini-ring-dual flex-shrink-0" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="20.5" class="ring-bg" stroke-width="4.2" fill="none" />
+          <circle id="miniG5Ring" data-circ="128.81" class="ring-progress-emerald" cx="24" cy="24" r="20.5" stroke-width="4.2" stroke-dasharray="128.81, 128.81" stroke-dashoffset="0" stroke-linecap="round" fill="none" />
+          <circle cx="24" cy="24" r="14.0" class="ring-bg" stroke-width="3.6" fill="none" />
+          <circle id="miniG5TimerRing" data-circ="87.96" class="ring-progress-timer" cx="24" cy="24" r="14.0" stroke-width="3.6" stroke-dasharray="87.96, 87.96" stroke-dashoffset="0" stroke-linecap="round" fill="none" />
+          <text x="24" y="27.5" text-anchor="middle" font-size="10" font-weight="800" fill="var(--text-main)" class="mono">5h</text>
+        </svg>
+        <div class="flex items-center justify-center gap-1 mt-0.5 leading-none whitespace-nowrap">
+          <span class="mono text-[9px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniG5Pct">--%</span>
+          <span class="mono text-[8px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniCooldown">--</span>
         </div>
       </div>
 
-      <div class="w-px h-6 flex-shrink-0" style="background: var(--border-card);"></div>
+      <div class="w-px h-7 flex-shrink-0" style="background: var(--border-card);"></div>
 
       <!-- Context & Pace Status (Stacked for Minimum Width) -->
       <div class="flex flex-col items-center justify-center gap-0.5 flex-shrink-0" title="Active Conversation Context (Backpack Weight)">
@@ -1905,8 +1899,10 @@ HTML_CONTENT = """<!DOCTYPE html>
     function updateRing(elementId, percent) {
       const el = document.getElementById(elementId);
       if (el) {
-        const offset = 100 - Math.min(100, Math.max(0, percent));
-        el.setAttribute('stroke-dashoffset', offset);
+        const circ = parseFloat(el.dataset.circ || '100');
+        const clamped = Math.min(100, Math.max(0, Number(percent) || 0));
+        const offset = circ * (1 - clamped / 100);
+        el.setAttribute('stroke-dashoffset', offset.toFixed(2));
       }
     }
 
@@ -4516,8 +4512,8 @@ class Api:
             cur_x = rect[0]
             cur_y = rect[1]
             if is_compact:
-                w = int(round(272 * self._font_scale_mini))
-                h = int(round(46 * self._font_scale_mini))
+                w = int(round(238 * self._font_scale_mini))
+                h = int(round(56 * self._font_scale_mini))
             else:
                 w = max(520, self._last_expanded_w)
                 min_safe_h = (820 if self._is_tp_expanded else 760) if self._view_mode == "verbose" else 420
@@ -4526,8 +4522,8 @@ class Api:
         elif self._window:
             try:
                 if is_compact:
-                    w = int(round(272 * self._font_scale_mini))
-                    h = int(round(46 * self._font_scale_mini))
+                    w = int(round(238 * self._font_scale_mini))
+                    h = int(round(56 * self._font_scale_mini))
                     self._window.resize(w, h)
                 else:
                     w = max(520, self._last_expanded_w)
@@ -4546,8 +4542,8 @@ class Api:
             save_hud_config(self._config)
             if self._is_compact:
                 hwnd = get_hud_hwnd()
-                w = int(round(272 * self._font_scale_mini))
-                h = int(round(46 * self._font_scale_mini))
+                w = int(round(238 * self._font_scale_mini))
+                h = int(round(56 * self._font_scale_mini))
                 if hwnd:
                     rect = (ctypes.c_long * 4)()
                     user32.GetWindowRect(hwnd, rect)
