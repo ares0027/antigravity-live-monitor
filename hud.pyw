@@ -343,7 +343,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       height: calc(34px * var(--font-scale)) !important;
     }
     .mini-divider {
-      height: calc(46px * var(--font-scale)) !important;
+      height: calc(58px * var(--font-scale)) !important;
     }
 
     [data-theme="oled"] {
@@ -608,7 +608,8 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span class="mono text-[9.5px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniWeeklyCooldown">--</span>
         </div>
         <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-muted);" id="miniWeeklyEta" title="Exact Weekly Timer Reset Clock Time">--</span>
-        <span class="mono text-[9px] font-bold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-dim);" id="miniWeeklyZeroEta" title="Estimated Time Until Weekly Usage Reaches 0%">0% --</span>
+        <span class="mono text-[9px] font-bold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-dim);" id="miniWeeklyZeroEta" title="Last 30m Pace: Estimated Time Until Weekly Hits 0%">30m: --</span>
+        <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-dim);" id="miniWeeklyWeightedEta" title="Weighted Pace (7d Slot + Recent Burst): Estimated Time Until Weekly Hits 0%">Wgt: --</span>
       </div>
 
       <div class="w-px mini-divider flex-shrink-0" style="background: var(--border-card);"></div>
@@ -627,7 +628,8 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span class="mono text-[9.5px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniCooldown">--</span>
         </div>
         <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-muted);" id="mini5hEta" title="Exact 5-Hour Timer Reset Clock Time">--</span>
-        <span class="mono text-[9px] font-bold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-dim);" id="mini5hZeroEta" title="Estimated Time Until 5-Hour Usage Reaches 0%">0% --</span>
+        <span class="mono text-[9px] font-bold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-dim);" id="mini5hZeroEta" title="Last 30m Pace: Estimated Time Until 5h Hits 0%">30m: --</span>
+        <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-dim);" id="mini5hWeightedEta" title="Weighted Pace (5h Slot + Recent Burst): Estimated Time Until 5h Hits 0%">Wgt: --</span>
       </div>
 
       <div class="w-px mini-divider flex-shrink-0" style="background: var(--border-card);"></div>
@@ -1741,17 +1743,18 @@ HTML_CONTENT = """<!DOCTYPE html>
       };
     }
 
-    function fmtZeroEtaParts(z, poolLabel) {
+    function fmtZeroEtaParts(z, poolLabel, tag) {
+      const pfx = tag || '0%';
       if (!z || z.status === 'idle' || !z.eta_ts) {
         return {
-          text: '0% Idle · Safe',
+          text: `${pfx}: Idle · Safe`,
           color: 'var(--text-dim)',
-          tip: `${poolLabel} 0% ETA: Idle (no active burn detected)`
+          tip: `${poolLabel} (${pfx}) 0% ETA: Idle (no active burn detected)`
         };
       }
       if (z.status === 'empty') {
         return {
-          text: '0% Now!',
+          text: `${pfx}: 0% Now!`,
           color: 'var(--accent-yolo)',
           tip: `${poolLabel} quota is at 0%!`
         };
@@ -1774,10 +1777,19 @@ HTML_CONTENT = """<!DOCTYPE html>
         ? ' — Depletes BEFORE reset!'
         : ' (resets before 0%)';
       return {
-        text: `0% ${clock} (${dur})`,
+        text: `${pfx}: ${clock} (${dur})`,
         color: color,
-        tip: `${poolLabel} hits 0% around ${fullClock} (in ${dur} at ${Number(z.rate_pct_hr || 0).toFixed(1)}%/hr via ${z.source || 'pace'})${warnSuffix}`
+        tip: `${poolLabel} [${z.source || pfx}] hits 0% around ${fullClock} (in ${dur} at ${Number(z.rate_pct_hr || 0).toFixed(2)}%/hr)${warnSuffix}`
       };
+    }
+
+    function applyZeroEtaEl(elId, zObj, poolLabel, tag) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const zp = fmtZeroEtaParts(zObj, poolLabel, tag);
+      el.textContent = zp.text;
+      el.style.color = zp.color;
+      el.title = zp.tip;
     }
 
     function updateLiveCooldowns() {
@@ -1803,13 +1815,9 @@ HTML_CONTENT = """<!DOCTYPE html>
         const wkTimerPct = Math.min(100, Math.max(0, (wkRemSecs / 604800) * 100));
         updateRing('miniGWTimerRing', wkTimerPct);
       }
-      const mwz = document.getElementById('miniWeeklyZeroEta');
-      if (mwz) {
-        const zp = fmtZeroEtaParts(ze.weekly, 'Weekly');
-        mwz.textContent = zp.text;
-        mwz.style.color = zp.color;
-        mwz.title = zp.tip;
-      }
+      applyZeroEtaEl('miniWeeklyZeroEta', ze.weekly, 'Weekly', '30m');
+      applyZeroEtaEl('miniWeeklyWeightedEta', ze.weekly_weighted, 'Weekly', 'Wgt');
+
       if (g5) {
         const el = document.getElementById('gemini5hDesc');
         if (el) el.textContent = g5.verbose;
@@ -1824,13 +1832,8 @@ HTML_CONTENT = """<!DOCTYPE html>
         const h5TimerPct = Math.min(100, Math.max(0, (h5RemSecs / 18000) * 100));
         updateRing('miniG5TimerRing', h5TimerPct);
       }
-      const m5z = document.getElementById('mini5hZeroEta');
-      if (m5z) {
-        const zp5 = fmtZeroEtaParts(ze.h5, '5-Hour');
-        m5z.textContent = zp5.text;
-        m5z.style.color = zp5.color;
-        m5z.title = zp5.tip;
-      }
+      applyZeroEtaEl('mini5hZeroEta', ze.h5, '5-Hour', '30m');
+      applyZeroEtaEl('mini5hWeightedEta', ze.h5_weighted, '5-Hour', 'Wgt');
       if (tpw) {
         const el = document.getElementById('tpWeeklyDesc');
         if (el) el.textContent = tpw.verbose;
@@ -2819,7 +2822,14 @@ class MetricsEngine:
     def compute_learned_cap(self, samples, default):
         if not samples:
             return default
-        caps = [s["implied_cap"] for s in samples if s.get("implied_cap", 0) > 10000]
+        recent = samples[-120:] if len(samples) > 120 else samples
+        high_sig = [s["implied_cap"] for s in recent if s.get("implied_cap", 0) > 10000 and int(s.get("pct_used", 0) or 0) >= 3]
+        if len(high_sig) >= 8:
+            caps = high_sig
+        else:
+            caps = [s["implied_cap"] for s in recent if s.get("implied_cap", 0) > 10000]
+            if not caps:
+                caps = [s["implied_cap"] for s in samples if s.get("implied_cap", 0) > 10000]
         if not caps:
             return default
         caps.sort()
@@ -4299,7 +4309,7 @@ class MetricsEngine:
             "runway_label": runway_label,
         }
 
-    def _build_zero_eta(self, rem_pct: float, rem_mins: float, windows: list, min_rate_hr: float) -> dict:
+    def _make_zero_eta_dict(self, rem_pct: float, rem_mins: float, rate_hr: float, source: str | None) -> dict:
         if rem_pct <= 0:
             return {
                 "status": "empty",
@@ -4307,8 +4317,33 @@ class MetricsEngine:
                 "runway_mins": 0.0,
                 "rate_pct_hr": 0.0,
                 "depletes_before_reset": True,
-                "source": "empty",
+                "source": source or "empty",
             }
+        if rate_hr <= 0 or source is None:
+            return {
+                "status": "idle",
+                "eta_ts": None,
+                "runway_mins": None,
+                "rate_pct_hr": 0.0,
+                "depletes_before_reset": False,
+                "source": None,
+            }
+        runway_mins = rem_pct / (rate_hr / 60.0)
+        depletes_before = bool(rem_mins > 0 and runway_mins <= rem_mins)
+        tight = bool(rem_mins > 0 and not depletes_before and runway_mins <= rem_mins * 1.18)
+        status = "critical" if depletes_before else ("warn" if tight else "safe")
+        return {
+            "status": status,
+            "eta_ts": time.time() + runway_mins * 60.0,
+            "runway_mins": round(runway_mins, 1),
+            "rate_pct_hr": round(rate_hr, 2),
+            "depletes_before_reset": depletes_before,
+            "source": source,
+        }
+
+    def _build_zero_eta(self, rem_pct: float, rem_mins: float, windows: list, min_rate_hr: float) -> dict:
+        if rem_pct <= 0:
+            return self._make_zero_eta_dict(0.0, rem_mins, 0.0, "empty")
         crit = [w for w in windows if w and w.get("critical")]
         chosen = None
         if crit:
@@ -4319,33 +4354,41 @@ class MetricsEngine:
                     chosen = w
                     break
         if not chosen:
-            return {
-                "status": "idle",
-                "eta_ts": None,
-                "runway_mins": None,
-                "rate_pct_hr": 0.0,
-                "depletes_before_reset": False,
-                "source": None,
-            }
-        rate_hr = float(chosen.get("rate_pct_hr", 0.0))
-        runway_mins = rem_pct / (rate_hr / 60.0) if rate_hr > 0 else 9999.0
-        depletes_before = bool(rem_mins > 0 and runway_mins <= rem_mins)
-        tight = bool(rem_mins > 0 and not depletes_before and runway_mins <= rem_mins * 1.18)
-        status = "critical" if depletes_before else ("warn" if tight else "safe")
-        return {
-            "status": status,
-            "eta_ts": time.time() + runway_mins * 60.0,
-            "runway_mins": round(runway_mins, 1),
-            "rate_pct_hr": round(rate_hr, 2),
-            "depletes_before_reset": depletes_before,
-            "source": chosen.get("window"),
-        }
+            return self._make_zero_eta_dict(rem_pct, rem_mins, 0.0, None)
+        return self._make_zero_eta_dict(
+            rem_pct, rem_mins, float(chosen.get("rate_pct_hr", 0.0)), chosen.get("window")
+        )
 
-    def _compute_weekly_zero_eta(self, now_utc, wWeek: dict | None, w5: dict) -> dict:
+    def _build_weighted_zero_eta(
+        self,
+        rem_pct: float,
+        rem_mins: float,
+        slot_win: dict | None,
+        burst_win: dict | None,
+        fallback_burst: dict | None,
+        burst_weight: float,
+        min_rate_hr: float,
+    ) -> dict:
+        if rem_pct <= 0:
+            return self._make_zero_eta_dict(0.0, rem_mins, 0.0, "empty")
+        slot_rate = float((slot_win or {}).get("rate_pct_hr", 0.0))
+        b_win = burst_win if (burst_win and burst_win.get("rate_pct_hr", 0.0) > 0) else fallback_burst
+        burst_rate = float((b_win or {}).get("rate_pct_hr", 0.0))
+        if slot_rate > 0 and burst_rate > 0:
+            wgt_rate = (1.0 - burst_weight) * slot_rate + burst_weight * burst_rate
+        else:
+            wgt_rate = slot_rate if slot_rate > 0 else burst_rate
+        if wgt_rate < min_rate_hr:
+            return self._make_zero_eta_dict(rem_pct, rem_mins, 0.0, None)
+        src = f"{int((1.0 - burst_weight) * 100)}% {(slot_win or {}).get('window', 'Slot')} + {int(burst_weight * 100)}% 30m"
+        return self._make_zero_eta_dict(rem_pct, rem_mins, wgt_rate, src)
+
+    def _compute_weekly_zero_eta(self, now_utc, wWeek: dict | None, w5: dict) -> tuple[dict, dict]:
         wk_rem_pct = float(self.cached_metrics.get("gemini_weekly_pct", 100))
         wk_used_pct = max(0.0, 100.0 - wk_rem_pct)
         if self.gemini_weekly_reset_dt is None:
-            return self._build_zero_eta(wk_rem_pct, 0.0, [], min_rate_hr=0.03)
+            idle_z = self._make_zero_eta_dict(wk_rem_pct, 0.0, 0.0, None)
+            return idle_z, idle_z
         wk_rem_secs = max(0.0, (self.gemini_weekly_reset_dt - now_utc).total_seconds())
         wk_rem_mins = min(10080.0, wk_rem_secs / 60.0)
         wk_elapsed_mins = max(5.0, 10080.0 - wk_rem_mins)
@@ -4354,8 +4397,8 @@ class MetricsEngine:
         )
         wk_src = wWeek or w5 or {}
         wk_slot_leg = float(wk_src.get("gemini_legacy_units", 0) or 0)
-        if wk_used_pct >= 3.0 and wk_slot_leg > 0:
-            wk_units_per_1pct = max((learned_wk_cap / 100.0) * 0.65, wk_slot_leg / wk_used_pct)
+        if wk_used_pct >= 1.5 and wk_slot_leg > 0:
+            wk_units_per_1pct = max(100.0, wk_slot_leg / wk_used_pct)
         else:
             wk_units_per_1pct = max(100.0, learned_wk_cap / 100.0)
 
@@ -4373,15 +4416,19 @@ class MetricsEngine:
         wk_15m = self._eval_pace_window(
             "Last 15m", used_15m_pct, min(15.0, wk_elapsed_mins), wk_rem_pct, wk_rem_mins, min_used_for_warn=0.3
         )
-        return self._build_zero_eta(
+        burst_z = self._build_zero_eta(
             wk_rem_pct, wk_rem_mins, [wk_30m, wk_15m, wk_slot], min_rate_hr=0.03
         )
+        weighted_z = self._build_weighted_zero_eta(
+            wk_rem_pct, wk_rem_mins, wk_slot, wk_30m, wk_15m, burst_weight=0.25, min_rate_hr=0.03
+        )
+        return burst_z, weighted_z
 
     def _compute_pace_windows(self, w5: dict, wWeek: dict | None = None):
         now_utc = datetime.datetime.now(datetime.timezone.utc)
         rem_pct = float(self.cached_metrics.get("gemini_5h_pct", 100))
         used_pct = max(0.0, 100.0 - rem_pct)
-        wk_zero_eta = self._compute_weekly_zero_eta(now_utc, wWeek, w5)
+        wk_burst_z, wk_wgt_z = self._compute_weekly_zero_eta(now_utc, wWeek, w5)
 
         if self.gemini_5h_reset_dt is None:
             idle_w = {
@@ -4413,9 +4460,12 @@ class MetricsEngine:
                 "w30m": dict(idle_w, window="Last 30m"),
                 "w15m": dict(idle_w, window="Last 15m"),
             }
+            idle_5 = self._make_zero_eta_dict(rem_pct, 0.0, 0.0, None)
             self.cached_metrics["zero_eta"] = {
-                "h5": self._build_zero_eta(rem_pct, 0.0, [], min_rate_hr=0.2),
-                "weekly": wk_zero_eta,
+                "h5": idle_5,
+                "h5_weighted": idle_5,
+                "weekly": wk_burst_z,
+                "weekly_weighted": wk_wgt_z,
             }
             return
 
@@ -4427,8 +4477,8 @@ class MetricsEngine:
             self.compute_learned_cap(self.history.get("samples_5h", []), default=862066)
         )
         slot_leg = float(w5.get("gemini_legacy_units", 0) or 0)
-        if used_pct >= 5.0 and slot_leg > 0:
-            units_per_1pct = max((learned_5h_cap / 100.0) * 0.65, slot_leg / used_pct)
+        if used_pct >= 2.0 and slot_leg > 0:
+            units_per_1pct = max(100.0, slot_leg / used_pct)
         else:
             units_per_1pct = max(100.0, learned_5h_cap / 100.0)
 
@@ -4460,7 +4510,11 @@ class MetricsEngine:
 
         self.cached_metrics["zero_eta"] = {
             "h5": self._build_zero_eta(rem_pct, rem_mins, [w_30m, w_15m, w_slot], min_rate_hr=0.2),
-            "weekly": wk_zero_eta,
+            "h5_weighted": self._build_weighted_zero_eta(
+                rem_pct, rem_mins, w_slot, w_30m, w_15m, burst_weight=0.35, min_rate_hr=0.2
+            ),
+            "weekly": wk_burst_z,
+            "weekly_weighted": wk_wgt_z,
         }
 
         crit_windows = [w for w in (w_slot, w_30m, w_15m) if w["critical"]]
@@ -4711,8 +4765,8 @@ class Api:
 
     def _compact_dimensions(self):
         return (
-            int(round(316 * self._font_scale_mini)),
-            int(round(114 * self._font_scale_mini)),
+            int(round(336 * self._font_scale_mini)),
+            int(round(128 * self._font_scale_mini)),
         )
 
     def set_compact_mode(self, is_compact):
