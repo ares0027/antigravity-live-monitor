@@ -343,7 +343,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       height: calc(34px * var(--font-scale)) !important;
     }
     .mini-divider {
-      height: calc(28px * var(--font-scale)) !important;
+      height: calc(46px * var(--font-scale)) !important;
     }
 
     [data-theme="oled"] {
@@ -607,7 +607,8 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span class="mono text-[9.5px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
           <span class="mono text-[9.5px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniWeeklyCooldown">--</span>
         </div>
-        <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-muted);" id="miniWeeklyEta" title="Estimated Weekly Reset Clock Time">--</span>
+        <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-muted);" id="miniWeeklyEta" title="Exact Weekly Timer Reset Clock Time">--</span>
+        <span class="mono text-[9px] font-bold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-dim);" id="miniWeeklyZeroEta" title="Estimated Time Until Weekly Usage Reaches 0%">0% --</span>
       </div>
 
       <div class="w-px mini-divider flex-shrink-0" style="background: var(--border-card);"></div>
@@ -625,7 +626,8 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span class="mono text-[9.5px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniG5Pct">--%</span>
           <span class="mono text-[9.5px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniCooldown">--</span>
         </div>
-        <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-muted);" id="mini5hEta" title="Estimated 5-Hour Reset Clock Time">--</span>
+        <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-muted);" id="mini5hEta" title="Exact 5-Hour Timer Reset Clock Time">--</span>
+        <span class="mono text-[9px] font-bold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-dim);" id="mini5hZeroEta" title="Estimated Time Until 5-Hour Usage Reaches 0%">0% --</span>
       </div>
 
       <div class="w-px mini-divider flex-shrink-0" style="background: var(--border-card);"></div>
@@ -1711,7 +1713,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       const hhmm = pad(dt.getHours()) + ':' + pad(dt.getMinutes());
       const monDay = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const clock = (d > 0) ? (monDay + ' ' + hhmm) : hhmm;
-      const eta = (d > 0) ? (monDay + ' ' + hhmm) : ('@ ' + hhmm);
+      const eta = '↻ ' + clock;
       if (diff <= 0) {
         return { full: 'Resetting now · ' + clock, compact: '0m', eta: eta, verbose: 'Resetting now · (' + clock + ')' };
       }
@@ -1739,6 +1741,45 @@ HTML_CONTENT = """<!DOCTYPE html>
       };
     }
 
+    function fmtZeroEtaParts(z, poolLabel) {
+      if (!z || z.status === 'idle' || !z.eta_ts) {
+        return {
+          text: '0% Idle · Safe',
+          color: 'var(--text-dim)',
+          tip: `${poolLabel} 0% ETA: Idle (no active burn detected)`
+        };
+      }
+      if (z.status === 'empty') {
+        return {
+          text: '0% Now!',
+          color: 'var(--accent-yolo)',
+          tip: `${poolLabel} quota is at 0%!`
+        };
+      }
+      const diff = Math.max(0, Math.floor(z.eta_ts - Date.now() / 1000));
+      const d = Math.floor(diff / 86400);
+      const h = Math.floor((diff % 86400) / 3600);
+      const m = Math.floor((diff % 3600) / 60);
+      const pad = (x) => String(x).padStart(2, '0');
+      const dt = new Date(z.eta_ts * 1000);
+      const hhmm = pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+      const monDay = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const dur = d > 0 ? `${d}d${pad(h)}h` : (h > 0 ? `${h}h${pad(m)}m` : `${m}m`);
+      const clock = d > 0 ? monDay : hhmm;
+      const fullClock = d > 0 ? (monDay + ' ' + hhmm) : hhmm;
+      const color = (z.status === 'critical')
+        ? 'var(--accent-yolo)'
+        : (z.status === 'warn' ? 'var(--accent-warn)' : 'var(--accent-gemini)');
+      const warnSuffix = z.depletes_before_reset
+        ? ' — Depletes BEFORE reset!'
+        : ' (resets before 0%)';
+      return {
+        text: `0% ${clock} (${dur})`,
+        color: color,
+        tip: `${poolLabel} hits 0% around ${fullClock} (in ${dur} at ${Number(z.rate_pct_hr || 0).toFixed(1)}%/hr via ${z.source || 'pace'})${warnSuffix}`
+      };
+    }
+
     function updateLiveCooldowns() {
       if (!lastMetrics) return;
       const d = lastMetrics;
@@ -1746,6 +1787,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       const g5 = fmtCountdownParts(d.gemini_5h_reset_ts);
       const tpw = fmtCountdownParts(d.tp_weekly_reset_ts);
       const tp5 = fmtCountdownParts(d.tp_5h_reset_ts);
+      const ze = d.zero_eta || {};
 
       if (gw) {
         const el = document.getElementById('geminiWeeklyDesc');
@@ -1761,6 +1803,13 @@ HTML_CONTENT = """<!DOCTYPE html>
         const wkTimerPct = Math.min(100, Math.max(0, (wkRemSecs / 604800) * 100));
         updateRing('miniGWTimerRing', wkTimerPct);
       }
+      const mwz = document.getElementById('miniWeeklyZeroEta');
+      if (mwz) {
+        const zp = fmtZeroEtaParts(ze.weekly, 'Weekly');
+        mwz.textContent = zp.text;
+        mwz.style.color = zp.color;
+        mwz.title = zp.tip;
+      }
       if (g5) {
         const el = document.getElementById('gemini5hDesc');
         if (el) el.textContent = g5.verbose;
@@ -1774,6 +1823,13 @@ HTML_CONTENT = """<!DOCTYPE html>
         const h5RemSecs = Math.max(0, d.gemini_5h_reset_ts - Date.now() / 1000);
         const h5TimerPct = Math.min(100, Math.max(0, (h5RemSecs / 18000) * 100));
         updateRing('miniG5TimerRing', h5TimerPct);
+      }
+      const m5z = document.getElementById('mini5hZeroEta');
+      if (m5z) {
+        const zp5 = fmtZeroEtaParts(ze.h5, '5-Hour');
+        m5z.textContent = zp5.text;
+        m5z.style.color = zp5.color;
+        m5z.title = zp5.tip;
       }
       if (tpw) {
         const el = document.getElementById('tpWeeklyDesc');
@@ -3667,7 +3723,7 @@ class MetricsEngine:
         self.cached_metrics["models_5h"] = self._build_model_rows(by_model_5h, active_model_name)
         self.cached_metrics["models_weekly"] = self._build_model_rows(by_model_w, active_model_name)
         self._update_pool_valuations()
-        self._compute_pace_windows(w5)
+        self._compute_pace_windows(w5, wWeek)
         self._recompute_minimal_metrics()
 
     def _parse_transcript_bins(self, log_path: str, mtime: float, fsize: int, subagent_map: dict):
@@ -4243,10 +4299,89 @@ class MetricsEngine:
             "runway_label": runway_label,
         }
 
-    def _compute_pace_windows(self, w5: dict):
+    def _build_zero_eta(self, rem_pct: float, rem_mins: float, windows: list, min_rate_hr: float) -> dict:
+        if rem_pct <= 0:
+            return {
+                "status": "empty",
+                "eta_ts": time.time(),
+                "runway_mins": 0.0,
+                "rate_pct_hr": 0.0,
+                "depletes_before_reset": True,
+                "source": "empty",
+            }
+        crit = [w for w in windows if w and w.get("critical")]
+        chosen = None
+        if crit:
+            chosen = min(crit, key=lambda x: x["runway_mins"])
+        else:
+            for w in windows:
+                if w and w.get("rate_pct_hr", 0.0) >= min_rate_hr:
+                    chosen = w
+                    break
+        if not chosen:
+            return {
+                "status": "idle",
+                "eta_ts": None,
+                "runway_mins": None,
+                "rate_pct_hr": 0.0,
+                "depletes_before_reset": False,
+                "source": None,
+            }
+        rate_hr = float(chosen.get("rate_pct_hr", 0.0))
+        runway_mins = rem_pct / (rate_hr / 60.0) if rate_hr > 0 else 9999.0
+        depletes_before = bool(rem_mins > 0 and runway_mins <= rem_mins)
+        tight = bool(rem_mins > 0 and not depletes_before and runway_mins <= rem_mins * 1.18)
+        status = "critical" if depletes_before else ("warn" if tight else "safe")
+        return {
+            "status": status,
+            "eta_ts": time.time() + runway_mins * 60.0,
+            "runway_mins": round(runway_mins, 1),
+            "rate_pct_hr": round(rate_hr, 2),
+            "depletes_before_reset": depletes_before,
+            "source": chosen.get("window"),
+        }
+
+    def _compute_weekly_zero_eta(self, now_utc, wWeek: dict | None, w5: dict) -> dict:
+        wk_rem_pct = float(self.cached_metrics.get("gemini_weekly_pct", 100))
+        wk_used_pct = max(0.0, 100.0 - wk_rem_pct)
+        if self.gemini_weekly_reset_dt is None:
+            return self._build_zero_eta(wk_rem_pct, 0.0, [], min_rate_hr=0.03)
+        wk_rem_secs = max(0.0, (self.gemini_weekly_reset_dt - now_utc).total_seconds())
+        wk_rem_mins = min(10080.0, wk_rem_secs / 60.0)
+        wk_elapsed_mins = max(5.0, 10080.0 - wk_rem_mins)
+        learned_wk_cap = float(
+            self.compute_learned_cap(self.history.get("samples_weekly", []), default=4310330)
+        )
+        wk_src = wWeek or w5 or {}
+        wk_slot_leg = float(wk_src.get("gemini_legacy_units", 0) or 0)
+        if wk_used_pct >= 3.0 and wk_slot_leg > 0:
+            wk_units_per_1pct = max((learned_wk_cap / 100.0) * 0.65, wk_slot_leg / wk_used_pct)
+        else:
+            wk_units_per_1pct = max(100.0, learned_wk_cap / 100.0)
+
+        leg_30m = float(wk_src.get("gemini_legacy_30m", w5.get("gemini_legacy_30m", 0)) or 0)
+        leg_15m = float(wk_src.get("gemini_legacy_15m", w5.get("gemini_legacy_15m", 0)) or 0)
+        used_30m_pct = leg_30m / wk_units_per_1pct
+        used_15m_pct = min(used_30m_pct, leg_15m / wk_units_per_1pct)
+
+        wk_slot = self._eval_pace_window(
+            "7d Slot", wk_used_pct, wk_elapsed_mins, wk_rem_pct, wk_rem_mins, min_used_for_warn=2.0
+        )
+        wk_30m = self._eval_pace_window(
+            "Last 30m", used_30m_pct, min(30.0, wk_elapsed_mins), wk_rem_pct, wk_rem_mins, min_used_for_warn=0.5
+        )
+        wk_15m = self._eval_pace_window(
+            "Last 15m", used_15m_pct, min(15.0, wk_elapsed_mins), wk_rem_pct, wk_rem_mins, min_used_for_warn=0.3
+        )
+        return self._build_zero_eta(
+            wk_rem_pct, wk_rem_mins, [wk_30m, wk_15m, wk_slot], min_rate_hr=0.03
+        )
+
+    def _compute_pace_windows(self, w5: dict, wWeek: dict | None = None):
         now_utc = datetime.datetime.now(datetime.timezone.utc)
         rem_pct = float(self.cached_metrics.get("gemini_5h_pct", 100))
         used_pct = max(0.0, 100.0 - rem_pct)
+        wk_zero_eta = self._compute_weekly_zero_eta(now_utc, wWeek, w5)
 
         if self.gemini_5h_reset_dt is None:
             idle_w = {
@@ -4277,6 +4412,10 @@ class MetricsEngine:
                 "slot": dict(idle_w, window="0->Now Slot"),
                 "w30m": dict(idle_w, window="Last 30m"),
                 "w15m": dict(idle_w, window="Last 15m"),
+            }
+            self.cached_metrics["zero_eta"] = {
+                "h5": self._build_zero_eta(rem_pct, 0.0, [], min_rate_hr=0.2),
+                "weekly": wk_zero_eta,
             }
             return
 
@@ -4318,6 +4457,11 @@ class MetricsEngine:
         w_15m = self._eval_pace_window(
             "Last 15m", used_15m_pct, eff_15m_mins, rem_pct, rem_mins, min_used_for_warn=1.5
         )
+
+        self.cached_metrics["zero_eta"] = {
+            "h5": self._build_zero_eta(rem_pct, rem_mins, [w_30m, w_15m, w_slot], min_rate_hr=0.2),
+            "weekly": wk_zero_eta,
+        }
 
         crit_windows = [w for w in (w_slot, w_30m, w_15m) if w["critical"]]
         warn_windows = [w for w in (w_slot, w_30m, w_15m) if w["warn"]]
@@ -4567,8 +4711,8 @@ class Api:
 
     def _compact_dimensions(self):
         return (
-            int(round(278 * self._font_scale_mini)),
-            int(round(94 * self._font_scale_mini)),
+            int(round(316 * self._font_scale_mini)),
+            int(round(114 * self._font_scale_mini)),
         )
 
     def set_compact_mode(self, is_compact):
