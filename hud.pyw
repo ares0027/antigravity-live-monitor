@@ -1695,6 +1695,11 @@ HTML_CONTENT = """<!DOCTYPE html>
       refreshData();
     }
 
+    function fmtPct(v) {
+      if (v === null || v === undefined || v === '--' || Number.isNaN(Number(v))) return '--%';
+      return Number(v).toFixed(2) + '%';
+    }
+
     let lastAvailModelsSig = '';
     function fmtUsd(v) {
       const n = Number(v || 0);
@@ -1970,13 +1975,13 @@ HTML_CONTENT = """<!DOCTYPE html>
 
       if (m.h5) {
         const p5 = document.getElementById('min5hPct');
-        if (p5) p5.textContent = (m.h5.pct_rem ?? '--') + '% left';
+        if (p5) p5.textContent = (m.h5.pct_rem != null ? fmtPct(m.h5.pct_rem) : '--%') + ' left';
         updateRing('min5hRing', m.h5.pct_rem ?? 100);
         renderMinimalScopeRows('min5hRows', m.h5.scopes, isTp);
       }
       if (m.weekly) {
         const pw = document.getElementById('minWkPct');
-        if (pw) pw.textContent = (m.weekly.pct_rem ?? '--') + '% left';
+        if (pw) pw.textContent = (m.weekly.pct_rem != null ? fmtPct(m.weekly.pct_rem) : '--%') + ' left';
         updateRing('minWkRing', m.weekly.pct_rem ?? 100);
         renderMinimalScopeRows('minWkRows', m.weekly.scopes, isTp);
       }
@@ -2206,12 +2211,12 @@ HTML_CONTENT = """<!DOCTYPE html>
           }
 
           // 1. Gemini Weekly
-          document.getElementById('geminiWeeklyPct').textContent = d.gemini_weekly_pct + '%';
+          document.getElementById('geminiWeeklyPct').textContent = fmtPct(d.gemini_weekly_pct);
           document.getElementById('geminiWeeklyDesc').textContent = d.gemini_weekly_desc;
           document.getElementById('geminiWeeklyRemain').textContent = '~' + d.gemini_est_weekly_remain_str + ' left';
           updateRing('geminiWeeklyRing', d.gemini_weekly_pct);
 
-          document.getElementById('miniGWPct').textContent = d.gemini_weekly_pct + '%';
+          document.getElementById('miniGWPct').textContent = fmtPct(d.gemini_weekly_pct);
           updateRing('miniGWRing', d.gemini_weekly_pct);
 
           document.getElementById('gwValWeighted').textContent = '$' + d.gw_cost_weighted.toFixed(2);
@@ -2220,12 +2225,12 @@ HTML_CONTENT = """<!DOCTYPE html>
           document.getElementById('gwValCache').textContent = '$' + d.gw_cost_cache.toFixed(2);
 
           // 2. Gemini 5-Hour
-          document.getElementById('gemini5hPct').textContent = d.gemini_5h_pct + '%';
+          document.getElementById('gemini5hPct').textContent = fmtPct(d.gemini_5h_pct);
           document.getElementById('gemini5hDesc').textContent = d.gemini_5h_desc;
           document.getElementById('gemini5hRemain').textContent = '~' + d.gemini_est_5h_remain_str + ' left';
           updateRing('gemini5hRing', d.gemini_5h_pct);
 
-          document.getElementById('miniG5Pct').textContent = d.gemini_5h_pct + '%';
+          document.getElementById('miniG5Pct').textContent = fmtPct(d.gemini_5h_pct);
           updateRing('miniG5Ring', d.gemini_5h_pct);
 
           document.getElementById('gfValWeighted').textContent = '$' + d.gf_cost_weighted.toFixed(2);
@@ -2236,9 +2241,9 @@ HTML_CONTENT = """<!DOCTYPE html>
           renderPaceMonitor(d);
 
           // 3. Claude & GPT Summary & Details
-          document.getElementById('tpSummary').textContent = 'Claude & GPT: ' + d.tp_weekly_pct + '% Weekly · ' + d.tp_5h_pct + '% 5h';
+          document.getElementById('tpSummary').textContent = 'Claude & GPT: ' + fmtPct(d.tp_weekly_pct) + ' Weekly · ' + fmtPct(d.tp_5h_pct) + ' 5h';
           
-          document.getElementById('tpWeeklyPct').textContent = d.tp_weekly_pct + '%';
+          document.getElementById('tpWeeklyPct').textContent = fmtPct(d.tp_weekly_pct);
           document.getElementById('tpWeeklyDesc').textContent = d.tp_weekly_desc;
           document.getElementById('tpWeeklyRemain').textContent = '~' + d.tp_est_weekly_remain_str + ' left';
           updateRing('tpWeeklyRing', d.tp_weekly_pct);
@@ -2249,7 +2254,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           document.getElementById('tpwValCache').textContent = '$' + d.tpw_cost_cache.toFixed(2);
 
           // 4. Claude & GPT 5-Hour
-          document.getElementById('tp5hPct').textContent = d.tp_5h_pct + '%';
+          document.getElementById('tp5hPct').textContent = fmtPct(d.tp_5h_pct);
           document.getElementById('tp5hDesc').textContent = d.tp_5h_desc;
           document.getElementById('tp5hRemain').textContent = '~' + d.tp_est_5h_remain_str + ' left';
           updateRing('tp5hRing', d.tp_5h_pct);
@@ -2664,7 +2669,7 @@ class MetricsEngine:
                         setattr(self, attr_reset, rdt)
                         setattr(self, attr_start, rdt - delta)
                 if pct is not None:
-                    self.cached_metrics[pct_key] = int(pct)
+                    self.cached_metrics[pct_key] = round(float(pct), 2)
             except Exception:
                 pass
         self._refresh_cooldown_fields()
@@ -2708,6 +2713,39 @@ class MetricsEngine:
             )
             time.sleep(15.0 if suspicious_jump else 90.0)
 
+    def _apply_quota_bucket(self, is_gemini: bool, is_weekly: bool, pct: float, reset_iso: str, now_utc, lu: dict):
+        if not reset_iso:
+            return
+        pct_val = round(max(0.0, min(100.0, float(pct))), 2)
+        reset_dt = datetime.datetime.fromisoformat(str(reset_iso).replace("Z", "+00:00"))
+        short_desc = self._fmt_cooldown_desc(reset_dt, now_utc)
+        if is_gemini:
+            if is_weekly:
+                self.cached_metrics["gemini_weekly_pct"] = pct_val
+                self.cached_metrics["gemini_weekly_desc"] = short_desc
+                self.weekly_start_dt = reset_dt - datetime.timedelta(days=7)
+                self.gemini_weekly_reset_dt = reset_dt
+                lu["gemini_weekly"] = {"pct": pct_val, "reset_iso": reset_iso}
+            else:
+                self.cached_metrics["gemini_5h_pct"] = pct_val
+                self.cached_metrics["gemini_5h_desc"] = short_desc
+                self.five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
+                self.gemini_5h_reset_dt = reset_dt
+                lu["gemini_5h"] = {"pct": pct_val, "reset_iso": reset_iso}
+        else:
+            if is_weekly:
+                self.cached_metrics["tp_weekly_pct"] = pct_val
+                self.cached_metrics["tp_weekly_desc"] = short_desc
+                self.tp_weekly_start_dt = reset_dt - datetime.timedelta(days=7)
+                self.tp_weekly_reset_dt = reset_dt
+                lu["tp_weekly"] = {"pct": pct_val, "reset_iso": reset_iso}
+            else:
+                self.cached_metrics["tp_5h_pct"] = pct_val
+                self.cached_metrics["tp_5h_desc"] = short_desc
+                self.tp_five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
+                self.tp_5h_reset_dt = reset_dt
+                lu["tp_5h"] = {"pct": pct_val, "reset_iso": reset_iso}
+
     def query_official_usage(self):
         try:
             si = subprocess.STARTUPINFO()
@@ -2715,10 +2753,14 @@ class MetricsEngine:
             si.wShowWindow = subprocess.SW_HIDE
 
             # Run with USER_HOME cwd and SILENT_RUNNER_EXE to ensure zero child console/MCP windows ever flash
+            base_args = [
+                AGY_EXE if os.path.exists(AGY_EXE) else "agy",
+                "-p", "/usage", "--output-format", "json",
+            ]
             if os.path.exists(SILENT_RUNNER_EXE) and os.path.exists(AGY_EXE):
-                cmd = [SILENT_RUNNER_EXE, AGY_EXE, "-p", "/usage"]
+                cmd = [SILENT_RUNNER_EXE] + base_args
             else:
-                cmd = [AGY_EXE if os.path.exists(AGY_EXE) else "agy", "-p", "/usage"]
+                cmd = base_args
             env = os.environ.copy()
             env["AGY_CLI_DISABLE_AUTO_UPDATE"] = "true"
             out = subprocess.check_output(
@@ -2735,40 +2777,50 @@ class MetricsEngine:
 
             now = datetime.datetime.now(datetime.timezone.utc)
             lu = self.history.setdefault("last_usage", {})
-            for line in out.strip().split("\n"):
-                parts = line.split("\t")
-                if len(parts) >= 4:
-                    group, metric, pct_str, reset_iso = parts[0].strip(), parts[1].strip(), parts[2].strip(), parts[3].strip()
-                    pct = int(pct_str.replace("%", "").strip())
-                    reset_dt = datetime.datetime.fromisoformat(reset_iso.replace("Z", "+00:00"))
-                    short_desc = self._fmt_cooldown_desc(reset_dt, now)
+            parsed_any = False
 
-                    if "Gemini" in group:
-                        if "Weekly" in metric:
-                            self.cached_metrics["gemini_weekly_pct"] = pct
-                            self.cached_metrics["gemini_weekly_desc"] = short_desc
-                            self.weekly_start_dt = reset_dt - datetime.timedelta(days=7)
-                            self.gemini_weekly_reset_dt = reset_dt
-                            lu["gemini_weekly"] = {"pct": pct, "reset_iso": reset_iso}
-                        elif "Five Hour" in metric:
-                            self.cached_metrics["gemini_5h_pct"] = pct
-                            self.cached_metrics["gemini_5h_desc"] = short_desc
-                            self.five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
-                            self.gemini_5h_reset_dt = reset_dt
-                            lu["gemini_5h"] = {"pct": pct, "reset_iso": reset_iso}
-                    elif "Claude" in group or "GPT" in group:
-                        if "Weekly" in metric:
-                            self.cached_metrics["tp_weekly_pct"] = pct
-                            self.cached_metrics["tp_weekly_desc"] = short_desc
-                            self.tp_weekly_start_dt = reset_dt - datetime.timedelta(days=7)
-                            self.tp_weekly_reset_dt = reset_dt
-                            lu["tp_weekly"] = {"pct": pct, "reset_iso": reset_iso}
-                        elif "Five Hour" in metric:
-                            self.cached_metrics["tp_5h_pct"] = pct
-                            self.cached_metrics["tp_5h_desc"] = short_desc
-                            self.tp_five_h_start_dt = reset_dt - datetime.timedelta(hours=5)
-                            self.tp_5h_reset_dt = reset_dt
-                            lu["tp_5h"] = {"pct": pct, "reset_iso": reset_iso}
+            try:
+                payload = json.loads(out)
+                groups = payload.get("command", {}).get("data", {}).get("groups", [])
+                for g in groups:
+                    g_name = str(g.get("name", ""))
+                    is_gem = ("Gemini" in g_name)
+                    is_tp = ("Claude" in g_name or "GPT" in g_name)
+                    if not (is_gem or is_tp):
+                        continue
+                    for b in g.get("buckets", []):
+                        b_id = str(b.get("id", "")).lower()
+                        b_win = str(b.get("window", "")).lower()
+                        b_name = str(b.get("name", ""))
+                        frac = b.get("remaining_fraction")
+                        reset_iso = str(b.get("reset_time", "")).strip()
+                        if frac is None or not reset_iso:
+                            continue
+                        is_weekly = (b_win == "weekly") or ("weekly" in b_id) or ("Weekly" in b_name)
+                        is_5h = (b_win == "5h") or ("5h" in b_id) or ("Five Hour" in b_name)
+                        if not (is_weekly or is_5h):
+                            continue
+                        self._apply_quota_bucket(is_gem, is_weekly, float(frac) * 100.0, reset_iso, now, lu)
+                        parsed_any = True
+                if not parsed_any and payload.get("response"):
+                    out = str(payload["response"])
+            except Exception:
+                pass
+
+            if not parsed_any:
+                for line in out.strip().split("\n"):
+                    parts = line.split("\t")
+                    if len(parts) >= 4:
+                        group, metric, pct_str, reset_iso = parts[0].strip(), parts[1].strip(), parts[2].strip(), parts[3].strip()
+                        pct = float(pct_str.replace("%", "").strip())
+                        is_gem = ("Gemini" in group)
+                        is_tp = ("Claude" in group or "GPT" in group)
+                        if not (is_gem or is_tp):
+                            continue
+                        is_weekly = ("Weekly" in metric)
+                        is_5h = ("Five Hour" in metric)
+                        if is_weekly or is_5h:
+                            self._apply_quota_bucket(is_gem, is_weekly, pct, reset_iso, now, lu)
 
             self._refresh_cooldown_fields()
             self._update_pool_valuations()
@@ -3111,22 +3163,23 @@ class MetricsEngine:
             "by_model": by_model,
         }
 
-    def _append_cal_sample(self, key: str, used_units: int, pct_used: int, min_pct: int = 5, max_pct: int = 98, extra: dict = None) -> bool:
-        if used_units <= 0 or pct_used < min_pct or pct_used > max_pct:
+    def _append_cal_sample(self, key: str, used_units: int, pct_used: float, min_pct: float = 5, max_pct: float = 98, extra: dict = None) -> bool:
+        pct_val = round(float(pct_used), 2)
+        if used_units <= 0 or pct_val < float(min_pct) or pct_val > float(max_pct):
             return False
-        implied_cap = int(used_units / (pct_used / 100.0))
+        implied_cap = int(used_units / (pct_val / 100.0))
         if implied_cap <= 10000:
             return False
         samples = self.history.setdefault(key, [])
         if samples:
             last = samples[-1]
             # Avoid duplicate consecutive samples when neither pct_used nor used_units moved significantly
-            if last.get("pct_used") == pct_used and abs(int(last.get("used", 0)) - used_units) < 250:
+            if abs(float(last.get("pct_used", 0)) - pct_val) < 0.01 and abs(int(last.get("used", 0)) - used_units) < 250:
                 return False
         entry = {
             "ts": time.time(),
             "used": int(used_units),
-            "pct_used": int(pct_used),
+            "pct_used": pct_val,
             "implied_cap": int(implied_cap),
         }
         if extra:
@@ -3136,10 +3189,10 @@ class MetricsEngine:
             del samples[:-600]
         return True
 
-    def _update_reset_cap_slot(self, rcap_key: str, reset_dt, pct_used: int, min_pct: int, base_units: int, raw_tokens: int, cache_tokens: int, leg_units: int, cost_usd: float):
-        if reset_dt is None or pct_used < min_pct or pct_used > 98 or base_units <= 0:
+    def _update_reset_cap_slot(self, rcap_key: str, reset_dt, pct_used: float, min_pct: float, base_units: int, raw_tokens: int, cache_tokens: int, leg_units: int, cost_usd: float):
+        if reset_dt is None or float(pct_used) < float(min_pct) or float(pct_used) > 98.0 or base_units <= 0:
             return
-        frac = pct_used / 100.0
+        frac = float(pct_used) / 100.0
         rcaps = self.history.setdefault("reset_caps", {}).setdefault(rcap_key, {})
         slot_id = "reset:" + reset_dt.isoformat()
         eff_approx = raw_tokens + 0.1 * cache_tokens
@@ -3194,15 +3247,15 @@ class MetricsEngine:
         now_ts = time.time()
         changed = False
 
-        g5_pct_used = 100 - int(self.cached_metrics.get("gemini_5h_pct", 100))
-        gw_pct_used = 100 - int(self.cached_metrics.get("gemini_weekly_pct", 100))
-        tp5_pct_used = 100 - int(self.cached_metrics.get("tp_5h_pct", 100))
-        tpw_pct_used = 100 - int(self.cached_metrics.get("tp_weekly_pct", 100))
+        g5_pct_used = max(0.0, round(100.0 - float(self.cached_metrics.get("gemini_5h_pct", 100.0)), 2))
+        gw_pct_used = max(0.0, round(100.0 - float(self.cached_metrics.get("gemini_weekly_pct", 100.0)), 2))
+        tp5_pct_used = max(0.0, round(100.0 - float(self.cached_metrics.get("tp_5h_pct", 100.0)), 2))
+        tpw_pct_used = max(0.0, round(100.0 - float(self.cached_metrics.get("tp_weekly_pct", 100.0)), 2))
 
         # Check if percentage changed on 5h pool (record immediately) or periodic 30s interval
         samples_5h = self.history.get("samples_5h", [])
         last_g5_pct = samples_5h[-1].get("pct_used") if samples_5h else None
-        pct_jumped = (last_g5_pct != g5_pct_used)
+        pct_jumped = (last_g5_pct is None) or (abs(float(last_g5_pct) - g5_pct_used) >= 0.05)
 
         if not pct_jumped and (now_ts - self.last_cal_save_ts) < 30.0:
             return
@@ -4098,14 +4151,14 @@ class MetricsEngine:
         last3_cap_base = _cap_from_rcap_list(ordered_rcaps[-3:]) or all_cap_base
 
         # Current slot live calibration
-        cur_pct_used = max(0, 100 - int(pct_rem))
+        cur_pct_used = max(0.0, round(100.0 - float(pct_rem), 2))
         cur_base_used = float(w_cur.get("gemini_base_units" if pool == "gemini" else "tp_base_units", 0) or 0)
         cur_cap_base = 0
         cur_slot_key = ("reset:" + cur_reset_dt.isoformat()) if cur_reset_dt else None
         if cur_slot_key and cur_slot_key in rcaps and (rcaps[cur_slot_key].get("cap_base", 0) or 0) > 0:
             cur_cap_base = int(rcaps[cur_slot_key]["cap_base"])
             cur_source = "live slot"
-        elif cur_pct_used >= 3 and cur_base_used > 0:
+        elif cur_pct_used >= 3.0 and cur_base_used > 0:
             cur_cap_base = int(cur_base_used / (cur_pct_used / 100.0))
             cur_source = "live est"
         else:
@@ -4113,7 +4166,7 @@ class MetricsEngine:
             cur_source = "hist fallback"
 
         def _calc_remain(cap_base_val: int, src_label: str, cal_slots_n: int):
-            rem_base = max(0.0, cap_base_val * (max(0, min(100, int(pct_rem))) / 100.0))
+            rem_base = max(0.0, cap_base_val * (max(0.0, min(100.0, float(pct_rem))) / 100.0))
             rem_eff = rem_base / w_m
             cap_eff = cap_base_val / w_m
             rem_tok = int(rem_eff * raw_per_eff)
@@ -4138,7 +4191,7 @@ class MetricsEngine:
             "all": {**u_all, **_calc_remain(all_cap_base, f"{len(ordered_rcaps)} cal slots" if ordered_rcaps else "est", len(ordered_rcaps))},
         }
         return {
-            "pct_rem": int(pct_rem),
+            "pct_rem": round(float(pct_rem), 2),
             "pct_used": cur_pct_used,
             "reset_ts": cur_reset_dt.timestamp() if cur_reset_dt else None,
             "reset_desc": self._fmt_cooldown_desc(cur_reset_dt),
@@ -4162,7 +4215,7 @@ class MetricsEngine:
                 period_secs=18000.0,
                 cur_start_dt=self.five_h_start_dt,
                 cur_reset_dt=self.gemini_5h_reset_dt,
-                pct_rem=int(self.cached_metrics.get("gemini_5h_pct", 100)),
+                pct_rem=float(self.cached_metrics.get("gemini_5h_pct", 100.0)),
                 w_cur=self._last_w5,
                 by_model_cur=self._last_by_model_5h,
                 samp_key="samples_5h",
@@ -4176,7 +4229,7 @@ class MetricsEngine:
                 period_secs=604800.0,
                 cur_start_dt=self.weekly_start_dt,
                 cur_reset_dt=self.gemini_weekly_reset_dt,
-                pct_rem=int(self.cached_metrics.get("gemini_weekly_pct", 100)),
+                pct_rem=float(self.cached_metrics.get("gemini_weekly_pct", 100.0)),
                 w_cur=self._last_wWeek,
                 by_model_cur=self._last_by_model_w,
                 samp_key="samples_weekly",
@@ -4191,7 +4244,7 @@ class MetricsEngine:
                 period_secs=18000.0,
                 cur_start_dt=self.tp_five_h_start_dt,
                 cur_reset_dt=self.tp_5h_reset_dt,
-                pct_rem=int(self.cached_metrics.get("tp_5h_pct", 100)),
+                pct_rem=float(self.cached_metrics.get("tp_5h_pct", 100.0)),
                 w_cur=getattr(self, "_last_w5_tp", self._last_w5),
                 by_model_cur=self._last_by_model_5h,
                 samp_key="samples_tp_5h",
@@ -4205,7 +4258,7 @@ class MetricsEngine:
                 period_secs=604800.0,
                 cur_start_dt=self.tp_weekly_start_dt,
                 cur_reset_dt=self.tp_weekly_reset_dt,
-                pct_rem=int(self.cached_metrics.get("tp_weekly_pct", 100)),
+                pct_rem=float(self.cached_metrics.get("tp_weekly_pct", 100.0)),
                 w_cur=getattr(self, "_last_wWeek_tp", self._last_wWeek),
                 by_model_cur=self._last_by_model_w,
                 samp_key="samples_tp_weekly",
@@ -4344,15 +4397,11 @@ class MetricsEngine:
     def _build_zero_eta(self, rem_pct: float, rem_mins: float, windows: list, min_rate_hr: float) -> dict:
         if rem_pct <= 0:
             return self._make_zero_eta_dict(0.0, rem_mins, 0.0, "empty")
-        crit = [w for w in windows if w and w.get("critical")]
         chosen = None
-        if crit:
-            chosen = min(crit, key=lambda x: x["runway_mins"])
-        else:
-            for w in windows:
-                if w and w.get("rate_pct_hr", 0.0) >= min_rate_hr:
-                    chosen = w
-                    break
+        for w in windows:
+            if w and w.get("rate_pct_hr", 0.0) >= min_rate_hr:
+                chosen = w
+                break
         if not chosen:
             return self._make_zero_eta_dict(rem_pct, rem_mins, 0.0, None)
         return self._make_zero_eta_dict(
@@ -4404,7 +4453,8 @@ class MetricsEngine:
 
         leg_30m = float(wk_src.get("gemini_legacy_30m", w5.get("gemini_legacy_30m", 0)) or 0)
         leg_15m = float(wk_src.get("gemini_legacy_15m", w5.get("gemini_legacy_15m", 0)) or 0)
-        used_30m_pct = leg_30m / wk_units_per_1pct
+        cap_pct = wk_used_pct if (wk_used_pct > 0 and wk_elapsed_mins <= 35.0) else 100.0
+        used_30m_pct = min(cap_pct, leg_30m / wk_units_per_1pct)
         used_15m_pct = min(used_30m_pct, leg_15m / wk_units_per_1pct)
 
         wk_slot = self._eval_pace_window(
