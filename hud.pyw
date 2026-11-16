@@ -607,6 +607,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span class="mono text-[9.5px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniGWPct">--%</span>
           <span class="mono text-[9.5px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniWeeklyCooldown">--</span>
         </div>
+        <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-muted);" id="miniWeeklyEta" title="Estimated Weekly Reset Clock Time">--</span>
       </div>
 
       <div class="w-px mini-divider flex-shrink-0" style="background: var(--border-card);"></div>
@@ -624,6 +625,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span class="mono text-[9.5px] font-black tracking-tight" style="color: var(--accent-gemini);" id="miniG5Pct">--%</span>
           <span class="mono text-[9.5px] font-bold tracking-tight" style="color: var(--accent-warn);" id="miniCooldown">--</span>
         </div>
+        <span class="mono text-[9px] font-semibold tracking-tight leading-none whitespace-nowrap mt-0.5" style="color: var(--text-muted);" id="mini5hEta" title="Estimated 5-Hour Reset Clock Time">--</span>
       </div>
 
       <div class="w-px mini-divider flex-shrink-0" style="background: var(--border-card);"></div>
@@ -1709,13 +1711,15 @@ HTML_CONTENT = """<!DOCTYPE html>
       const hhmm = pad(dt.getHours()) + ':' + pad(dt.getMinutes());
       const monDay = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const clock = (d > 0) ? (monDay + ' ' + hhmm) : hhmm;
+      const eta = (d > 0) ? (monDay + ' ' + hhmm) : ('@ ' + hhmm);
       if (diff <= 0) {
-        return { full: 'Resetting now · ' + clock, compact: '0m', verbose: 'Resetting now · (' + clock + ')' };
+        return { full: 'Resetting now · ' + clock, compact: '0m', eta: eta, verbose: 'Resetting now · (' + clock + ')' };
       }
       if (d > 0) {
         return {
           full: `⏳ ${d}d ${pad(h)}h ${pad(m)}m · ${clock}`,
           compact: `${d}d${pad(h)}h`,
+          eta: eta,
           verbose: `Resets in ${d}d ${pad(h)}h ${pad(m)}m · ${clock}`
         };
       }
@@ -1723,12 +1727,14 @@ HTML_CONTENT = """<!DOCTYPE html>
         return {
           full: `⏳ ${h}h ${pad(m)}m ${pad(s)}s · ${clock}`,
           compact: `${h}h${pad(m)}m`,
+          eta: eta,
           verbose: `Resets in ${h}h ${pad(m)}m ${pad(s)}s · ${clock}`
         };
       }
       return {
         full: `⏳ ${m}m ${pad(s)}s · ${clock}`,
         compact: `${m}m${pad(s)}s`,
+        eta: eta,
         verbose: `Resets in ${m}m ${pad(s)}s · ${clock}`
       };
     }
@@ -1746,6 +1752,11 @@ HTML_CONTENT = """<!DOCTYPE html>
         if (el) el.textContent = gw.verbose;
         const mwc = document.getElementById('miniWeeklyCooldown');
         if (mwc) mwc.textContent = gw.compact;
+        const mwe = document.getElementById('miniWeeklyEta');
+        if (mwe) {
+          mwe.textContent = gw.eta;
+          mwe.title = gw.verbose;
+        }
         const wkRemSecs = Math.max(0, d.gemini_weekly_reset_ts - Date.now() / 1000);
         const wkTimerPct = Math.min(100, Math.max(0, (wkRemSecs / 604800) * 100));
         updateRing('miniGWTimerRing', wkTimerPct);
@@ -1755,6 +1766,11 @@ HTML_CONTENT = """<!DOCTYPE html>
         if (el) el.textContent = g5.verbose;
         const mc = document.getElementById('miniCooldown');
         if (mc) mc.textContent = g5.compact;
+        const m5e = document.getElementById('mini5hEta');
+        if (m5e) {
+          m5e.textContent = g5.eta;
+          m5e.title = g5.verbose;
+        }
         const h5RemSecs = Math.max(0, d.gemini_5h_reset_ts - Date.now() / 1000);
         const h5TimerPct = Math.min(100, Math.max(0, (h5RemSecs / 18000) * 100));
         updateRing('miniG5TimerRing', h5TimerPct);
@@ -4551,8 +4567,8 @@ class Api:
 
     def _compact_dimensions(self):
         return (
-            int(round(272 * self._font_scale_mini)),
-            int(round(82 * self._font_scale_mini)),
+            int(round(278 * self._font_scale_mini)),
+            int(round(94 * self._font_scale_mini)),
         )
 
     def set_compact_mode(self, is_compact):
